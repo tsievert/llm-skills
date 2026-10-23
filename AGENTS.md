@@ -98,7 +98,7 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
   smooths/families, HGAMs/random effects, and resources. Includes the guideline to check Gavin Simpson's
   gratia docs/changelog, blog and GitHub. Built from the Agent Skills spec, gratia reference index/news
   (v0.11.2-66), Pedersen et al. 2019 and Simpson's repo list. No overlapping built-in skill found. Code
-  snippets not executed; not committed or pushed yet.
+  snippets not executed at first (see later entries); committed and pushed in 72a177f.
 - 2026-10-23: Added `gam-mgcv/references/sz-smooths.md` plus an sz section in SKILL.md. Verified by running
   (mgcv 1.9-4, gratia 0.11.2.10): per-level sp vs `id`, char-factor error, aliased `+fac`, NA k-index in
   `k.check`, NA for unseen levels, `difference_smooths()` fails on sz, `conditional_differences()` absent in
@@ -112,12 +112,12 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
   2012, marginaleffects. Verified in the live session (gratia 0.11.2.10): fitted_values simultaneous,
   conditional_values, smooth_estimates+add_confint, confint simultaneous, response_derivatives, variance_comp,
   draw(residuals=TRUE). Absent locally: conditional_differences, ale, simultaneous_bands. Not verified: new
-  theme API, sampling-API renames, ale/conditional_differences code. Not committed or pushed yet.
+  theme API, sampling-API renames, ale/conditional_differences code. Committed and pushed in 72a177f.
 - 2026-10-23: Installed gratia 0.11.2-64 (R-universe binary; GitHub source install failed at DLL load test with
   Rtools45/R 4.6.0). Re-tested: conditional_differences (works, also on sz models, matches the manual sz
   contrast to ~1e-15), ale, theme API, n_draws migration error, draw formals. difference_smooths still fails on sz.
   variance_comp(type="terms") output identical to "penalty" (flagged). Updated recent-developments.md,
-  sz-smooths.md, visualisation.md, uncertainty-and-inference.md. Not committed or pushed yet.
+  sz-smooths.md, visualisation.md, uncertainty-and-inference.md. Committed and pushed in 72a177f.
 
 ## About the local user
 
