@@ -402,6 +402,18 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   `write` tool is the fallback).
 
 
+- 2026-10-23: First `skill-feedback-triage` run: 3 inbox files (3 use-case entries, 2 lessons; skills openalex, r-reproducible-pipeline,
+  github-skill-maintenance), 10 loads in 5 sessions in `usage.tsv`. Outcomes: (1) openalex 400 on wildcard queries: `fix`, partly
+  reproduced (`title.search` + wildcard gives 400 with a readable message; exact+boolean+wildcard and quoted wildcard returned 200, not
+  reproduced), note added to `openalex/references/r-workflow.md`; (2) shared-cache truncation: renv rule already present, uv hardlink
+  hazard reproduced (truncating a venv file emptied the cache copy), pitfall added to `python-reproducible-pipeline`
+  `references/environments-and-pinning.md` and a disposable-copy rule to `github-skill-maintenance/references/testing-skills.md`;
+  (3) `lesson_problems()` no longer requires `confidence` for use-case entries (reader, `skill-lessons` text); (4) note in
+  `skill-lessons/references/hook-setup.md` that loads are counted only via the `skill` tool. Not verified: whether `title.search.exact`
+  accepts wildcards, uv `--link-mode clone`/copy behaviour, Linux/macOS, a second independent report for any issue. Also added the
+  openalex full-text retrieval (`scripts/fetch_fulltext.R`, `references/fulltext.md`; committed earlier). Watermark set; processed files
+  moved to `~/.posit/lessons/inbox/processed/`.
+
 ## About the local user
 
 - Name: Thorbjörn Sievert (git `user.name`; email `thorbjoern.sievert@gmx.net`, git `user.email`).
