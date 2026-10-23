@@ -22,6 +22,11 @@ Read the relevant file first when starting or revising a skill, and append to it
   11 round 5 (R side: targets, tarchetypes, crew, renv; local tests; open items in 11.5). Each row states what was read vs only
   seen as a lead, so check the status column before relying on a claim. Versions are dated 2026-10-23; re-check with
   `check_versions()`.
+- `research/data-and-git-ledger.md`: for the planned `reproducible-research-data` and `git-for-research-projects` and the refactor
+  of `data-repository-readme`. Sections: 1 overlap map, 2 sources (read/blocked/search status), 3 local tests and gotchas
+  (gitignore negation, `*.lock` vs `renv.lock`, `check-ignore -v` exit code, autocrlf, LFS vs `git archive`, cffr pitfalls),
+  4 git doc facts, 5 packages, 6 OpenAlex, 7 proposed split and refactor, 8 findings about the user's own setup (Syncthing folder
+  containing seven repositories), 9 open items and questions for the user.
 - Conventions: one dated section per research round; record sources fetched, local test results, bugs/gotchas found, open
   questions. R run from the assistant cannot write to the assistant scratch dir; use the git-ignored `tmp-examples/` for tests
   and delete afterwards.
@@ -124,8 +129,11 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
 - [~] `animal-behaviour-tracking-analysis`: v1 (keypoint-MoSeq) and v2 (basic DLC metrics) done, see Log. Still open:
   validation of immobility/freezing thresholds against manual scoring, real-data tests.
   SimBA/B-SOiD/VAME are out of scope for now (decision 2026-10-23). Link to `deeplabcut-hpc`.
-- [ ] `reproducible-research-data`: FAIR data deposits (Figshare "Data for:" style), data dictionaries,
-  `renv`/`uv` lockfiles, Quarto manuscripts, code and data archive per paper.
+- [~] `reproducible-research-data` (research round 1 done 2026-10-23, see Log and `research/data-and-git-ledger.md`; no skill files yet):
+  FAIR data deposits (Figshare "Data for:" style), data dictionaries,
+  `renv`/`uv` lockfiles, Quarto manuscripts, code and data archive per paper. Proposed scope: the deposit as a whole (what to
+  deposit, layout, licences, repository and journal policy, manifest, clean-clone test, DOI and versions); `data-repository-readme`
+  stays the README specialist and is refactored to point here (ledger section 7). Awaiting the user's answers (ledger section 9).
 - [x] `manuscript-figures-ggplot` (done 2026-10-23, see Log; committed): journal-ready figures (colour-blind-safe
   palettes, size/DPI, patchwork panels, consistent themes, export). Link to the model skills.
 - [ ] `stats-reporting-and-review`: effect sizes and uncertainty, power/sample size, pre-registration,
@@ -148,8 +156,11 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
     text for the user to apply. No large generated prose.
   - [ ] `python-r-interop`: reticulate and uv environments, R/Python data exchange via Arrow/parquet, Windows pitfalls seen in
     this repo (blocked `~/.posit` paths from the R session, hdf5r dimension order, pandas pins).
-  - [ ] `git-for-research-projects`: Git conventions for analysis repos, large files (git-lfs, DVC), `.gitignore` for data and
-    secrets, release tagging linked to Zenodo DOIs. Overlaps `github-skill-maintenance` only in commit steps.
+  - [~] `git-for-research-projects` (research round 1 done 2026-10-23, see Log and `research/data-and-git-ledger.md`; no skill files yet):
+    Git conventions for analysis repos, large files (git-lfs, DVC), `.gitignore` for data and
+    secrets, release tagging linked to Zenodo DOIs. Overlaps `github-skill-maintenance` only in commit steps. Must cover: cloud-sync
+    folders (the user's own repositories live in a Syncthing folder), `*.lock` vs `renv.lock`, gitignore negation rules, Windows
+    autocrlf, LFS vs GitHub archives, history rewrite for secrets.
   - [ ] `grant-and-cv-support`: publication, citation and funding data from OpenAlex and ORCID, formatting for CVs and grant
     applications (narrative CV, DORA style, output summaries). **Caveat as for the manuscript skill:** no large automatic prose
     generation; most text is written by the user; the assistant structures, checks and formats, and every edit is user-approved.
@@ -482,3 +493,21 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   `r-reproducible-pipeline/assets/project-template/py/uv.lock`, although the skill and checker require it. Fixed with a `!uv.lock`
   negation and the file is now tracked. Only ignored leftovers remain (`__pycache__`, `tmp-examples/`, `.posit/`). Lesson: after adding a
   template that contains lockfiles, check `git status --ignored`. `python-reproducible-pipeline` template has no lockfile (not required there).
+
+- 2026-10-23: Research round 1 for `reproducible-research-data` and `git-for-research-projects` (ledger `research/data-and-git-ledger.md`; no
+  skill files yet). Read: Turing Way (reproducible research index, RDM storage and checklist, compendia, VCS in research, VCS for data,
+  data licensing), Wilson 2017 and Perez-Riverol 2016 (page text), GitHub Docs (large files, Zenodo integration, CITATION files, removing
+  sensitive data), Zenodo docs (GitHub integration, CITATION.cff, `.zenodo.json`, create upload), Dryad file requirements, git docs
+  (gitignore, gitattributes), Git LFS man page, Syncthing ignore docs, FAIR list (PMC). Blocked (403 or client challenge): Springer
+  journal pages, Ecosphere and OUP instructions, Alston and Rick full text, nature.com. Installed from CRAN: `cffr` 1.4.2 (tested on a
+  non-package project), `zen4R` 0.10.6 (not tested, needs a token). Tested locally (Git 2.55, LFS 3.7.1): `*.lock` ignores `renv.lock`
+  too; negation under an excluded directory has no effect; `git check-ignore -v` exits 0 for a negated match; tracked files are never
+  reported; `core.autocrlf=true` comes from the Git for Windows system config; `.gitattributes` beats autocrlf and `--renormalize`
+  works; local `git archive` includes LFS content while GitHub archives default to pointers; `export-ignore` works; read-only flag via
+  `Sys.chmod` works on Windows; `zip::zip` and `git archive` set the UTF-8 flag; cffr validation catches non-ISO dates and non-SPDX
+  licences but `cff_write(validate = TRUE, verbose = FALSE)` still wrote an invalid file. Finding about the user's setup:
+  `Sync_Home_Work` is a Syncthing folder with no `.stignore` and seven Git repositories inside (no damage found in this one; unknown
+  whether a second device syncs it); an empty untracked directory `llm-skills/file4b984174891` exists (origin unknown, left alone).
+  Proposed split and refactor of `data-repository-readme` are in ledger section 7; five questions for the user in section 9.
+  Also added `!renv.lock` next to `!uv.lock` in `.gitignore` (same `*.lock` incident class). Not done: any skill file, link audit, tests of
+  repository APIs, `git filter-repo`, gitleaks, DVC, DataLad.

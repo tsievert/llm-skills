@@ -1,0 +1,169 @@
+# Data deposit and Git ledger
+
+Research ledger for two planned skills, `reproducible-research-data` (RRD) and `git-for-research-projects` (GIT), and for refactoring
+the existing `data-repository-readme` (README). Started 2026-10-23. Working notes, not a skill (no SKILL.md). Same conventions as
+`pipeline-resources-ledger.md`: status **read** = page text read in this session, **partial** = only part answered, **blocked** =
+fetch failed, **search** = only a search excerpt, **meta** = version or metadata only. Versions are dated 2026-10-23; re-check with
+`check_versions()` before writing them into a skill.
+
+## 1. Scope and overlap map
+
+| Topic | README (exists) | RRD (planned) | GIT (planned) | Pipeline skills (exist) |
+|---|---|---|---|---|
+| README text and data dictionary for a deposit | owns | links | | |
+| Repository choice (Dryad, Zenodo, Figshare, institutional), journal data policy, data availability statement | currently in `sources.md` (repository pages) | owns the decision and the statement | | |
+| What goes into the deposit (raw, processed, code, environment, figures), folder layout, file names, formats | partly (`content-guide.md`) | owns | | `renv.lock`, `uv.lock`, `_targets.R`, Snakefile come from here |
+| Licences, identifiers (DOI, ORCID, ROR), FAIR | `sources.md` "Standards" | owns | CITATION.cff basics | |
+| Personal data, sensitive species locations | rule in SKILL.md | owns | | |
+| Manifest and checksums, clean-clone test, archive build | | owns | `git archive` mechanics | the pipelines are what the clean clone runs |
+| Version control hygiene (`.gitignore`, `.gitattributes`, commits, tags, large files, secrets, history rewrite) | | links | owns | lockfile rules referenced |
+| GitHub release to Zenodo DOI, CITATION.cff, `.zenodo.json` | mentioned | decides when to use it | owns the Git side | |
+| Cloud-sync folders containing repositories | | | owns | |
+
+Overlap with README is real but narrow: README is the single artefact (README.md plus dictionary); RRD is the whole deposit and the
+decisions around it. Section 7 lists the proposed split.
+
+## 2. Sources
+
+| Source | Status | What it gave |
+|---|---|---|
+| Turing Way, Guide for Reproducible Research (https://book.the-turing-way.org/reproducible-research/reproducible-research.html) | read (index) | Chapter list: Version Control, Licensing, Research Data Management, Reproducible Environments, Research Compendia, Code Review, CI. Definition: reproducibility = data and code available to rerun the analysis. CC-BY 4.0 |
+| Turing Way, RDM chapter, `rdm-storage`, `rdm-checklist` | read | Storage: 2-3 copies on at least 2 media in different places; file names lowercase, ISO date first, no spaces or special characters, hyphens within chunks and underscores between, no personal data in names, convention documented in README. The page does **not** cover formats, read-only raw data or versioning of data. Checklist (individual): do not touch raw data, keep a read-only copy; data management plan; document with the data; reuse existing standards |
+| Turing Way, Research Compendia (`.../compendia`) | read | Definition (Marwick et al.): conventional folder structure, separate data / methods / output, specify the environment. Three-way sort: read-only (raw data, metadata), human-generated (code, paper, README), project-generated (clean data, figures). Example tree has `data_raw/`, `data_clean/`, `code/`, `figures/`, `paper`, `Dockerfile`, `Makefile`, `LICENSE`, `CITATION`. rrtools not mentioned on the page |
+| Turing Way, `vcs` index, `vcs-git-in-research`, `vcs-data` | read | Git alone is not enough for research data; plain Git is fine only while files are few, small and mostly CSV. Tool descriptions: DVC, Git LFS (centralised, needs a server or paid service), git-annex (distributed), submodules (hard), DataLad (git-annex based; newcomers on GitHub cannot fetch annexed content without the tools). Pages `vcs-workflow`, `vcs-checklist` not read |
+| Turing Way, `licensing-data` | read | CC0 relinquishes attribution (reliance on citation norms); Open Data Commons licences (PDDL, ODC-BY, ODbL) cover database rights only; CC licences are general-purpose |
+| Wilson et al. 2017, Good enough practices in scientific computing (PLOS CB, fetched page) | read | Six categories. Data: keep raw data read-only and backed up in more than one place; open machine-readable formats; replace cryptic codes (`-99` to `NA`); record processing in scripts; submit to a DOI repository. Project: one directory per project, `doc/ data/ results/ src/ bin/`. **Version control: do not track binary or office files, CSVs whose row order changes, raw data, regenerable intermediates, large files (100 MB GitHub limit; Git LFS called "not yet mature enough" in 2017), restricted data, passwords or keys** |
+| Perez-Riverol et al. 2016, Ten simple rules for Git and GitHub (PLOS CB, fetched page) | read | Small incremental commits, do not track derived files; semantic versioning tags; short-lived feature branches; Zenodo or Figshare DOI per release; LICENSE, README, CITATION file. Page does not discuss secrets or data repositories |
+| GitHub Docs, About large files | read | Warning at 50 MiB, hard block at 100 MiB, 25 MiB for browser uploads; repository ideally under 1 GB, strongly under 5 GB; use releases for large binaries; Git is not a backup |
+| GitHub Docs, Managing Git LFS objects in archives (search excerpt) | search | **By default GitHub source archives (zip, tarball) contain only LFS pointer files**; admins can include LFS objects; not for an external LFS server; a community thread reports that with the option on the tarball had the files but the zip did not (2021, may be outdated) |
+| GitHub Docs, Referencing and citing content | read | Zenodo integration: log in with GitHub, toggle the repository on, each new release archives the repository and gets a new DOI; public repositories only; add a licence |
+| GitHub Docs, About CITATION files | read | `CITATION.cff` in the root of the default branch gives a "Cite this repository" box (APA and BibTeX only); `preferred-citation` redirects to a paper; `type: dataset` gives a data citation string; other `CITATION*` files are linked, not parsed |
+| Zenodo docs: GitHub and Software, CITATION.cff, `.zenodo.json`, Archive a release | read | **If `.zenodo.json` exists Zenodo uses only it and ignores `CITATION.cff` entirely.** `.zenodo.json` is needed for grants, communities, related identifiers, contributor roles. A subset of the CFF schema is supported (title, version, license, type, abstract, authors with ORCID, keywords). Release archive is a Software record also archived in Software Heritage; failed releases show errors in the Zenodo GitHub page; Zenodo points to `cffconvert` for validation |
+| Zenodo docs, Create new upload | read | Up to 100 files and 50 GB per upload; after publishing, **files can only be changed within 45 days**, metadata any time; reserved DOI is lost if the draft is deleted; restricted files and embargo supported; sandbox at sandbox.zenodo.org. Do not reuse the article DOI for a supporting dataset |
+| Dryad, File requirements | read | Accepts all research data but only files compatible with CC0; code and software can be uploaded through Dryad and are then hosted on Zenodo (time-released with the dataset); no PII; CSV, TSV or ODF preferred for tables, README in Markdown; RAR not accepted; recommended maximum 10 GB per file, 2 TB per publication through the web interface |
+| Springer Nature data policy types (search excerpts) | search | Legacy types 1 to 4 (encouraged; evidence encouraged; availability statement required = type 3, now the standard; peer review of data required). Statement templates: dataset in named repository with persistent link; not public because [reason] but available on request; on request; not applicable; included in the article. Community repositories are mandatory for some data types. Journal pages for Oecologia, Behavioral Ecology and Sociobiology **not read** (fetch returned a client challenge) |
+| Ecosphere author guidelines, OUP Behavioral Ecology, Alston and Rick 2021 full text | blocked (403) | Not read. Alston and Rick (W3124249310, Bulletin of the ESA) is the ecology-specific beginner's guide: obtain the text through the OpenAlex full-text route (`openalex/references/fulltext.md`) before the skill cites any detail |
+| FAIR principles (Wilkinson 2016, PMC4792175) | read | F1 to F4, A1, A1.1, A1.2, A2, I1 to I3, R1, R1.1 to R1.3 (licence, provenance, community standards). The go-fair.org page returns nothing to the fetch tool (also in the README skill) |
+| git-scm docs: gitignore, gitattributes | read | See section 4 |
+| GitHub Docs, Removing sensitive data from a repository | read | Rotate the credential first; `git filter-repo` 2.47 or newer with `--sensitive-data-removal`; force push, then GitHub Support to purge cached views and pull-request refs; forks keep the data; commit hashes and signatures change |
+| Git LFS man page | read | Pointer files, clean and smudge filters, pre-push upload; commands track, migrate, ls-files, prune. No limitations stated on the page |
+| Syncthing docs, Ignoring files (v2.1.0) | read | `.stignore` must sit at the folder root, is never synced, first matching pattern wins, `!` negation, `(?d)` deletes ignored files that block a directory removal, `#include` |
+| Syncthing forum threads and web posts on Git in synced folders (search excerpts) | search | Maintainer view: Git repositories are not independent files, concurrent edits are "merged" by Syncthing into an inconsistent repository; use fetch and push instead; one safe case: the repository is used on only one device and the sync is a backup. Git LFS maintainer: cloud sync services (OneDrive, Dropbox) are known to corrupt Git repositories because they sync file by file. MATLAB and others show a warning for OneDrive folders |
+| Happy Git with R (happygitwithr.com) | partial (index only) | Table of contents only (chapters on install, PAT, SSH, workflows, "Burn it all down", "Resetting"). No statement on cloud-sync folders found on the page read |
+| CRAN pages: zen4R, rdryad; deposits docs | read | See section 5 |
+
+## 3. Local tests (Windows 11, Git 2.55.0.windows.5, git-lfs 3.7.1, R 4.6.0), scratch repos in git-ignored `tmp-examples/gt/` (deleted afterwards)
+
+| Test | Result |
+|---|---|
+| Pattern `*.lock` in `.gitignore` | Ignores `renv.lock`, `uv.lock` and `a.lock` alike (reproduces the template lockfile incident). Fix `!uv.lock` and `!renv.lock` after it: both tracked, other `*.lock` still ignored |
+| `data/` then `!data/raw.csv` | **Negation has no effect** (parent directory excluded). `data/*` then `!data/raw.csv` works |
+| `git check-ignore -v` on a path matched by a negation | Prints `file:line:!pattern path` and **exits 0**, so exit 0 does not mean "ignored"; use `-q`, `git status --ignored`, or look for the leading `!` |
+| `git check-ignore` on an already tracked file | Reports nothing (exit 1) because tracked files are not ignored; `--no-index` shows the matching rule. A new ignore rule never untracks a file |
+| Windows default line endings | `core.autocrlf=true` is set in the **system** config (`C:/Program Files/Git/etc/gitconfig`), not in the user config; this is the source of the "LF will be replaced by CRLF" warnings. `git ls-files --eol` shows index and working-tree endings per file |
+| `.gitattributes` `* text=auto` plus `*.sh text eol=lf` and `git add --renormalize .` | Index stays LF, `lf.sh` checked out with LF despite autocrlf; a CSV with CRLF in the working tree is normalised to LF in the index. Attributes beat `core.autocrlf` |
+| LFS: `git lfs track "*.bin"`, commit, `git archive` | `git lfs ls-files` shows the file; **a local `git archive` contains the real 300 kB content** (smudge runs), whereas GitHub-generated archives contain pointers by default (docs). So a deposit zip built locally is complete; the GitHub "Source code (zip)" is not |
+| `.gitattributes` with `tests/ export-ignore` and `.gitattributes export-ignore` | Both left out of the archive; works for trimming a code deposit |
+| `git filter-repo` | Not installed (`git filter-repo` unknown); `uvx` 0.12.5 is available, so `uvx git-filter-repo` is a possible route (not run) |
+| Read-only flag: `Sys.chmod(f, "444")` | `file.access(f, 2)` returns -1 and `writeLines` fails with "Permission denied"; the Windows read-only attribute works for protecting raw data from accidental overwrite (not a security measure) |
+| Hashes | `tools::sha256sum()` and `md5sum()` exist in R 4.6.0 (sha256sum is in base R since 4.5) |
+| ZIP with a non-ASCII file name (`Thorbj\u00f6rn_data.csv`) | `zip::zip` (3.0.2) and `git archive --format=zip` both set the UTF-8 flag; names decode correctly in Python. ASCII-only names are still advised (Turing Way, Dryad) |
+| `cffr` 1.4.2 (CRAN, installed) on a **non-package** project | Works: `cff(...)` with `as_cff_person("Name <mail> (https://orcid.org/...)")` for authors, `cff_write()`, `cff_validate(path)`, `as_bibentry()`. See gotchas below |
+| `zen4R` 0.10.6 (CRAN, installed) | Installed only; no API call made (needs a Zenodo token; calls could publish). Not tested |
+| Repository integrity check on this repo | `git fsck` clean, no `*sync-conflict*` files, no `.stversions` entries for `llm-skills`, no stale `.git/*.lock` |
+
+### Gotchas worth putting in the skills
+
+1. **`*.lock` ignores `renv.lock` too.** A generic "lock files" rule in `.gitignore` silently removes the lockfiles the pipeline skills require. Use `!renv.lock`, `!uv.lock`, or ignore specific lock names only.
+2. **Negation under an excluded directory does nothing**; write `dir/*`, not `dir/`.
+3. **`git check-ignore -v` exit code 0 is not proof of ignoring** when the matching rule is a negation.
+4. `.gitignore` is not retroactive: tracked files stay tracked (`git rm --cached`).
+5. **`cffr::cff()` needs `cff_version` to validate**; `cff_write(validate = TRUE, verbose = FALSE)` wrote an invalid file (missing `message` and `authors`) without error. Always run `isTRUE(cff_validate(path, verbose = FALSE))` afterwards; the validation attribute `errors` is huge, print `attr(v, "errors")[, c("instancePath", "message")]`. cffr caught a non-ISO `date-released` and a non-SPDX licence (`GPL3`) in a deliberately broken file. If `.zenodo.json` exists Zenodo ignores the CFF, so do not keep both unless intended.
+6. `as_cff_person()` expects one string per person; passing a base-R `person()` inside a plain list produced a nested, invalid `authors` entry.
+7. YAML trap from the pipeline ledger (key `n` read as FALSE) also applies to CFF and config files.
+8. GitHub archives and LFS: pointers by default; local `git archive` is complete if the LFS objects are present locally (`git lfs fetch --all` first on a fresh clone; not tested).
+9. Zenodo post-publication file edit window (45 days) vs the Zenodo `about-records` wording noted in the README skill; both claims are from Zenodo docs, so the skill should say "check the current page before publishing".
+
+## 4. Facts from git docs (read)
+
+- `.gitignore` source precedence: command line, then `.gitignore` files (deeper wins), then `.git/info/exclude`, then `core.excludesFile` (default `~/.config/git/ignore`). Last matching pattern within one level wins. Trailing `/` matches directories only.
+- `.gitattributes`: `text=auto` normalises text to LF in the index; `eol=lf` or `eol=crlf` set the working-tree ending; `binary` = `-diff -merge -text`; `core.safecrlf` warns on irreversible conversion; recommended migration `echo "* text=auto" > .gitattributes; git add --renormalize .`; `export-ignore` for `git archive`.
+- `usethis` 3.2.2 exports `git_vaccinate()` (adds common files to the **global** ignore; not run, it edits the user's global config), `use_git_ignore`, `use_git_config`, `use_github_release`, `use_git_hook`, `use_citation`. `gert` 2.5.0 exports `git_ls`, `git_tag_create`, `git_tag_list`, `git_tag_push`, `git_status`, `git_ignore_path_is_ignored` (returned FALSE for the negated file, TRUE for an ignored sibling; consistent with `-q`), `git_archive_zip`, `git_stat_files`.
+
+## 5. Packages and tools
+
+| Tool | CRAN | Status | Note |
+|---|---|---|---|
+| cffr 1.4.2 | yes | installed, tested | CITATION.cff from R, validation against the CFF 1.2.0 JSON schema (needs `jsonvalidate`); `cff_gha_update()` and `cff_git_hook_install()` exist (not tested); docs say it targets packages, works for plain projects with `cff()` |
+| zen4R 0.10.6 | yes | installed, not tested | Zenodo REST client (depositions, DOIs, upload); stores tokens with `keyring`. Any call that publishes is permanent; if tested, use the sandbox with the user's explicit permission |
+| rdryad 1.0.0 (2020) | yes | page read | Search and download only (Solr, OAI-PMH, fetch); **no submission**; old |
+| deposits | **no** (rOpenSci r-universe or GitHub, version 0.2.1.068) | page read, not installed | Zenodo, Zenodo sandbox and Figshare, with a sandbox option; non-CRAN, so installing needs the user's permission |
+| codemetar 0.3.7 | yes | not installed | CodeMeta JSON for R packages; probably not needed for analysis projects |
+| precommit 0.4.3 | yes | not installed | R wrapper around the Python `pre-commit` framework; needs Python; pre-commit itself is not installed here |
+| gert 2.5.0, usethis 3.2.2, gh 1.6.1, gitcreds, credentials, renv, fs, digest, here | yes | installed | Enough for hooks, tags, ignore checks and checksums without new dependencies |
+| workflowr 1.7.2, pins 1.4.2 | yes | not installed | Different jobs (website from analyses; versioned data boards); not obviously needed |
+| rrtools | no (GitHub only) | not installed | Marwick's compendium scaffold; GitHub install requires permission; the skill can describe the layout without it |
+| Git LFS 3.7.1 | n/a | installed, tested | See section 3 |
+| DVC, DataLad, git-annex, gitleaks, pre-commit | n/a | not installed | Judged from docs only |
+
+## 6. OpenAlex (R/httr2, title searches; authors checked from the returned authorships; abstracts not read)
+
+| Work | OpenAlex ID | Year | Citations | Use |
+|---|---|---|---|---|
+| Wilson et al., Good enough practices in scientific computing | W2963508088 (duplicate record W2507622755) | 2017 | 451 | Practices for data, project layout, version control (page read) |
+| Noble, A quick guide to organizing computational biology projects | W2140503409 | 2009 | 95 | Project layout; **page not read** |
+| Marwick et al., Packaging data analytical work reproducibly using R (and friends) | W4245161709 (preprints W2749102981, W4249988402) | 2017 | 108 | Research compendium; not read |
+| Alston and Rick, A beginner's guide to conducting reproducible research | W3124249310 | 2021 | 81 | Ecology audience; full text blocked, not read |
+| Wilkinson et al., The FAIR Guiding Principles | W2302501749 (addendum W2966562087) | 2016 | 18275 | FAIR list read via PMC |
+| Sandve et al., Ten simple rules for reproducible computational research | W2036318837 | 2013 | 873 | Already in the pipeline ledger |
+| Perez-Riverol et al., Ten simple rules for taking advantage of Git and GitHub | W2557994837 | 2016 | 231 | Page read |
+| Hillemann et al., Code review in practice: a checklist for computational reproducibility | W4409740950 | 2025 | 1 | Preprint, not assessed |
+| Nuest et al., CODECHECK | W3151240889 | 2021 | 27 | Independent execution of the code behind an article; not read |
+| Rule et al., Ten simple rules for reproducible research in Jupyter notebooks | W2897352125 | 2018 | 18 | Not read; relevant only if notebooks are used |
+
+Not searched: ecology-specific data-sharing studies (for example how often code and data are archived in behavioural ecology journals); do this before the skill makes any claim about field practice.
+
+## 7. Proposed split and refactor (design observations, not decisions)
+
+**`reproducible-research-data` (new): the deposit as a whole, for one paper.**
+
+1. Decide what is deposited: raw, processed, code, environment (lockfiles from the pipeline skills), figures' source data; what is excluded and why (personal data, protected-species coordinates, licence-restricted third-party data).
+2. Layout and names: compendium sort into read-only, human-written and generated; ASCII lowercase names; raw data read-only (Windows read-only flag tested); open formats (Dryad list).
+3. Licences and identifiers: data CC0 or CC-BY, code MIT or similar, repository-forced terms (Dryad CC0); ORCID, ROR, funder IDs.
+4. Where to deposit: Dryad (data) plus Zenodo (code, also via Dryad), Zenodo alone, institutional; journal policy and data availability statement text (Springer templates read only as search excerpts; journal pages need to be read live each time).
+5. Build and check: manifest with sha256 and sizes, file-name and format checks, size limits against the live repository page, clean-clone run of the pipeline (what the pipeline skills' `--locked` rules are for), `git archive` for the code archive, README via `data-repository-readme`.
+6. Publish and maintain: DOI and version semantics, 45-day Zenodo window, CITATION.cff or `.zenodo.json`, update the data availability statement and the paper's references. The assistant never uploads or publishes; zen4R or deposits only with sandbox first and explicit permission.
+7. Candidate scripts (to be written and tested): `make_manifest()` (path, size, sha256, class by extension), `check_deposit()` (non-ASCII or space in names, forbidden formats, large files, missing README, lockfiles present, secret-looking files, calls `check_readme()`), CITATION.cff helper around cffr with the validation pitfall handled.
+
+**`git-for-research-projects` (new): repository hygiene around analysis projects.**
+
+1. Starter files: `.gitignore` for R, Python, Quarto, Positron or RStudio; `.gitattributes` for line endings (this repo already has one for `*.sh`, `*.py`, `*.md`); what to commit (code, small text data, lockfiles, config, README) and what not (binary and office files, raw large data, regenerable output, `.Rproj.user`, `.RData`, `.venv`, `_targets/`, secrets).
+2. Habits: small commits with a reason, tag at submission, revision, acceptance and deposit; semantic or date tags; a branch only for risky changes.
+3. Large files decision table: under about 50 MiB plain Git; many or large files: keep data out of Git and deposit them (Dryad, Zenodo), or Git LFS (GitHub archives omit objects by default, quota), or DVC or DataLad (not tested here); Git is not a backup.
+4. Secrets: prevention (`.Renviron` ignored, tokens via environment), detection (filename checks; gitleaks not installed), response (rotate first, then `git filter-repo`, force push, GitHub Support; forks keep the data).
+5. Windows and cross-platform: system `core.autocrlf=true`, `.gitattributes`, `git ls-files --eol`, `core.longpaths`, case-insensitive paths (not tested).
+6. Sync folders: do not put a working Git repository in a OneDrive, Dropbox or Syncthing folder; push and pull instead. See section 8: **this applies to the user's own setup**.
+7. Releases: tag, GitHub release, Zenodo integration, CITATION.cff, `.zenodo.json` precedence; LFS caveat.
+8. Candidate script: `audit_repo()` (ignored files that the project requires, `*.lock` rule, tracked large files, CRLF mix via `git ls-files --eol`, missing `.gitattributes` or `.gitignore`, repository inside a sync folder by looking for `.stfolder`, `.dropbox`, OneDrive in the path, committed `.RData` or `.Rproj.user`). Overlaps `github-skill-maintenance` only in commit steps.
+
+**`data-repository-readme` refactor (proposal).**
+
+- Keep it as the README-and-dictionary specialist; its workflow, scripts and assets are tested and stay.
+- Move generic material out to RRD: the "Standards" section (identifiers, licences, FAIR) and the general rules (do not upload, personal data, sensitive locations, journal policy check). In README keep one-line pointers.
+- Rename nothing; add "Related skills" links to RRD and GIT, and have step 1 ("Establish the target") say that choosing the repository belongs to RRD.
+- `content-guide.md` keeps README sections and the field-specific additions; the CITATION.cff mention moves to RRD and GIT.
+- `sources.md` stays (repository README pages), plus links to RRD's repository and journal-policy sources, to avoid two copies of the same URLs.
+- Decision for the user: one combined skill versus three. Recommendation: three, because triggers differ (a README request versus a "prepare my deposit" request versus a Git problem) and the README skill is already tested; the cost is cross-links, covered by `check_skill_links()`.
+
+## 8. Findings about the user's own setup (facts observed, not acted on)
+
+- `C:/Users/thorb/Sync_Home_Work` is a **Syncthing folder** (`.stfolder`, `.stversions` present, `syncthingtray` on the PATH) with **no `.stignore`** at its root. It contains **seven Git repositories**, including this one (`llm-skills`, `01-2026_Aarhus_odor`, `06-2026_GAM_course/*` two clones, `au-section-08-2026`, `dlc-pig-method-paper`, `entreprenauts_anomaly_tracker`). If another device syncs the same folder, their `.git` directories are synced too, which Syncthing's maintainers and Git LFS's maintainer advise against. No damage found in `llm-skills` (fsck clean, no conflict files), and I cannot see from here whether a second device is attached. Options for the user to weigh: keep as is and only edit on one device at a time; ignore `.git` (or whole repositories) in `.stignore` and rely on `git push` and `git pull`; or move repositories out of the sync folder. A `.stignore` is per device and never synced.
+- An empty directory `llm-skills/file4b984174891` exists (created 2026-10-23 14:31, untracked because Git ignores empty directories). Origin unknown; left in place.
+- `core.autocrlf=true` comes from the Git for Windows system config; this repo's `.gitattributes` fixes endings only for `*.sh`, `*.py`, `*.md`. The `.gitignore` and `uv.lock` CRLF warnings seen earlier are therefore expected, and harmless for the index.
+- Fixed earlier today: the `*.lock` rule that excluded the template `uv.lock` (see AGENTS.md log).
+
+## 9. Open items and not done
+
+- Not read: Springer journal pages for Oecologia and Behavioral Ecology and Sociobiology, Ecosphere and Behavioral Ecology author instructions (all blocked), Alston and Rick full text, Noble 2009, Marwick 2017, Happy Git chapters on workflows and "Burn it all down", Turing Way pages `vcs-workflow`, `vcs-checklist`, `rdm-metadata`, `rdm-sharing`, `rdm-fair`, Software Heritage, Dryad "Good data practices" refreshed, Figshare current limits, institutional repository of the user (Jyvaskyla or Aarhus; ask).
+- Not tested: zen4R and any repository API (needs a token, sandbox first, user permission), `git filter-repo` (not installed), gitleaks, `precommit`, DVC, DataLad, LFS on GitHub itself (quota, archive option), `git lfs fetch --all` on a fresh clone then `git archive`, case collisions on Windows, long paths, symlinks, `cff_gha_update()` and `cff_git_hook_install()`, Linux and macOS.
+- Questions for the user before building: (1) one combined skill or three (section 7); (2) which repositories and journals matter most (Dryad, Figshare, Zenodo, institutional; Oecologia, Behavioral Ecology and Sociobiology, Ecosphere), so the policy research targets those; (3) whether to test Zenodo through the sandbox with a token; (4) whether another device syncs `Sync_Home_Work`, and what to do about `.git` inside it; (5) whether DVC or DataLad deserve hands-on coverage or only a decision table (recommendation: decision table).

@@ -18,6 +18,7 @@
 *.lock
 # Template lockfiles are deliberate content
 !uv.lock
+!renv.lock
 
 # Logs and temp files
 *.log
