@@ -235,7 +235,9 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   agentskills.io (specification, evaluating skills, optimizing descriptions), the Claude best-practices guide, and the Posit
   Assistant skills/hooks/config docs. CRAN check: no skill-specific package; used `yaml`, `jsonlite`, `gert`, `utils`. PyPI
   `skills-ref` (via `uvx --from skills-ref agentskills validate`; plain `uvx skills-ref` fails) passes all 13 skills. Linter
-  findings on the existing skills (NOT yet fixed): (1) `hpc-job-scripts` description is truncated at "Covers" because an
+  findings on the existing skills (all fixed and pushed in e5e6790, 2026-10-23: description now single-quoted, three scripts
+  converted to LF, link reworded, TOCs added to the five long reference files; `lint_skills()` then reported no findings for
+  14 skills): (1) `hpc-job-scripts` description is truncated at "Covers" because an
   unquoted ` #SBATCH` starts a YAML comment (confirmed with R `yaml` and `skills-ref`); (2) CRLF in the working copy of
   `hpc-job-scripts/scripts/check_sbatch.sh`, `hpc-job-scripts/assets/python-scratch-job.sh` and
   `animal-behaviour-tracking-analysis/scripts/dlc_metrics.py` (index is LF); (3) `mixed-models-glmm/SKILL.md` links to
@@ -244,7 +246,8 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   flags only kpms 0.6.6 (latest 0.7.1) and gratia claims (dev builds newer than CRAN 0.11.2); the rest match.
   `check_sync_setup()` tested with synthetic cfg lists and live git state; R was blocked from reading the real
   `~/.posit/assistant/settings.json` (session file guard, not worked around), so that path is untested. Note: the
-  `mixed-models-glmm` entry above says "Not yet committed" but it is in commit f57ecd1.
+  `mixed-models-glmm` entry above says "Not yet committed" but it is in commit f57ecd1. Standing rule "Verify before
+  reporting ready" added to the working rules.
 
 ## About the local user
 
