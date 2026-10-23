@@ -11,6 +11,21 @@ Repository of custom Posit Assistant skills, synced via GitHub
 - Folder name must match the `name` in the frontmatter.
 - Use the `create-skill` skill when authoring a new skill.
 
+## Research folder (`research/`)
+
+`research/` holds working notes gathered before a skill is written. These are not skills (no SKILL.md, not synced as skills).
+Read the relevant file first when starting or revising a skill, and append to it instead of starting a new one.
+
+- `research/pipeline-resources-ledger.md`: shared ledger for `python-reproducible-pipeline`, `r-reproducible-pipeline` and the
+  planned `python-r-interop`. Sections: 1 shared concerns, 2 Python tools, 3 R tools, 4 Quarto, 5 design observations,
+  8-10 rounds 2-4 (Prefect/Dagster/Nextflow docs, crew.cluster, Snakemake rerun triggers, P3M snapshots, `--report`),
+  11 round 5 (R side: targets, tarchetypes, crew, renv; local tests; open items in 11.5). Each row states what was read vs only
+  seen as a lead, so check the status column before relying on a claim. Versions are dated 2026-10-23; re-check with
+  `check_versions()`.
+- Conventions: one dated section per research round; record sources fetched, local test results, bugs/gotchas found, open
+  questions. R run from the assistant cannot write to the assistant scratch dir; use the git-ignored `tmp-examples/` for tests
+  and delete afterwards.
+
 ## Working rules
 
 - When writing or changing skill files (SKILL.md, frontmatter, scripts, references),
@@ -124,7 +139,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   BibTeX export for Quarto. Lower priority (search step already covered).
 - Added 2026-10-23 (user-approved from the reassessment). Each follows the working rules and standing rules (online check
   first, CRAN check, teaching section, capture-lessons section, verify with `github-skill-maintenance`):
-  - [ ] `r-reproducible-pipeline`: targets, renv and Quarto project structure for multi-step analyses, re-running the whole
+  - [x] `r-reproducible-pipeline` (done 2026-10-23, see Log; not yet committed; research in `research/pipeline-resources-ledger.md` sections 11-12): targets, renv and Quarto project structure for multi-step analyses, re-running the whole
     analysis including on HPC (`crew.cluster`, `future.batchtools`). Distinct from `reproducible-research-data` (the deposit).
     If it ships cluster scripts it needs the "Where this skill runs" section (assistant runs locally only).
   - [ ] `manuscript-writing-quarto`: Quarto manuscripts with journal templates, CSL, cross-references, supplementary material,
@@ -420,3 +435,28 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   Dagster, Nextflow, pytask judged from docs only. Link audit: backlinks added in `animal-behaviour-tracking-analysis`,
   `data-repository-readme`, `hpc-job-scripts`; four `no-backlink` rows recorded. `lint_skills()` and `check_skill_links()` clean (20 skills),
   `skills-ref` valid.
+
+- 2026-10-23: Research round 5 for `r-reproducible-pipeline` (ledger section 11, no skill files yet). Read the targets manual
+  (walkthrough, projects, random, literate-programming, performance, debugging, hpc), renv docs and lockfile reference, Quarto
+  project scripts. Installed from CRAN: targets, tarchetypes, crew, crew.cluster, qs2, gittargets, quarto (R pkg). Tested locally
+  on an 8-target pipeline with a Python step via `uv run`, `tar_quarto`, crew local controller: hash-based file tracking (touch,
+  comment edits ignored; unchanged output stops downstream reruns), name-derived seeds reproduce after deleting the store,
+  `crew_controller_slurm()` constructs (no submit). Gotchas: R `yaml` reads key `n` as FALSE; `reporter = "summary"` deprecated;
+  `tar_quarto` needs the `quarto` package. Not tested: renv init/snapshot on a targets project, Python chunk in a targeted
+  report, real Slurm, NFS, Linux. Open items listed in ledger 11.5. Not yet committed.
+
+- 2026-10-23: Added `r-reproducible-pipeline` (SKILL.md; `references/` targets-patterns, renv-and-pinning, hpc-crew, tool-choice, sources;
+  `assets/project-template/` with `_targets.R`, `R/`, `py/` (uv.lock), `config/`, `report.qmd`, `_dependencies.R`, `slurm/run_targets.sbatch`;
+  `scripts/check_targets_project.R`). Tested locally (Windows, targets 1.12.0, crew 1.3.3, renv 1.3.1, uv 0.12.5): template end to end
+  (Python step per sample through `uv run --locked`, dynamic branching, `tar_quarto`), skip on rerun, invalidation table, seeds reproduce after
+  deleting the store, `PIPELINE_EXECUTOR=local`, Slurm controller builds, `renv::init()` in a `callr` subprocess and a run inside the project
+  library, sbatch passes the `hpc-job-scripts` linter, checker on the template, an renv copy and a seeded-defect copy (CLI exit status too).
+  Findings: whole-`config` dependency reran every branch when a sample was added (fixed with per-setting targets); renv implicit snapshot missed
+  `quarto` (fixed with `_dependencies.R`); `tar_seed()` deprecated for `tar_seed_get()`; CRLF rewrite of a tracked file reruns dependants; the
+  assistant's R session cannot read `.Rprofile` (checker reports INFO). **Incident:** a stray `file.copy()` of an renv test project onto itself
+  truncated 63 entries in the shared renv cache (`%LOCALAPPDATA%/R/cache/R/renv/cache`), including older ones from July; repaired by copying the
+  same versions from the installed library and verified with `diff -r` (0 differences, 267 entries intact afterwards); rule recorded in the skill.
+  `lint_skills()` and `check_skill_links()` clean (21 skills), `skills-ref` valid for the new and four edited skills, `check_versions()` same.
+  Backlinks added in `python-reproducible-pipeline`, `data-repository-readme`, `hpc-job-scripts`, `hpc-r-code`; three `no-backlink` rows. Not tested:
+  `tar_make()` in a real Slurm job, crew.cluster submission, NFS, Linux/macOS, Python chunk in a targeted report, `tar_map`/`tar_rep`, undeclared-script
+  negative case, restore from a P3M snapshot URL. Not yet committed.

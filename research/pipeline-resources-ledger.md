@@ -260,3 +260,87 @@ Signature (first args): `tar_quarto(name, path = ".", output_file = NULL, workin
 - P3M PyPI snapshot URL for uv/pip; renv with a snapshot repository.
 - Prefect: local server requirement; Dagster: webserver/daemon requirement; `prefect-dask` reference.
 - Social search, Quarto Python page, abstracts of the OpenAlex hits, WSL run of the Snakemake test.
+
+## 11. Round 5 (2026-10-23): R-specific research for `r-reproducible-pipeline`
+
+Focus: targets, tarchetypes, crew, renv, Quarto. Installed from CRAN this round (allowed): targets 1.12.0, tarchetypes 0.14.1, crew 1.3.3, crew.cluster 0.4.0, qs2 0.3.1, gittargets 0.0.7, quarto (R pkg) 1.5.1. Already present: renv 1.3.1, pak, visNetwork. Quarto CLI is the RStudio-bundled one.
+
+### 11.1 Docs read (targets manual, https://books.ropensci.org/targets/)
+
+| Page | Facts for the skill |
+|---|---|
+| walkthrough.html | `_targets.R` (loads packages, `tar_option_set()`, `tar_source()`, returns a list of `tar_target()`), `R/functions.R`, `_targets/` store (objects in `_targets/objects/`; path configurable via `_targets.yaml`). Functions: `use_targets()` (>= 0.12.0), `tar_manifest()`, `tar_visnetwork()`, `tar_make()` (runs in a new external R process, only outdated targets), `tar_read()`/`tar_load()`, `tar_outdated()`, `tar_cue()`, `tar_config_set()`. Page does not say what to commit and does not describe hashing |
+| projects.html | One folder = one pipeline + one renv library + one Git repo; layout `.Rprofile`, `renv/`, `_targets.R`, `_targets.yaml`, `R/`, `data/`. Functions in `R/`, loaded with `tar_source()`. Multiple pipelines only if they share goals (`tar_config_set(script=, store=, project=)`, `TAR_PROJECT`). **Commit code, renv setup and config; do not commit the whole `_targets/` store; optionally commit `_targets/meta/meta`** (needed to check status and read targets). Page does not mention `here` or working-directory rules |
+| random.html | `tar_option_set(seed = n)`; each target gets its own deterministic seed from its **name** and the global seed (readable in `tar_meta()`); `seed = NA` disables seeding and makes targets always outdated unless `cue = tar_cue(seed = FALSE)`; `tarchetypes::tar_rep()` gives replicate seeds in a `tar_seed` column. Page does not cover parallel pitfalls or `set.seed()` inside functions |
+| literate-programming.html | Reports are targets that mostly display upstream results; `tar_quarto()` (tarchetypes >= 0.6.0.9000) handles single documents and whole Quarto projects, finds dependencies by static analysis of literal `tar_read()`/`tar_load()` calls; `execute_params` for one parameter set, `tar_quarto_rep()` for many. Keep computation out of the report |
+| performance.html | Default format RDS; `qs` for any data; `feather` needs arrow; **parquet not mentioned on this page**; `format = "file"` for data too large for memory; `memory = "transient"` plus `garbage_collection`; avoid millions of tiny targets (batch with `tar_rep()`); monitoring `tar_poll()`, `tar_progress()`, `tar_watch()`; crew for distributed work, `storage`/`retrieval = "worker"` need workers that can read the store, `deployment = "main"` for cheap targets |
+| debugging.html | `tar_option_set(error = "null")`; `tar_meta(fields = error/warnings, complete_only = TRUE)`; `tar_load_globals()` then `tar_load()` to reproduce; `tar_make(callr_function = NULL, use_crew = FALSE, as_job = FALSE)` plus `browser()`/`debug` option (restart R afterwards, can corrupt results); workspaces saved on error (`tar_workspaces()`, `tar_workspace()`, `workspace_on_error`); `tar_traceback()` |
+| hpc.html ("old way") | `tar_make_clustermq()` and `tar_make_future()` still documented; footnote warns against several concurrent `tar_make()` calls on one store (probably breaks it). The page does **not** say where the main process should run or how `tar_make()` runs inside a Slurm job (open: ask the user how their site wants it; the usual pattern is main process in a batch job or on a login node, workers via crew.cluster; not verified from docs) |
+| files.html | HTTP 404 (URL guessed); file tracking is covered on projects/walkthrough pages only |
+
+Renv (https://rstudio.github.io/renv/articles/renv.html, reference/lockfiles.html): `init()`, `snapshot()`, `restore()`, `install()`, `update()`, `history()`/`revert()`. Commit `renv.lock`, `.Rprofile`, `renv/settings.json`, `renv/activate.R` (renv writes a `.gitignore` for the library). Lockfile: `R` (Version, Repositories), `Packages` (Version, Source, Repository, Hash, Remote* fields), optional `Python` block (Version, Type, Name); JSON, hand-editable; `lockfile_modify(repos=, remotes=)` exists. Snapshot types: implicit (default; packages found by `dependencies()`), explicit (DESCRIPTION), all, custom. renv does **not** manage the R version (suggests `rig`), pandoc, system libraries or compilers (suggests Docker), and binaries that vanish fall back to source builds. Not covered on the read pages: `status()`, cache location, Bioconductor details. In implicit mode, packages used only inside `_targets.R` or `R/` are detected by static scanning of `library()`/`pkg::` calls; packages named only in `tar_option_set(packages = ...)` as strings may be missed (**hypothesis, untested**; check with `renv::dependencies()`).
+
+Quarto `scripts.html` (read): `pre-render`/`post-render` project scripts may be any shell command (`make prepare` given as an example); run in the project directory; env vars `QUARTO_PROJECT_RENDER_ALL` etc. Possible hook to run `Rscript -e 'targets::tar_make()'` before rendering (design idea, untested). Pre-render scripts cannot change the project directory or type.
+
+P3M docs: the `docs.posit.co/rspm/admin/...` URL returned only "Redirect" and the PyPI setup page is a JS app (no text). The PyPI snapshot URL form is therefore **still unconfirmed**. `pak::ppm_snapshots()` works (3-row head shown: 2017-10-10, 2017-10-11, 2017-10-12 ...); `pak::ppm_repo()` does not exist (not an export).
+
+### 11.2 Local tests (Windows 11, R 4.6.0, targets 1.12.0, tarchetypes 0.14.1, crew 1.3.3, uv 0.12.5, Quarto from RStudio)
+
+Scratch pipeline in the git-ignored `tmp-examples/tgt/` (deleted afterwards): config file, a Python script run through `system2("uv", c("run","--no-project","python", ...))`, `format = "file"` targets for config, Python script and CSV output, `lm`, a random target, and `tar_quarto()` with an R chunk calling `tar_read(fit)`. Eight targets.
+
+| Test | Result |
+|---|---|
+| First run | 8 completed; Quarto report 6.8 s; the `uv run` Python step works under `tar_make()` (callr) |
+| Rerun | 8 skipped |
+| `touch` config file (content unchanged) | Nothing outdated (targets uses content hash for file targets) |
+| Comment-only change in `R/functions.R` | Nothing outdated (comments ignored) |
+| Add an unused function to `R/functions.R` | Nothing outdated (only used functions count) |
+| Comment appended to the Python script (declared as a file target) | `py_script` and its dependant `sim_csv` re-ran, but **`dat`, `fit`, `report` skipped** because the output CSV hash was unchanged |
+| Change `n_obs` 20 to 30 in config | Outdated: `cfg_file`, `cfg`, `sim_csv`, `dat`, `fit`, `report` (`noise` and `py_script` not) |
+| Change the body of the used function `fit_model` | Outdated: `fit` and `report` only |
+| Delete `_targets/`, rebuild only `noise` | Identical random numbers (seed from target name and global seed) |
+| `crew::crew_controller_local(workers = 2)` set in `tar_option_set(controller=)` | Pipeline ran to completion (7 completed, 1 skipped) |
+| `crew.cluster::crew_controller_slurm(...)` with `crew_options_slurm(partition, cpus_per_task, memory_gigabytes_required, time_minutes, log_output, script_lines, script_directory)` | **Constructed without error** (no `sbatch` here, `Sys.which("sbatch")` empty), class `crew_class_controller`; no job submitted. `crew_options_slurm()` formals: `verbose, command_submit, command_terminate, script_directory, script_lines, log_output, log_error, memory_gigabytes_required, memory_gigabytes_per_cpu, cpus_per_task, time_minutes, partition, n_tasks` |
+| Warnings seen | "package built under R version 4.6.1" only (harmless here, but `tar_meta(fields = warnings)` shows them on the report target) |
+
+Findings and gotchas:
+
+1. **YAML 1.1 trap:** R `yaml::read_yaml()` read the key `n: 20` as `FALSE: 20` (the key `n` means "no"). Python run then failed with a confusing argument error. Use descriptive keys (`n_obs`), or quote keys; applies to any config shared between R and Python (`y`, `n`, `yes`, `no`, `on`, `off`, `NO` for Norway codes). Also check with `str(cfg)`.
+2. `tar_make(reporter = "summary")` is deprecated since targets 1.10.1.9010; use `"balanced"`, `"verbose"` or `"timestamp"`.
+3. `tar_quarto()` needs the CRAN package `quarto` (error "The package "quarto" is required" otherwise).
+4. The Python script is only tracked if it is declared as a `format = "file"` target **and** passed to the function that calls it (the target `py_script` above). This was the design; the negative case (script not declared, edit not detected) is expected from the model but was **not tested**.
+5. Hash-based file tracking means: no spurious reruns from mtime changes, unlike Snakemake's mtime-sensitive default (compare section 10.1); useful to explain when users choose between the tools. NFS behaviour of targets was not tested.
+6. R's session guard blocks `dir.create()` into the assistant scratch directory (`%TEMP%/p-cmmwB5/...`); use the git-ignored `tmp-examples/` in the project for R-driven tests.
+7. `dir.create()` is not vectorised (an error "invalid 'path' argument" when given several paths); trivial but it cost one run.
+
+### 11.3 OpenAlex (R/httr2, authors checked from the returned fields, abstracts not read)
+
+Free-text `search=` queries for R pipelines returned unrelated highly cited papers (NumPy, phyloseq, SciPy); filter-based queries returned almost nothing. Usable finds: renv software record W4399636582 (Ushey, "renv: Project Environments", 2019, 69 citations, venue empty, so it is a software citation); W4409740950 (Hillemann et al. 2025, "Code review in practice: A checklist for computational reproducibility and collaborative research", 1 citation, not assessed). Already in section 8.4 and reusable for the R skill: targets JOSS paper W3119281122, Sandve et al. W2036318837, Wilson et al. W2963508088, Gupte et al. W3206946405. No peer-reviewed comparison of targets with Snakemake or Nextflow found. Retrieval note: `title.search:` with several words works; `title_and_abstract.search.exact` with `OR` of two quoted phrases matched "renv" as a substring of unrelated words (virology hits); do not use it for short tokens.
+
+### 11.4 Design observations for `r-reproducible-pipeline` (not decisions)
+
+1. Default stack: **renv + targets + tarchetypes (`tar_quarto`) + Quarto**, config in YAML read by one `config` target, seed in `tar_option_set(seed=)`. Python steps as file targets that call `uv run` (tested pattern above); mixed projects point to `python-reproducible-pipeline` (Snakemake) or to the planned `python-r-interop`.
+2. When to prefer Snakemake over targets: Python-centric or many non-R tools, or the user already works with it; when targets: mostly R, functions as units, per-target hashing, `tar_quarto`. Tell the user the rerun semantics differ (hash vs mtime plus code/params triggers).
+3. HPC: crew.cluster Slurm controller plus `tar_make()` in one batch job (or on a login node if the site allows) is the likely route; **how the main process is started is not documented in the pages read** (ask the user to check their site docs and to run test commands; the assistant stays local). Always set `log_output`, `time_minutes`, `script_directory`; `seconds_wall` is not the Slurm limit (section 9.1).
+4. Provide a starter template (`assets/project-template/`) analogous to the Python skill's, plus a static checker (e.g. `scripts/check_targets_project.R`) for: missing renv.lock, `_targets/` committed, no seed, unquoted/ambiguous YAML keys, non-file targets reading files, `reporter = "summary"`, `setwd()` in functions. Checks must be tested on a seeded-defect copy before claiming them.
+5. Version claims to re-check before writing: targets 1.12.0, tarchetypes 0.14.1, crew 1.3.3, crew.cluster 0.4.0 (CRAN, 2026-10-23), renv 1.3.1.
+
+### 11.5 Still open after round 5
+
+- `renv::init()`/`snapshot()` on a targets project (does implicit snapshot find packages used in `_targets.R`, including `tar_option_set(packages=)`?), renv + Quarto chunks, `renv` + uv `.venv` with `RETICULATE_PYTHON`. Not run because `init()` restarts the user's session; needs a separate Rscript process or user consent.
+- A `tar_quarto()` report with a Python chunk (knitr + reticulate picking the right Python); the Quarto Python page is still unread.
+- Undeclared-script negative test; `tar_make()` inside a real Slurm job; crew.cluster job submission; NFS behaviour; Linux/macOS.
+- `tarchetypes` factories (`tar_map`, `tar_rep`, `tar_files`), `tar_resources_*`, dynamic branching: only read via the performance and literate-programming pages; not tested.
+- targets data-store formats on this machine: `qs2`, arrow/parquet (arrow not installed; installing from CRAN is allowed).
+- P3M PyPI snapshot URL; renv `Repositories` with a snapshot URL (restore behaviour).
+- Prefect, Dagster, social search, remaining Snakemake items (see 10.5).
+
+## 12. Skill build (2026-10-23): `r-reproducible-pipeline`
+
+Closes part of 11.5: `renv::init()` on a targets project ran in a `callr` subprocess; implicit snapshot recorded 64 packages but missed `quarto`
+(fixed by a never-run `_dependencies.R` with `library(quarto)`); the pipeline then ran inside the renv project library with `renv::status()$synchronized`
+TRUE. The lockfile recorded the user's configured repository (`packagemanager.posit.co/cran/latest`), so a dated URL must be set before `init()` to be recorded.
+Template findings: depending on the whole `config` list invalidated every dynamic branch when a sample was added (use one small target per setting; then only new
+branches ran); `tar_seed()` is deprecated (use `tar_seed_get()`); CRLF vs LF rewrite of a file target reruns dependants. Hazard: copying an renv project onto itself
+truncated shared-cache entries (63 repaired from the installed library, verified with `diff -r`). Still open: items in 11.5 that concern real Slurm, NFS, Python chunks in
+reports, `tar_map`/`tar_rep`, and P3M snapshot restore. The skill's sources are in `r-reproducible-pipeline/references/sources.md`.
