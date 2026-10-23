@@ -88,3 +88,9 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
   templates, scratch template (periodic sync, USR1, restart, failed-sync keeps scratch) with an rsync
   stand-in, R skeleton (non-fork path, resume). Not tested: real rsync on Linux, mclapply fork path, GPU
   templates, torchrun/multi-node patterns, anything on a real cluster.
+- 2026-10-23: Added `deeplabcut-hpc` (DLC on HPC). Written from the official docs only, starting at the DLC LLM
+  entry point (https://deeplabcut.github.io/DeepLabCut/llms.txt). Covers headless install, PyTorch config keys,
+  DLC-specific pitfalls, a training job skeleton, and a troubleshooting section that searches upstream
+  issues/PRs/commits via `gh`. States that the assistant runs locally only and cluster-side commands are
+  instructions for the user. Not tested: nothing run on a cluster, `gh` commands not run, function signatures
+  not hard-coded (lookup in live docs).
