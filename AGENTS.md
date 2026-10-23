@@ -321,6 +321,18 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   timeout, script LF/`bash -n`/`stop_hook_active`, data-folder counts). Tested with synthetic good/bad configs and a synthetic
   lessons folder, and on the user's real `settings.json` pasted as text (R cannot read that file; all ok). Committed and pushed.
 
+- 2026-10-23: Added `job-opportunity-watch` (SKILL.md; `scripts/jobwatch.R`, `run_probe.R`; references `classification`,
+  `state-and-files`, `maintaining-links-and-profile`, `portal-quirks`; assets links and profile templates). Design: replaces a
+  one-shot Copilot prompt that degraded over time; model-free R steps do parsing, polite probing (httr2/rvest), diff against
+  `state/` and a coverage audit, the assistant triages, verifies and classifies A-E, and edits to links file or profile need
+  user confirmation (`jw_add_link`/`jw_write_confirmed`, backup + `confirmed = TRUE`). User data lives in an ignored
+  `job-watch/` folder (also `tmp-examples/` ignored). Tested on the user's real 104-link list, two runs (1 min each): 85 ok,
+  ~10 JS-suspect, 4 blocked, 2-4 errors, 3 search-engine URLs; run 2 diff gave 5-27 new links and 1-2 queue items; link
+  insertion, backups, opportunity upsert/expire, headless digest. Bugs found and fixed: invalid-byte pages broke `gsub`,
+  `table[["x"]]` on missing names, TSV quoting. `lint_skills()` clean, `skills-ref` valid, no version claims. Not tested:
+  Task Scheduler/hook, real vacancy verification by the assistant, non-English title filter quality, other machines.
+  Not yet committed.
+
 ## About the local user
 
 - Name: Thorbjörn Sievert (git `user.name`; email `thorbjoern.sievert@gmx.net`, git `user.email`).

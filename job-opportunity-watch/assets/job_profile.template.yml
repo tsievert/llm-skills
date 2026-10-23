@@ -1,0 +1,66 @@
+# job_profile.yml for job-opportunity-watch (template; fill in with the user, keep their wording)
+# The helper scripts read only target_search.excluded_job_titles; the assistant reads everything.
+career_search_profile:
+  profile_version: "YYYY-MM-DD"
+  profile_status: "Draft"          # Draft | Validated
+
+  target_search:
+    opportunity_tracks:
+      primary_employment: {enabled: true, report_separately: true}
+      supplementary_expert_opportunities:
+        enabled: true
+        report_separately: true
+        accepted_types: ["Paid consultancy", "Expert rosters", "Unpaid panels", "Professional networks"]
+        classification_rules:
+          - "Registration on a roster does not guarantee work or remuneration."
+          - "Do not rank unpaid opportunities with salaried employment."
+    priority_role_types:            # High priority | Medium priority | Interested
+      permanent_research_role: "High priority"
+      tenure_track_assistant_professor: "High priority"
+      postdoctoral_researcher: "Medium priority"
+    accepted_job_titles: ["Permanent researcher", "Assistant professor", "Postdoctoral researcher"]
+    conditional_job_titles:
+      research_assistant:
+        status: "Conditional"
+        rule: "Only when a PhD is required and the work is substantive."
+    excluded_job_titles: ["Full professor", "PhD researcher", "Technician"]
+
+  expertise_and_interests:          # one entry per method/skill: experience + interest or willingness
+    r_programming: {experience: "Strong", interest_in_using: "High"}
+    telemetry_and_biologging:
+      experience: "None"
+      interest: "Conditional"
+      ranking_rule: "Penalise roles where it is the dominant focus."
+
+  animal_systems:                   # or other focal systems of the user's field
+    very_high_fit: {focal_system_1: {experience: "Strong", interest: "Strong"}}
+    excluded_as_primary_system: ["System X"]
+
+  scientific_topics:
+    very_high_priority: {topic_1: {experience: "Very strong", interest: "Primary"}}
+    excluded_if_central: ["Topic Y"]
+
+  interdisciplinary_method_boundaries:
+    molecular_biology: {collaborator_use: "Accept", personal_laboratory_work: "Exclude"}
+
+  employment_conditions:
+    contract_duration: {hard_minimum: "1 year", preferred_minimum: "2 years"}
+    one_year_postdoctoral_positions:
+      status: "Exceptional matches only"
+      exceptional_match_definition: "Describe what counts as exceptional."
+    employment_percentage: {minimum_fte_percent: 100, part_time_acceptable: false}
+    salary: {minimum_gross_salary: null, exclude_if_salary_not_advertised: false}
+
+  geography:
+    current_base: "Country"
+    primary_search_region: "Europe"
+    geographic_ranking:
+      strict_country_ranking: false
+      strong_location_bonus: ["Country A"]
+      moderate_location_bonus: ["Country B"]
+    excluded: ["Country or region"]
+    outside_europe:
+      status: "Exceptional scientific matches only"
+    work_authorisation:
+      citizenship: ["Country"]
+      screening_rule: "Include all suitable roles; do not filter solely on work authorisation."

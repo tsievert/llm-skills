@@ -34,3 +34,7 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+
+# Personal job-search inputs and state (never commit)
+tmp-examples/
+job-watch/

@@ -1,0 +1,6 @@
+url,section,label,enabled,added,added_by,replaces,note
+https://euraxess.ec.europa.eu/jobs/search,Aggregators,EURAXESS,TRUE,,user,,
+https://academicpositions.com/,Aggregators,Academic Positions,TRUE,,user,,
+https://www.jyu.fi/en/workwithus/open-jobs,Finland,University of Jyvaskyla,TRUE,,user,,
+https://www.slu.se/en/about-slu/work-at-slu/jobs-vacancies/,Sweden,SLU,TRUE,,user,,
+https://chemecol.org/employment/,Society boards,Chemical ecology society,TRUE,,user,,"comma, in note allowed when quoted"
