@@ -20,7 +20,7 @@ Repository of custom Posit Assistant skills, synced via GitHub
 - The same applies to hooks and sync scripting: check the hooks docs
   (https://assistant.posit.co/docs/features/hooks/) before changing hook config.
 
-## Auto-sync protocol (status: installed and tested in isolation; not yet verified in a live session)
+## Auto-sync protocol (status: installed and verified in a live session)
 
 Goal: skills are installed globally (all projects) and kept current with GitHub.
 
@@ -60,7 +60,7 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
 ## Open decisions
 
 - ~~Clone-in-place vs. copy~~ Resolved: use `skills.paths` (see implementation notes).
-- After sync works, delete the old `~/.posit/assistant/skills/openalex` (repo copy replaces it).
+- ~~Delete the old `~/.posit/assistant/skills/openalex`~~ Done 2026-10-23 (repo copy replaces it).
 - Whether sync should delete skills removed from the repo (default: no).
 - Handling local uncommitted edits in the clone (default: skip pull and warn).
 
@@ -73,6 +73,7 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
   isolated HOME: up to date, throttled, dirty tree (skip + warn), clean fast-forward, local
   ahead (skip + warn), offline (silent). All exit 0.
 - 2026-10-23: SessionStart hook and `skills.paths` added to `~/.posit/assistant/settings.json`.
-  TODO: in a new conversation, verify `/openalex` resolves and
-  `~/.posit/state/llm-skills-last-check` is created; then delete the old
-  `~/.posit/assistant/skills/openalex`.
+  Verified after RStudio restart: the state file below was created and `openalex` loaded from the repo path. Checked: `/openalex` resolved and
+  `~/.posit/state/llm-skills-last-check` was created. Old copy of
+  `~/.posit/assistant/skills/openalex` deleted (diffed identical to the repo copy first).
+  Not yet observed: a live pull of a real upstream change (only tested in the scratch repo).
