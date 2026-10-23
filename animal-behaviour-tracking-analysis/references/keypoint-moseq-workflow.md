@@ -11,7 +11,7 @@
 - [Advanced options (from the docs, none run here)](#advanced-options-from-the-docs-none-run-here)
 - [Data requirements (FAQ)](#data-requirements-faq)
 
-Source: kpms stable docs (modeling tutorial, FAQs, advanced topics, io API) read on 2026-10-23, plus runs on 0.6.6. Re-check against the installed version.
+Source: kpms stable docs (modeling tutorial, FAQs, advanced topics, io API) read on 2026-10-23, plus runs on 0.6.6 and (2026-10-23, scripts only) 0.8.0. Re-check against the installed version. 0.8.0 adds `fps=` to `fit_model`, `metadata=` to `init_model`, `check_videos` (replaces `check_video_paths`) and `check_installation`; the script does not use them and works without.
 
 
 ## Pipeline (interactive Python API, as in the tutorial)

@@ -7,7 +7,8 @@ Load `hpc-cluster-docs` first for the site's modules, partitions and GPU syntax,
 ## Install
 
 - Docs (install page, 2026-10-23): conda env with Python 3.10, then `pip install keypoint-moseq` (CPU) or `pip install keypoint-moseq[cuda]` (GPU, CUDA 12). Supported platforms follow JAX: CPU and GPU on Linux, CPU on macOS and Windows; GPU on WSL2 experimental. The first import after installation can take minutes.
-- PyPI metadata (2026-10-22): kpms 0.7.1, `requires_python >=3.10`; the 0.7.0 release notes say Python 3.10-3.14 and that pins on numpy, jax, pandas and others were dropped, so a fresh install gets the newest versions (NumPy 2, pandas 3 on Python 3.11+). The install page still says 3.10; either works per the release notes, but use the version the cluster's JAX wheels support.
+- Release 0.8.0 (PyPI and GitHub, 2026-10-23): GPU is now strictly the `[cuda]` extra (Linux, CUDA 12) and a plain `pip install keypoint-moseq` is CPU-only; macOS and Windows get the current release again (earlier releases pulled Linux-only CUDA packages, so pip there silently fell back to 0.6.6). Adds `kpms.check_installation()`, which is worth asking the user to run after every install. Check `pip list` for the actual version, because a silent fallback to an old release is the failure to look for.
+- PyPI metadata (2026-10-22, 0.7.1): `requires_python >=3.10`; the 0.7.0 release notes say Python 3.10-3.14 and that pins on numpy, jax, pandas and others were dropped, so a fresh install gets the newest versions (NumPy 2, pandas 3 on Python 3.11+). The install page still says 3.10; either works per the release notes, but use the version the cluster's JAX wheels support.
 - Install on a login node or in an interactive job, into an environment on shared storage; never inside the batch script. Use `pip install "keypoint-moseq[cuda]"` so JAX brings CUDA 12 wheels; a `module load cuda` is usually not needed but the NVIDIA driver must be new enough (ask the user for `nvidia-smi` output).
 - Verify on a GPU node (ask the user to run it and paste the output):
 
@@ -19,8 +20,8 @@ python -c "import jax, keypoint_moseq as k; print(k.__version__, jax.__version__
 
 ### Findings from local testing on Windows (2026-10-23)
 
-- kpms 0.7.x could not be installed on Windows with `uv pip`: it declares `jax-cuda12-pjrt`, which only has Linux wheels (and an older pinned version was yanked), so resolution fails. The newest installable was 0.6.6 (CPU). This is not a problem on Linux clusters, but it means Windows cannot reproduce a 0.7.x cluster environment.
-- kpms 0.6.6 with pandas 3 fails in `check_nan_proportions` (`Styler` has no `applymap`). Install `pandas<3` for 0.6.x. The 0.7.0 notes mention pandas 3 fixes for `plot_syll_stats_with_sem`; not tested.
+- kpms 0.7.x could not be installed on Windows with `uv pip` (it declared the Linux-only `jax-cuda12-pjrt`), so the newest installable was 0.6.6. **Fixed in 0.8.0**, which installed on Windows (Python 3.12, uv, CPU; jax 0.12.0.1, numpy 2.5.4) without problems.
+- `check_nan_proportions` fails with pandas 3 (`Styler` has no `applymap`) in 0.6.6 and still in 0.8.0 (pandas 3.1.0). Install `pandas<3` (2.3.3 worked with 0.8.0). The 0.7.0 notes mention a pandas 3 fix for `plot_syll_stats_with_sem` only; not tested.
 - A CPU fit of 12 iterations on 4 x 1500 frames took roughly 45 s including JIT compilation; useful for smoke tests, not for real data.
 
 ## Job layout
