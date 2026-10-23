@@ -14,6 +14,7 @@ The assistant runs only on the user's local machine, never on the cluster. It wr
 - Do not try to run `sbatch`, `squeue`, `nvidia-smi`, `torch.cuda.is_available()` and similar cluster-side checks. Give the user the exact command to run on the cluster and ask for the output.
 - Ask the user for the cluster's DLC version (`python -c "import deeplabcut; print(deeplabcut.__version__)"`), PyTorch/CUDA versions and log excerpts instead of inspecting them. The local install, if any, may differ.
 - Local tools (web fetch, `gh`, linting with `check_sbatch.sh`, syntax checks of Python) are available and should be used. Cluster-side commands in this file are instructions for the user, not for the assistant to execute.
+- **Requirement:** whenever information is needed that only the cluster can provide, stop and ask the user to run the specific shell command(s), given in a code block, and paste back the output. Do not guess or proceed on assumptions.
 
 ## Step 1: Consult the official LLM entry point
 

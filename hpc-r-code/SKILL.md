@@ -9,6 +9,20 @@ Run `hpc-cluster-docs` first (R module names, library policy, internet on comput
 nodes are site-specific). Use `hpc-job-scripts` for general script rules, logs and
 arrays, and `hpc-resource-allocation` for sizing.
 
+## Where this skill runs
+
+The assistant runs on the user's local machine (its R session is local), not on the
+cluster. It writes and reviews scripts and can run local syntax checks or small tests,
+but module names, library paths, forked parallelism (`mclapply` on Linux), core limits
+and `future.batchtools` submission are untested until the user runs them on the cluster.
+`parallelly::availableCores()` locally says nothing about the allocation. Ask the user
+for cluster-side output.
+
+**Requirement:** whenever information is needed that only the cluster can provide (R
+module names, `.libPaths()`, installed packages, allocation, logs), stop and ask the
+user to run the specific shell command(s), given in a code block, and paste back the
+output. Do not guess or proceed on assumptions.
+
 ## Job script basics
 
 - Run scripts with `Rscript script.R` (non-interactive). `R CMD BATCH script.R` also

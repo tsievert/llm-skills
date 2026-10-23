@@ -14,6 +14,17 @@ Examples of real site variance found while building this skill: one site says no
 set `--partition` at all; another requires `--account` and `--partition`; one forbids
 `--mem` and overriding `OMP_NUM_THREADS`; one effectively bans job arrays.
 
+## Where this skill runs
+
+The assistant runs on the user's local machine, not on the cluster. It cannot log in,
+run `sbatch`/`sinfo`/`module avail` or read the cluster's filesystem. Cluster-side
+commands here are instructions for the user to run and paste back. Only public
+documentation (web fetch) can be read directly.
+
+**Requirement:** whenever information is needed that only the cluster can provide,
+stop and ask the user to run the specific shell command(s), given in a code block, and
+paste back the output. Do not guess or proceed on assumptions.
+
 ## Workflow
 
 1. **Check what is already known.** Look in project memory (AGENTS.md section

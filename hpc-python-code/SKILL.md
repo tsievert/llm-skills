@@ -8,6 +8,19 @@ description: Writes and reviews Python code that runs inside HPC batch jobs (Slu
 Run `hpc-cluster-docs` first if the cluster is unknown, and write the submission
 script with `hpc-job-scripts`. This skill covers the Python side.
 
+## Where this skill runs
+
+The assistant runs on the user's local machine, not on the cluster. It can write code
+and run syntax checks or small local tests (the skeleton runs on Windows/macOS/Linux),
+but not on real Slurm: signal/requeue paths, `SLURM_*` variables, cgroup CPU limits and
+shared-filesystem behaviour are untested until the user runs the job and shares the log.
+Local package versions may differ from the cluster's.
+
+**Requirement:** whenever information is needed that only the cluster can provide
+(Python/package versions, allocation, logs, file system state), stop and ask the user
+to run the specific shell command(s), given in a code block, and paste back the
+output. Do not guess or proceed on assumptions.
+
 ## Start from the skeleton
 
 [assets/hpc_skeleton.py](assets/hpc_skeleton.py) is a working, stdlib-only template:

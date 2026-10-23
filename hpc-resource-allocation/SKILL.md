@@ -10,6 +10,19 @@ hardware; under-requesting gets jobs killed. The goal is accurate, measured requ
 with modest headroom. Get site limits from `hpc-cluster-docs` first (partition
 maximums and default memory vary).
 
+## Where this skill runs
+
+The assistant runs on the user's local machine, not on the cluster, so it cannot run or
+measure jobs. In the workflow below, "run" and "measure" are steps for the user: give
+the exact `sbatch`/`sacct`/`seff` commands and size the request from the numbers they
+paste back. Do not estimate memory or time from local runs without saying that the
+cluster hardware and input may differ.
+
+**Requirement:** whenever information is needed that only the cluster can provide
+(`sacct`/`seff` numbers, partition limits, queue state), stop and ask the user to run
+the specific shell command(s), given in a code block, and paste back the output. Do
+not guess or proceed on assumptions.
+
 ## Workflow: measure, then size
 
 1. **Classify the workload.** Serial, multithreaded (one process, many threads),

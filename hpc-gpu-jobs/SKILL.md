@@ -9,6 +9,18 @@ Run `hpc-cluster-docs` first: GPU syntax, types, partitions, QOS limits and CUDA
 modules are site-specific. Use `hpc-job-scripts` for the general script rules and
 `hpc-python-code` for checkpoint/signal code.
 
+## Where this skill runs
+
+The assistant runs on the user's local machine, not on the cluster, and usually has no
+matching GPU. It writes and lints job scripts and code; it cannot run `nvidia-smi`,
+`torch.cuda.is_available()`, `torchrun` or `sbatch`. GPU, multi-GPU and rendezvous
+behaviour is untested until the user runs it; ask for the commands' output and logs.
+
+**Requirement:** whenever information is needed that only the cluster can provide (GPU
+types, driver/CUDA versions, `nvidia-smi` output, logs), stop and ask the user to run
+the specific shell command(s), given in a code block, and paste back the output. Do
+not guess or proceed on assumptions.
+
 ## Request only what the code uses
 
 - Only GPU-enabled code benefits. A GPU request on CPU-only code wastes resources,

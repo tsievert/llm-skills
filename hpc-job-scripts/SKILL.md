@@ -9,6 +9,19 @@ Assumes the cluster is known. If not, run `hpc-cluster-docs` first. Slurm is use
 below; for PBS/LSF/SGE keep the same structure and translate directives from the
 site's docs.
 
+## Where this skill runs
+
+The assistant runs on the user's local machine, not on the cluster. It writes and lints
+scripts locally (`scripts/check_sbatch.sh` is a static check); the user copies them to
+the cluster, submits them and reports back. Never try to run `sbatch`, `squeue` or
+`sacct`; give the user the command and ask for the output. A passing lint or a local
+dry run of a script does not show it works under Slurm.
+
+**Requirement:** whenever information is needed that only the cluster can provide
+(job state, logs, `sacct` output, file listings), stop and ask the user to run the
+specific shell command(s), given in a code block, and paste back the output. Do not
+guess or proceed on assumptions.
+
 ## Workflow
 
 1. Confirm cluster profile (`hpc-cluster-docs`) and size the request (`hpc-resource-allocation`).
