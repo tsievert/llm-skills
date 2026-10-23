@@ -1,0 +1,56 @@
+# Starter .gitignore for a research analysis project (R, Python, Quarto).
+# Read the comments and delete what does not apply. Rules are ordered: later lines win.
+
+# --- R and RStudio ---
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*_cache/
+# renv writes its own renv/.gitignore (library/ is ignored there); renv.lock and renv/activate.R are tracked
+
+# --- Python ---
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# uv.lock and pyproject.toml are tracked
+
+# --- Regenerable pipeline and render output (rebuild with the pipeline) ---
+_targets/
+.snakemake/
+/.quarto/
+/_site/
+*_files/
+# _freeze/ is deliberately NOT ignored: Quarto recommends committing it when rendering is expensive
+
+# --- Secrets: never commit; rotate anything that was ---
+.env
+.Renviron
+.netrc
+*.pem
+*.key
+*.p12
+*.pfx
+
+# --- OS and editor files ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# --- Lock files from tools: only the pipeline lockfiles are wanted ---
+# Do NOT use a bare `*.lock` here: it also hides renv.lock and uv.lock.
+# If you must, add the two negations right below it:
+# *.lock
+# !renv.lock
+# !uv.lock
+
+# --- Data: originals stay on the server; Git keeps a manifest, not the files ---
+# Write `data/*`, never `data/`: a negation under an excluded directory does nothing.
+data/*
+!data/README.md
+!data/manifest.tsv
+# Small input tables that ARE meant to be tracked can get their own negation, e.g.:
+# !data/lookup_species.csv

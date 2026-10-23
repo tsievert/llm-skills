@@ -156,7 +156,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
     text for the user to apply. No large generated prose.
   - [ ] `python-r-interop`: reticulate and uv environments, R/Python data exchange via Arrow/parquet, Windows pitfalls seen in
     this repo (blocked `~/.posit` paths from the R session, hdf5r dimension order, pandas pins).
-  - [~] `git-for-research-projects` (research round 1 done 2026-10-23, see Log and `research/data-and-git-ledger.md`; no skill files yet):
+  - [x] `git-for-research-projects` (built 2026-10-23, see Log; not yet committed; research in `research/data-and-git-ledger.md`):
     Git conventions for analysis repos, large files (git-lfs, DVC), `.gitignore` for data and
     secrets, release tagging linked to Zenodo DOIs. Overlaps `github-skill-maintenance` only in commit steps. Must cover: cloud-sync
     folders (the user's own repositories live in a Syncthing folder), `*.lock` vs `renv.lock`, gitignore negation rules, Windows
@@ -527,3 +527,19 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   draft create, tiny upload, read back and draft delete worked, nothing published, `setUploadType` deprecated, `addCreator` with an affiliation string 404s, `record$getFiles`
   not a method. Token never written anywhere. User decision (ledger 10.4): large files stay on university servers and are deposited or linked from there, never stored in GitHub
   repositories, so GIT covers no LFS or DVC walkthrough and RRD gets a manifest and checksum step plus a README line on where the original data live.
+
+- 2026-10-23: Built `git-for-research-projects` (SKILL.md; `scripts/audit_repo.R` with `audit_repo()`, `release_check()`, `data_manifest()`,
+  `verify_manifest()`, `write_citation_cff()`; `assets/gitignore-research`, `assets/gitattributes-research`; references `ignore-and-attributes`,
+  `secrets-and-history`, `data-and-large-files`, `releases-and-citation`, `windows-and-sync`, `sources`). Scope follows ledger sections 7 and 10:
+  no LFS/DVC walkthrough (plain-language table only), Syncthing as one short hazard note, data stay on the server with a tracked manifest.
+  Online checks: Agent Skills spec, Anthropic best practices, git gitignore docs, GitHub sensitive-data docs, Quarto `_freeze` page (commit it).
+  CRAN check: `gitignore` 0.1.8 (toptal templates; its R template ignores `docs/`, so only a starting block), `git2rdata` 0.5.2 (installed, not tested),
+  `cffr`, `gert`, `usethis` (`git_vaccinate()` edits the global ignore, not run); no CRAN secret scanner found. Tested (Windows, Git 2.55, R 4.6.0):
+  audit on a seeded scratch repo (all checks fired; first run missed `token <- "..."` because the pattern required `=` or `:`, fixed), no false
+  positives on this repo except the true sync-folder finding; manifest round trip; `write_citation_cff()` (bug found and fixed: `lapply(authors,
+  as_cff_person)` gave nested authors, ORCID survives only as `(ORCID: <https://orcid.org/...>)`; invalid SPDX licence and malformed author rejected;
+  one earlier nested-authors file validated as TRUE, unexplained, a later direct test returned FALSE); `release_check()` before/after tagging;
+  starter `.gitignore`/`.gitattributes` in a scratch repo; `uvx git-filter-repo --sensitive-data-removal` on a clone (works, keeps `origin`).
+  `lint_skills()` and `check_skill_links()` clean (22 skills), `skills-ref` valid for the new skill and the three edited ones. Backlinks added in
+  `r-reproducible-pipeline`, `python-reproducible-pipeline`, `data-repository-readme`; one `no-backlink` row (`hpc-job-scripts`). Not tested: Linux/macOS,
+  push or GitHub Support side of a rewrite, gitleaks, pre-commit, case collisions and long paths, real Zenodo release, `git2rdata`, submodules.

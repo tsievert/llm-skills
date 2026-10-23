@@ -106,6 +106,7 @@ template against each repository's own template files.
 - `manuscript-figures-ggplot`: figures that use the same column labels as the data dictionary.
 - `python-reproducible-pipeline`: a pinned, re-runnable workflow (uv lock, Snakemake) to deposit with the data so the results can be regenerated.
 - `r-reproducible-pipeline`: the R counterpart (targets, renv lockfile, Quarto report) to deposit with the data.
+- `git-for-research-projects`: the repository side of a deposit: what stays out of Git, a checksum manifest of server-held data, tagging a version and CITATION.cff.
 
 ## Explain the reasoning (teaching rule)
 
