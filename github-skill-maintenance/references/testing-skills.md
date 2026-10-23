@@ -71,6 +71,11 @@ whether the skill is ever used.
 - Shell scripts: LF endings (`.gitattributes` enforces LF in the index, but a working
   copy written on Windows can still be CRLF), a shebang, `bash -n`.
 
+- Package-manager tests (renv, uv, conda) go into disposable copies of source files only. Never copy, move, sync or delete
+  recursively over folders that link into a shared cache (`renv/library`, `.venv`, junctions): a write through the link damages the
+  shared cache for every project. Point caches at a scratch folder when a test must write into an environment (renv: `RENV_PATHS_CACHE`,
+  uv: `UV_CACHE_DIR`).
+
 ## When to stop
 
 Stop when the failures left are inconsistent rather than systematic, or when a change

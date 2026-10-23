@@ -29,6 +29,14 @@ two; `.python-version` is recommended in third-party summaries and is what the c
 asks for). Do not commit `.venv/`. The lock is universal (one file for all platforms).
 This repo's own `.gitignore` ignores `*.lock`; a project repository must not.
 
+## Shared-cache hazard (uv)
+
+With `--link-mode hardlink` (uv's default on Windows and Linux; macOS clones) a file in `.venv` and the copy in the uv cache are
+the same file. Tested 2026-10-23 with uv 0.12.5 on Windows: truncating a venv file emptied the cache copy too (2 links, 34,703 bytes
+to 0), which would damage every project that uses that package. Never copy over, truncate or overwrite `.venv`; delete and recreate
+it from the lock (`uv sync --locked`). For tests that may write into environments, set `UV_CACHE_DIR` to a scratch folder or use
+`--link-mode copy`. The same class of problem was seen with renv (see `r-reproducible-pipeline`).
+
 ## Date pinning
 
 `exclude-newer` limits resolution to releases before a timestamp. Put it in

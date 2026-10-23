@@ -149,7 +149,9 @@ lesson_problems <- function(lessons) {
                                                                       problem = why, stringsAsFactors = FALSE)
   rbind(bad(!lessons$type %in% types, "type missing or not in the allowed list"),
         bad(is.na(lessons$symptom) | !nzchar(lessons$symptom), "no symptom"),
-        bad(!lessons$confidence %in% c("high", "medium", "low"), "confidence invalid"),
+        # use-case entries describe usage, not a claim, so confidence is optional there
+        bad(!lessons$confidence %in% c("high", "medium", "low") & !(lessons$type %in% "use-case" & is.na(lessons$confidence)),
+            "confidence invalid"),
         bad(!nzchar(lessons$title), "no title"),
         if ("known_skill" %in% names(lessons)) bad(!lessons$known_skill, "skill folder not found in the repo"))
 }

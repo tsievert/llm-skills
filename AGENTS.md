@@ -460,3 +460,6 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   Backlinks added in `python-reproducible-pipeline`, `data-repository-readme`, `hpc-job-scripts`, `hpc-r-code`; three `no-backlink` rows. Not tested:
   `tar_make()` in a real Slurm job, crew.cluster submission, NFS, Linux/macOS, Python chunk in a targeted report, `tar_map`/`tar_rep`, undeclared-script
   negative case, restore from a P3M snapshot URL. Not yet committed.
+
+## Lessons triage state
+- Lessons usage watermark: 2026-10-23T19:33:29

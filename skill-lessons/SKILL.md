@@ -84,7 +84,7 @@ environment: {os: "Windows 11", r: "4.6.0", python: null, packages: {mgcv: "1.9-
 - resolution: what finally worked, or "unresolved"
 - evidence: error text (paths removed) or a minimal reproducible snippet
 - suggested-change: one sentence on what the skill should say, or "unknown"
-- confidence: high | medium | low (high only if the user confirmed the fix worked)
+- confidence: high | medium | low (high only if the user confirmed the fix worked; optional for `use-case` entries)
 - generality: general | likely-user-specific | unsure
 ```
 

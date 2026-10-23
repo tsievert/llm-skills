@@ -138,5 +138,10 @@ Keep the published version (journal/conference `type == "article"`, not
   `title_and_abstract.search.exact` supports full boolean syntax (`AND`/`OR`/
   `NOT`, parentheses, quoted phrases) plus wildcards (`*`, `?`, minimum 3
   literal characters before a wildcard, no leading wildcards).
+- Wildcards need an exact (unstemmed) field. `title.search:workflow*` returns HTTP 400; the API's message says so, but httr2 shows
+  only "HTTP 400 Bad Request" by default. To read it, use `req_error(is_error = \(r) FALSE)` and print `resp_body_string(resp)`.
+  Checked live 2026-10-23: `title_and_abstract.search.exact` with parenthesised AND groups and a wildcard, and a wildcard inside
+  quotes, both returned 200; a report of 400 for unquoted exact+boolean+wildcard was not reproduced. Boolean groups with `OR`/`AND`
+  also work in the non-exact `title_and_abstract.search` and `title.search` (no wildcards there).
 - OpenAlex's `type` and `is_paratext` fields are coarse — see conference
   papers above.

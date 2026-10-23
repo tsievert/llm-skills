@@ -62,5 +62,8 @@ a clean project name. Check the JSON with `jq`.
   stand-in. The transcript file format is undocumented, so the script does not parse it.
 - Whether the assistant follows the reminder is up to the model; measure it from
   `usage.tsv` against the number of inbox files.
+- Loads are counted only when a skill is loaded through the `skill` tool. Reading or editing a skill's files (for example while
+  writing or revising it) logs nothing and triggers no reminder, so end such a session with a manual `use-case` entry
+  (seen 2026-10-23: a skill written in one session had 0 logged loads).
 - The assistant's R session cannot write outside the project; the `write` tool can
   (this may prompt for permission in some workspaces).
