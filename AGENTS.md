@@ -77,3 +77,14 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
   `~/.posit/state/llm-skills-last-check` was created. Old copy of
   `~/.posit/assistant/skills/openalex` deleted (diffed identical to the repo copy first).
   Not yet observed: a live pull of a real upstream change (only tested in the scratch repo).
+- 2026-10-23: Added four HPC skills: `hpc-cluster-docs`, `hpc-job-scripts` (with `scripts/check_sbatch.sh`
+  linter), `hpc-python-code` (with `assets/hpc_skeleton.py`), `hpc-resource-allocation`. Linter tested
+  on good/bad scripts; skeleton tested via `uv run` on Windows (fresh run, resume, rerun). Not tested:
+  signal/requeue path (no SIGUSR1 on Windows) and anything on a real Slurm cluster.
+- 2026-10-23: Added `hpc-gpu-jobs` and `hpc-r-code`; added races/node-local-scratch reference
+  (`hpc-job-scripts/references/arrays-and-scratch.md`) with `assets/python-scratch-job.sh`; extended the
+  linter (shared-file appends in arrays, scratch without trap, GPU/torchrun mismatch, random MASTER_PORT).
+  Testing found and fixed a bug: scratch was deleted even when the final sync failed. Tested: linter on all
+  templates, scratch template (periodic sync, USR1, restart, failed-sync keeps scratch) with an rsync
+  stand-in, R skeleton (non-fork path, resume). Not tested: real rsync on Linux, mclapply fork path, GPU
+  templates, torchrun/multi-node patterns, anything on a real cluster.

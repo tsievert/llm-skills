@@ -1,0 +1,4 @@
+# Skill scripts run on Linux (HPC login/compute nodes): keep LF line endings.
+*.sh text eol=lf
+*.py text eol=lf
+*.md text eol=lf
