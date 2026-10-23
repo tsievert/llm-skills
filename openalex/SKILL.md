@@ -105,6 +105,11 @@ fetch the live docs:
 See [references/setup.md](references/setup.md) for both the R/httr2 API-key
 setup and a note on the MCP server's separate OAuth sign-in.
 
+## Related skills
+
+- `social-research-search`: finding what people discuss about a method or tool on Bluesky and Mastodon (papers stay with this skill).
+- `job-opportunity-watch`: career opportunities; use this skill there for a researcher or lab publication profile.
+
 ## Explain the reasoning (teaching rule)
 
 The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why this method, setting or tool was chosen, which alternative was rejected and why, which check or step was skipped, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.

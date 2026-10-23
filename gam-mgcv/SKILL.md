@@ -109,6 +109,12 @@ Load [references/resources.md](references/resources.md) for the curated list. Sh
 - Gavin Simpson's GitHub (courses, `naboer`, other packages): https://github.com/gavinsimpson
 - mgcv help: `?gam`, `?choose.k`, `?gam.check`, `?mgcv.FAQ`
 
+## Related skills
+
+- `mixed-models-glmm`: linear or generalized mixed models without smooth terms (random intercepts and slopes, zero inflation, repeatability).
+- `gam-interpretation`: plotting and cautiously interpreting a fitted GAM.
+- `hpc-r-code`: running large `bam()` or many GAM fits on a cluster.
+
 ## Explain the reasoning (teaching rule)
 
 The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why this method, setting or tool was chosen, which alternative was rejected and why, which check or step was skipped, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.

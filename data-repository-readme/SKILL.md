@@ -100,6 +100,11 @@ tested: Excel, HDF5 or RData inputs (the dictionary helper reads delimited text 
 large files (the whole table is read into memory), a real submission to any repository, and the
 template against each repository's own template files.
 
+## Related skills
+
+- `animal-behaviour-tracking-analysis`: the typical behavioural data (DLC outputs, per-animal metrics) to document in a deposit.
+- `manuscript-figures-ggplot`: figures that use the same column labels as the data dictionary.
+
 ## Explain the reasoning (teaching rule)
 
 The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were or were not done: why a repository page was consulted, why a field was left `[TODO]` instead of inferred, why a checker finding is a heuristic, and why a choice such as license or deposit scope is theirs. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference (for example `references/sources.md`) for depth rather than lecturing.

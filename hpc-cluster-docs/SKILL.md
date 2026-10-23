@@ -94,6 +94,8 @@ paste back the output. Do not guess or proceed on assumptions.
 - Choosing or diagnosing CPU/memory/GPU/time requests: `hpc-resource-allocation`
 - GPU / deep-learning jobs: `hpc-gpu-jobs`
 - R scripts and R pipelines on the cluster: `hpc-r-code`
+- DeepLabCut training and video analysis: `deeplabcut-hpc`
+- DeepLabCut training and video analysis: `deeplabcut-hpc`
 
 ## Explain the reasoning (teaching rule)
 

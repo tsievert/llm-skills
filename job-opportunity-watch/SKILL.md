@@ -179,6 +179,11 @@ bot walls, nothing submitted. Respect a site's terms; if a portal offers an RSS 
 (propose it in Step 5). The word filters are heuristics: they decide what the assistant reads first, not
 what is relevant. Findings are as current as the last successful probe.
 
+## Related skills
+
+- `social-research-search`: social discovery (Step 4b) with the tag ledger.
+- `openalex`: checking a group or PI publication record when judging scientific fit.
+
 ## Explain the reasoning (teaching rule)
 
 The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why this method, setting or tool was chosen, which alternative was rejected and why, which check or step was skipped, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.

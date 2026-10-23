@@ -83,6 +83,12 @@ There is no CRAN package for keypoint-MoSeq itself; the fitting side is Python o
 
 Basic-metrics scripts: tested on synthetic DLC-format CSV/h5 (single and multi-animal), R and Python agree, cross-checked against trajr, animovement and movement; not run on real recordings or other camera geometries. kpms: tested locally on Windows with kpms 0.6.6 (CPU, pandas<3) on synthetic DLC-format CSVs: fresh fit, resume in the AR and full phases, concurrent seed fits, results extraction, R and Python summaries agree with each other and with kpms' CSV export. **Not tested:** kpms 0.7.x (it does not install on Windows, see the troubleshooting reference), GPU runs, Slurm, multi-animal DLC files, real behavioural data, `apply_model`, grid movies, location-aware mode. If something fails on the cluster, trust the live docs and `help()` for the installed version over this file and tell the user which part was wrong.
 
+## Related skills
+
+- `hpc-python-code` and `hpc-r-code`: code that runs the fits or analyses inside cluster jobs.
+- `manuscript-figures-ggplot`: journal-ready figures from the summaries and model results.
+- `data-repository-readme`: README and data dictionary for depositing the tracking data and metrics.
+
 ## Explain the reasoning (teaching rule)
 
 The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why this method, setting or tool was chosen, which alternative was rejected and why, which check or step was skipped, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.

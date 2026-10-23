@@ -100,6 +100,10 @@ backfill scheduling can fit them into gaps.
 - [ ] Thread/process counts match the allocation (no oversubscription)
 - [ ] Tiny jobs batched or arrayed; arrays throttled
 
+## Related skills
+
+- `hpc-job-scripts`: fixing the submission script once the right sizes are known (and the bundled linter).
+
 ## Explain the reasoning (teaching rule)
 
 The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why this method, setting or tool was chosen, which alternative was rejected and why, which check or step was skipped, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.
