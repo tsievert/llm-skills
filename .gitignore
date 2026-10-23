@@ -1,0 +1,36 @@
+# R / RStudio
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Posit Assistant project-local state
+.posit/assistant
+
+# Secrets (skills reference keys via env vars; never commit literal keys)
+.env
+.Renviron
+*.key
+*.pem
+
+# Sync hook state
+.last-sync
+*.lock
+
+# Logs and temp files
+*.log
+*.tmp
+*.bak
+*~
+
+# Python caches (for skill scripts)
+__pycache__/
+*.pyc
+.venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
