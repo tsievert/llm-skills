@@ -1,0 +1,18 @@
+---
+title: "Pipeline report"
+format: html
+---
+
+Results are read from the targets store; this document does no computation of its own.
+
+```{r}
+#| label: coefficients
+knitr::kable(targets::tar_read(coef_table), digits = 3)
+```
+
+```{r}
+#| label: data
+#| fig-cap: "Simulated data by sample"
+d <- targets::tar_read(sim_data)
+plot(d$x, d$y, col = as.integer(factor(d$sample)), xlab = "x", ylab = "y")
+```

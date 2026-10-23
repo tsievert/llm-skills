@@ -37,7 +37,7 @@ where will it run (laptop only, or Slurm); does the user already use a tool. The
 |---|---|
 | A few Python scripts run in sequence, laptop only | `uv run --locked` calling the scripts from one short driver script is enough; use Snakemake once rerunning only changed steps matters |
 | Several steps, many samples/animals/sessions, Python and/or R and/or shell, maybe Slurm | **Snakemake** (default of this skill) |
-| Purely R with R-object dependencies | the `targets` package is the R-native choice (no skill yet) |
+| Purely R with R-object dependencies | the `targets` package is the R-native choice (see `r-reproducible-pipeline`) |
 | Python functions as tasks, laptop-scale | `pytask`; no Slurm route was verified |
 | Reusing an existing nf-core pipeline, or heavy cloud use | Nextflow (JVM, Groovy, Windows only via WSL) |
 | Large data files under version control | DVC for the data, Snakemake for the steps |
@@ -169,6 +169,7 @@ ERROR until the `<PLACEHOLDER>` values in its profile are replaced.
 - `hpc-r-code`: R steps and R environments on a cluster.
 - `animal-behaviour-tracking-analysis`: a typical pipeline to wrap (DeepLabCut output to metrics to statistics).
 - `data-repository-readme`: documenting the code and data deposit that accompanies the pipeline.
+- `r-reproducible-pipeline`: the R-centred counterpart (targets, renv, Quarto) and the other side of the "choose the tool" decision.
 
 ## Explain the reasoning (teaching rule)
 

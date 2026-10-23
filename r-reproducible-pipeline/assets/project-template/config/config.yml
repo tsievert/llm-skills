@@ -1,0 +1,4 @@
+# Use descriptive keys: unquoted n, y, yes, no, on, off are read as logical by R's yaml package.
+samples: [a, b, c]
+n_obs: 40
+slope: 2.0

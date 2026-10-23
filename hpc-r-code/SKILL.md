@@ -118,6 +118,7 @@ output. Do not guess or proceed on assumptions.
 
 - `gam-mgcv`: `bam()` settings (`discrete`, `nthreads`) for large GAMs.
 - `mixed-models-glmm`: glmmTMB and lme4 fits that need many cores or many bootstrap or simulation runs.
+- `r-reproducible-pipeline`: turning the analysis into a targets pipeline with renv and re-running it on the cluster through crew.cluster.
 
 ## Explain the reasoning (teaching rule)
 

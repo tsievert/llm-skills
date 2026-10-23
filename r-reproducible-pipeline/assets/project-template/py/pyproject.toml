@@ -1,0 +1,8 @@
+[project]
+name = "pipeline-python-steps"
+version = "0.1.0"
+description = "Environment for the Python steps called from the targets pipeline"
+requires-python = ">=3.11"
+dependencies = []
+
+# Add packages with `uv add --project py <package>`, then commit py/uv.lock.
