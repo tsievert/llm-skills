@@ -94,3 +94,7 @@ paste back the output. Do not guess or proceed on assumptions.
 - Choosing or diagnosing CPU/memory/GPU/time requests: `hpc-resource-allocation`
 - GPU / deep-learning jobs: `hpc-gpu-jobs`
 - R scripts and R pipelines on the cluster: `hpc-r-code`
+
+## Explain the reasoning (teaching rule)
+
+The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why this method, setting or tool was chosen, which alternative was rejected and why, which check or step was skipped, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.

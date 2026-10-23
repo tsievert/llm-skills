@@ -66,3 +66,7 @@ Show the user the `url` for every post you cite so they can verify it.
 - **X/Twitter:** no free keyless access. Third-party free services and cookie-based scrapers exist but are
   rate-limited, fragile or risk account bans, so they are not bundled. Do not use them unless the user asks.
 - **Other Mastodon-compatible servers** (Pleroma, Misskey) use different APIs and are not covered.
+
+## Explain the reasoning (teaching rule)
+
+The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why this method, setting or tool was chosen, which alternative was rejected and why, which check or step was skipped, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.

@@ -70,3 +70,7 @@ State: family and link; smooth bases and `k`; estimation method; diagnostics and
 ## When the user asks for a definitive statement
 
 If the user asks "is the relationship non-linear?", "is there a threshold?", or "is group A different from B?", answer with what the model supports, the uncertainty, and what would change the answer (more data, different basis, different smoothing choices). Offer a sensitivity check (different `k`, basis, `select = TRUE`, or a simpler parametric comparison) rather than a categorical verdict.
+
+## Explain the reasoning (teaching rule)
+
+The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why this method, setting or tool was chosen, which alternative was rejected and why, which check or step was skipped, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.

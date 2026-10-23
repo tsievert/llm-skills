@@ -26,6 +26,20 @@ Repository of custom Posit Assistant skills, synced via GitHub
   - Installing or updating from GitHub (or any non-CRAN source, e.g. R-universe) requires
     stopping and asking the user for explicit permission first.
 
+### Standing rules for all skills (added 2026-10-23)
+
+- **HPC skills run locally.** Every HPC-related skill (`hpc-*`, `deeplabcut-hpc`, and any skill that ships sbatch/cluster
+  scripts such as `animal-behaviour-tracking-analysis`) must state in a "Where this skill runs" section that the assistant
+  is NOT intended to run on the cluster. It works locally on the user's computer and adapts scripts for the cluster.
+  Information that only the cluster has (versions, partitions, `sacct`, logs, modules) is obtained by prompting the user to
+  run the specific command in their own console/shell and paste back the output; never guess. New HPC skills must include
+  this section. Checked 2026-10-23: all 8 existing ones comply.
+- **Explain the reasoning.** Every skill (new and existing) must tell the assistant to explain briefly why things were or
+  were not done (choices, rejected alternatives, skipped checks, assumptions). Purpose: teach the user long-term, not
+  replace their thinking. Explanations stay short: a sentence or two, the trade-off, the decision that is the user's,
+  a pointer for depth. Implemented as a section "Explain the reasoning (teaching rule)" at the end of each `SKILL.md`;
+  new skills must include it.
+
 ## Auto-sync protocol (status: installed and verified in a live session)
 
 Goal: skills are installed globally (all projects) and kept current with GitHub.

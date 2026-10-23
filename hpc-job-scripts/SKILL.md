@@ -109,3 +109,7 @@ guess or proceed on assumptions.
 | Results corrupted or missing rows in an array | Tasks append to / overwrite a shared file; use per-task files |
 | Work on node-local disk vanished | Scratch is deleted at job end/cancel; sync out periodically |
 | GPU job: see `hpc-gpu-jobs`; R job: see `hpc-r-code` | Dedicated skills |
+
+## Explain the reasoning (teaching rule)
+
+The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why this method, setting or tool was chosen, which alternative was rejected and why, which check or step was skipped, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.
