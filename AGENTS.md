@@ -118,6 +118,13 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
   contrast to ~1e-15), ale, theme API, n_draws migration error, draw formals. difference_smooths still fails on sz.
   variance_comp(type="terms") output identical to "penalty" (flagged). Updated recent-developments.md,
   sz-smooths.md, visualisation.md, uncertainty-and-inference.md. Committed and pushed in 72a177f.
+- 2026-10-23: Added `social-research-search` (keyless Bluesky `searchPosts` on api.bsky.app + Mastodon hashtag
+  timelines; R httr2 helper `scripts/social_search.R`). Tested live on mgcv, gratia, rstats: Bluesky
+  `cursor` paging gives 403 without login (helper pages via `until` instead); `public.api.bsky.app` gives 403;
+  Mastodon keyless status search returns nothing (hashtags only); bad-host errors become warnings. X/Twitter
+  deliberately not covered (no free keyless access; Nitter checked and not viable: archived 2026-10-09 after
+  X legal action, instances bot-walled). Optional CRAN packages: `bskyr` (needs free Bluesky login), `rtoot`,
+  `vosonSML`; not tested. Committed and pushed.
 
 ## About the local user
 
