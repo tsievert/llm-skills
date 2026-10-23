@@ -99,8 +99,8 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   Link to `deeplabcut-hpc`.
 - [ ] `reproducible-research-data`: FAIR data deposits (Figshare "Data for:" style), data dictionaries,
   `renv`/`uv` lockfiles, Quarto manuscripts, code and data archive per paper.
-- [ ] `manuscript-figures-ggplot`: journal-ready figures (colour-blind-safe palettes, size/DPI, patchwork panels,
-  consistent themes, export). Link to the model skills.
+- [x] `manuscript-figures-ggplot` (done 2026-10-23, see Log; not yet committed): journal-ready figures (colour-blind-safe
+  palettes, size/DPI, patchwork panels, consistent themes, export). Link to the model skills.
 - [ ] `stats-reporting-and-review`: effect sizes and uncertainty, power/sample size, pre-registration,
   reviewer-response drafting, checks for pseudoreplication, multiple testing, p-hacking.
 - [ ] `chemical-ecology-data`: GC-MS peak processing in R (xcms, MSnbase), compound annotation, multivariate
@@ -268,6 +268,31 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   added tier labels (Borealis minimum 9 / enhanced 13), header "generated/updated" line, two contacts, ancillary and
   not-included data, abbreviations/codes glossary, version section, `assets/README_software.md`, info-level
   enhanced-element checks in `check_readme()`. Not obtained: Borealis xlsx and the 20 example READMEs.
+
+- 2026-10-23: Added `manuscript-figures-ggplot` (SKILL.md; `scripts/figure_helpers.R` with `theme_ms`, `okabe_ito`,
+  `journal_width`, `save_figure`, `check_pdf`, `cvd_preview`; `assets/example_figure.R`; references `principles-and-pitfalls`,
+  `journal-specs`, `colour`, `ggplot2-and-packages`, `community-notes`). Sources read live: Chenxin Li's FriendsDontLetFriends
+  (README, 16 rules, flagged as opinionated; contested points listed), Wilke dataviz (ch. 16, 19, 21, 27), Weissgerber 2015,
+  Rougier 2014, Data-to-Viz caveats, ggplot2 4.0.0 release post, N. Rennie's blog, Nature research-figure-guide, Elsevier artwork
+  sizing, OUP Behavioral Ecology, Frontiers, a Springer artwork page (search extracts). Social search (Bluesky/Mastodon) gave
+  only anecdotal leads (sizing at export, patchwork, ggview, accessible palettes). References verified in OpenAlex. Blocked or
+  not read: nature.com final-submission and Nature Methods pages, science.org, Springer Oecologia (403), BE general-instructions
+  (404), Crameri 2020 full text. Science, Cell, Nature Communications widths are third-party only. Tested (R 4.6.0, ggplot2
+  4.0.3): `save_figure` PDF/PNG/TIFF/SVG (TIFF 600 dpi LZW, 2102 px for 89 mm), `check_pdf` via qpdf on the real PDF stream (text
+  sizes 5.6/7/8 pt, fonts embedded, 1 mm linewidth = 2.134 pt), `cvd_preview` (red/green collapse visible), example figure,
+  ggplot2 4.0 theme palettes and `panel.widths`. Smoke-tested only: ggdist, scico, ggrastr, ggh4x, ggtext. Installed from CRAN:
+  svglite, ggbeeswarm, ggdist, scico, ggtext, ggrastr, ggh4x, tiff (plus dependencies). `lint_skills()` no findings,
+  `skills-ref` valid; `check_versions()` only "claim older than latest" for the generic "ggplot2 4.0". Not tested: Linux/macOS,
+  cluster fonts, EPS, any journal upload, real data.
+- 2026-10-23 (follow-up): `manuscript-figures-ggplot` now prefers CVD-friendly palettes (viridis family and relatives first;
+  user request) and has `references/ggplot2-hacks.md`. `theme_ms()` gained `palette = c("viridis","okabe")` (ggplot2 4.0 theme
+  palettes; verified vs `viridisLite`, cividis ends) and `element_geom` line defaults (`geom_line_pt`; point `stroke` still ~1.07 pt).
+  Sources: sparse clone of nrennie/tidytuesday 2025-26 (idiom counts), tidyverse "ggplot2 styling" article, Posit ggplot2 cheat sheet
+  (HTML, 2026-08), contributed cheat-sheet list, a third-party cheat sheet (r-statistics.co; its claim that `scale_x_log10()` leaves
+  histogram bins unchanged is wrong, tested), Bluesky/Mastodon trick posts. Tested (render-only): textbox_simple, clip off, identity
+  scale, `facet_manual`, `labs(alt)`, `labs(dictionary)`, stretchy colourbar, `element_geom`, geomtextpath, `ggview::canvas`.
+  `camcorder` 0.1.0 recorded 0 files under ggplot2 4.0.3. Installed from CRAN: ggview, camcorder, geomtextpath, pdftools.
+  Not read: Rennie workshop slides, Posit cheatsheet content pages. Not yet committed.
 
 ## About the local user
 
