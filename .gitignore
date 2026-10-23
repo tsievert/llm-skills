@@ -16,6 +16,8 @@
 # Sync hook state
 .last-sync
 *.lock
+# Template lockfiles are deliberate content
+!uv.lock
 
 # Logs and temp files
 *.log

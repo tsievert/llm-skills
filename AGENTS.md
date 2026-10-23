@@ -126,7 +126,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   SimBA/B-SOiD/VAME are out of scope for now (decision 2026-10-23). Link to `deeplabcut-hpc`.
 - [ ] `reproducible-research-data`: FAIR data deposits (Figshare "Data for:" style), data dictionaries,
   `renv`/`uv` lockfiles, Quarto manuscripts, code and data archive per paper.
-- [x] `manuscript-figures-ggplot` (done 2026-10-23, see Log; not yet committed): journal-ready figures (colour-blind-safe
+- [x] `manuscript-figures-ggplot` (done 2026-10-23, see Log; committed): journal-ready figures (colour-blind-safe
   palettes, size/DPI, patchwork panels, consistent themes, export). Link to the model skills.
 - [ ] `stats-reporting-and-review`: effect sizes and uncertainty, power/sample size, pre-registration,
   reviewer-response drafting, checks for pseudoreplication, multiple testing, p-hacking.
@@ -139,7 +139,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   BibTeX export for Quarto. Lower priority (search step already covered).
 - Added 2026-10-23 (user-approved from the reassessment). Each follows the working rules and standing rules (online check
   first, CRAN check, teaching section, capture-lessons section, verify with `github-skill-maintenance`):
-  - [x] `r-reproducible-pipeline` (done 2026-10-23, see Log; not yet committed; research in `research/pipeline-resources-ledger.md` sections 11-12): targets, renv and Quarto project structure for multi-step analyses, re-running the whole
+  - [x] `r-reproducible-pipeline` (done 2026-10-23, see Log; committed; research in `research/pipeline-resources-ledger.md` sections 11-12): targets, renv and Quarto project structure for multi-step analyses, re-running the whole
     analysis including on HPC (`crew.cluster`, `future.batchtools`). Distinct from `reproducible-research-data` (the deposit).
     If it ships cluster scripts it needs the "Where this skill runs" section (assistant runs locally only).
   - [ ] `manuscript-writing-quarto`: Quarto manuscripts with journal templates, CSL, cross-references, supplementary material,
@@ -154,7 +154,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
     applications (narrative CV, DORA style, output summaries). **Caveat as for the manuscript skill:** no large automatic prose
     generation; most text is written by the user; the assistant structures, checks and formats, and every edit is user-approved.
     Pairs with `job-opportunity-watch`.
-  - [~] `python-reproducible-pipeline` (drafted 2026-10-23, see Log; not yet committed): Python counterpart of `r-reproducible-pipeline`. uv (pyproject, lockfile, pinned Python),
+  - [~] `python-reproducible-pipeline` (drafted and committed 2026-10-23, see Log): Python counterpart of `r-reproducible-pipeline`. uv (pyproject, lockfile, pinned Python),
     multi-step workflow tools (Snakemake, or DVC/Prefect/Dagster; compare and pick with the user), config and seeds, notebooks
     or Quarto as the report layer, re-running the whole chain including on HPC (Snakemake Slurm executor plugin). Pairs with
     `python-r-interop` and `hpc-python-code`. If it ships cluster scripts it needs the "Where this skill runs" section.
@@ -270,7 +270,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   with glmmTMB 1.1.15.2, DHARMa 0.5.0, emmeans 2.0.4, lme4 2.0.6, performance 0.19.0. Findings: `testCategorical(plot=FALSE)`
   errors in DHARMa 0.5.0; testZeroInflation p=0.07 while AIC favoured ZI by 37. Checked that `recalculateResiduals(group=)`,
   `ordbeta`, `beta_family`, `diagnose`, `nbinom1` exist. Not tested: real data, rptR (not installed), ar1/exp covariance
-  structures, pbkrtest bootstrap with glmmTMB, brms. Not yet committed.
+  structures, pbkrtest bootstrap with glmmTMB, brms. (Committed in f57ecd1.)
 - 2026-10-23: Installed `rptR` 0.9.23 from CRAN; tested Gaussian and Poisson `rpt()` (block 9b in `glmm_templates.R`; full script
   reruns clean, noisy progress bar and singular-fit warnings in bootstraps). Added "Issues reported for ecological and behavioural
   data" to `mixed-models-glmm/references/pitfalls-and-reporting.md` from OpenAlex (R/httr2; authors verified via API, abstracts only,
@@ -304,7 +304,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   Dryad template file itself, go-fair.org (fetch returned nothing), journal policies. Installed `frictionless` 1.3.0 from CRAN
   (infers column types only). Tested both scripts on a synthetic deposit with seeded defects (two bugs found and fixed:
   perl regex for backticked filenames, mixed ISO/non-ISO dates). `lint_skills()` no findings, `skills-ref` valid,
-  `check_versions()` OK for frictionless. Not tested: Excel/HDF5 input, real submissions. Not yet committed.
+  `check_versions()` OK for frictionless. Not tested: Excel/HDF5 input, real submissions. (Committed.)
   Follow-up same day: read the Dryad template in full (4 sections, no author/license/contact; added
   `assets/README_dryad.md` and `check_readme(profile = "dryad")`). Installed and tested dataspice 1.1.1, codebook 0.10.1,
   skimr 2.2.2, frictionless 1.3.0 (`references/optional-packages.md`): skimr and frictionless useful for QA;
@@ -340,7 +340,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   histogram bins unchanged is wrong, tested), Bluesky/Mastodon trick posts. Tested (render-only): textbox_simple, clip off, identity
   scale, `facet_manual`, `labs(alt)`, `labs(dictionary)`, stretchy colourbar, `element_geom`, geomtextpath, `ggview::canvas`.
   `camcorder` 0.1.0 recorded 0 files under ggplot2 4.0.3. Installed from CRAN: ggview, camcorder, geomtextpath, pdftools.
-  Not read: Rennie workshop slides, Posit cheatsheet content pages. Not yet committed.
+  Not read: Rennie workshop slides, Posit cheatsheet content pages. (Committed.)
 
 - 2026-10-23: Added the lessons-learned feedback loop. New skills `skill-lessons` (capture protocol, entry format, privacy rules,
   `scripts/lesson_helpers.R`, `references/hook-setup.md`) and `skill-feedback-triage` (`scripts/read_lessons.R`,
@@ -455,7 +455,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   comment edits ignored; unchanged output stops downstream reruns), name-derived seeds reproduce after deleting the store,
   `crew_controller_slurm()` constructs (no submit). Gotchas: R `yaml` reads key `n` as FALSE; `reporter = "summary"` deprecated;
   `tar_quarto` needs the `quarto` package. Not tested: renv init/snapshot on a targets project, Python chunk in a targeted
-  report, real Slurm, NFS, Linux. Open items listed in ledger 11.5. Not yet committed.
+  report, real Slurm, NFS, Linux. Open items listed in ledger 11.5. (Committed.)
 
 - 2026-10-23: Added `r-reproducible-pipeline` (SKILL.md; `references/` targets-patterns, renv-and-pinning, hpc-crew, tool-choice, sources;
   `assets/project-template/` with `_targets.R`, `R/`, `py/` (uv.lock), `config/`, `report.qmd`, `_dependencies.R`, `slurm/run_targets.sbatch`;
@@ -471,7 +471,14 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   `lint_skills()` and `check_skill_links()` clean (21 skills), `skills-ref` valid for the new and four edited skills, `check_versions()` same.
   Backlinks added in `python-reproducible-pipeline`, `data-repository-readme`, `hpc-job-scripts`, `hpc-r-code`; three `no-backlink` rows. Not tested:
   `tar_make()` in a real Slurm job, crew.cluster submission, NFS, Linux/macOS, Python chunk in a targeted report, `tar_map`/`tar_rep`, undeclared-script
-  negative case, restore from a P3M snapshot URL. Not yet committed.
+  negative case, restore from a P3M snapshot URL. (Committed in c4fd1fd; the template `uv.lock` was untracked until the next commit, see below.)
 
 ## Lessons triage state
 - Lessons usage watermark: 2026-10-23T19:33:29
+
+- 2026-10-23: Commit audit (`git status`, `--ignored`, tracked-file counts per skill, `origin/main` comparison). All 21 skills and
+  `research/` were committed and pushed (HEAD 1551556 = origin/main); the "not yet committed" notes above were stale and are corrected.
+  One real gap found: `.gitignore` has `*.lock` (meant for sync-hook locks), which silently excluded
+  `r-reproducible-pipeline/assets/project-template/py/uv.lock`, although the skill and checker require it. Fixed with a `!uv.lock`
+  negation and the file is now tracked. Only ignored leftovers remain (`__pycache__`, `tmp-examples/`, `.posit/`). Lesson: after adding a
+  template that contains lockfiles, check `git status --ignored`. `python-reproducible-pipeline` template has no lockfile (not required there).
