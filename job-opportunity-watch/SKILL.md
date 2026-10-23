@@ -1,7 +1,7 @@
 ---
 name: job-opportunity-watch
 description: 'Periodically checks a user-maintained list of job portals and search links for new career opportunities (academic and research jobs, postdocs, fellowship hosts, expert rosters), diffs them against what was seen on earlier runs, verifies and classifies each new candidate against a user profile, and keeps a persistent state so only new or changed items are reported. May propose (and, after confirmation, apply) additions to the links file and profile. Use when the user asks to check, scan, refresh or update job listings, vacancies, postdocs, positions or opportunities, mentions links.txt or a job profile, or asks whether a periodic job check is due.'
-compatibility: Requires R with httr2, rvest, xml2, readr, yaml and internet access. Read-only towards job sites (polite, no logins). The user's links file and profile are personal and stay outside the skill repo.
+compatibility: Requires R with httr2, rvest, xml2, readr, yaml and internet access; optional social discovery needs the social-research-search skill. Read-only towards job sites (polite, no logins). The user's links file and profile are personal and stay outside the skill repo.
 ---
 
 # Job opportunity watch
@@ -120,7 +120,34 @@ output is short; the full ledger lives in `state/opportunities.tsv`.
 
 Only after supplied links are processed, and only when asked, run additional discovery searches
 (species, mechanisms, local-language terms, institutions, early signals); aggregators are for discovery,
-not final evidence.
+not final evidence. Social-media discovery (Bluesky, Mastodon) is Step 4b and uses the `social-research-search` skill.
+
+## Step 4b: social discovery and the tag ledger
+
+Only when asked for discovery (after the supplied links are processed), or when the user wants early
+signals (advertised positions, "looking for a postdoc" posts, group announcements). Use the
+**`social-research-search`** skill for the searching itself (load it; its helper `bsky_search()`,
+`masto_tag()` and `social_search()` are keyless and read-only; follow its pitfalls and privacy notes: link
+posts, do not profile individuals). Social posts are leads, never final evidence: every opportunity found
+this way goes through Step 3 on the employer's own page.
+
+**Maintain a ledger of hashtags (by platform) that proved useful**, in `state/social_tags.tsv`
+(columns in [references/state-and-files.md](references/state-and-files.md)). This is mandatory, not optional:
+
+1. Before searching, `jw_tags_read()`. Search first with `keep` tags, then `candidate` tags; do not use
+   `retired` ones. Hashtags are for Mastodon (`masto_tag`); on Bluesky use text search and the `tag` filter,
+   and record the term or tag you actually used, with `platform = "bluesky"`.
+2. Add at most a few new candidate tags per run, drawn from what you saw (co-occurring tags on relevant posts,
+   field and language variants). Do not invent tags that no post uses.
+3. After screening, `jw_tags_record(platform, tag, hits = <posts judged job-relevant>, useful = <of those,
+   how many led to a verified opportunity or a link the user accepted>)`. Count honestly; zero is a valid result.
+4. At the end of the run, `jw_tags_review()` lists suggested status changes (keep after a useful hit; retire after
+   several runs with none). **Propose them to the user; apply only with `jw_tags_set_status(..., confirmed = TRUE)`.**
+   Never delete rows; retired tags stay so they are not rediscovered and retried.
+5. Report the ledger changes in one line in Step 4 (new candidates, suggested keeps/retirements).
+
+Why a ledger: tag usefulness drifts (communities move platforms, tags get spammed), and without a record the
+same unproductive searches get repeated. The counts are small, so treat them as a rough guide, not a ranking.
 
 ## Step 5: maintain the links file and the profile (propose, then confirm)
 

@@ -13,6 +13,7 @@ Contents: layout; links file format; profile; state files; privacy; helper funct
     anchors_seen.tsv        every candidate link ever seen, with first_seen
     opportunities.tsv       verified opportunities (written by the assistant)
     runs.tsv                one row per run: counts for the audit trail
+    social_tags.tsv         hashtag/search-term ledger per platform (Step 4b of SKILL.md)
   digests/<date>.md         output of the headless run
   *.bak-<timestamp>         backups made before any edit of links or profile
 ```
@@ -67,5 +68,14 @@ skill files.
 
 `jw_read_links`, `jw_probe`, `jw_save_run`, `jw_audit`, `jw_due`, `jw_source_health`, `jw_opp_upsert`,
 `jw_opp_expire`, `jw_add_link`, `jw_replace_link`, `jw_convert_links_txt`, `jw_find_replacement`,
-`jw_write_confirmed`, `jw_headless`. Read the file header and the comments
+`jw_write_confirmed`, `jw_headless`, `jw_tags_read`, `jw_tags_record`, `jw_tags_review`, `jw_tags_set_status`. Read the file header and the comments
 above each function; they are short.
+
+## social_tags.tsv
+
+One row per (`platform`, `tag`); `platform` is `bluesky` or `mastodon`. Columns: `first_used`, `last_used`, `n_runs`,
+`n_hits` (posts judged job-relevant), `n_useful` (of those, how many led to a verified opportunity or an accepted
+link), `last_useful`, `status` (`candidate`, `keep`, `retired`), `note`. The assistant writes counts with
+`jw_tags_record()`; status changes are proposed by `jw_tags_review()` and applied only after the user agrees
+(`jw_tags_set_status(confirmed = TRUE)`, backup first). Retired rows are kept. No personal data about post authors
+is stored.

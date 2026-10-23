@@ -114,6 +114,23 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   `deeplabcut-hpc`.
 - [ ] `literature-review-workflow`: extend `openalex` with screening log, deduplication, PRISMA-style flow,
   BibTeX export for Quarto. Lower priority (search step already covered).
+- Added 2026-10-23 (user-approved from the reassessment). Each follows the working rules and standing rules (online check
+  first, CRAN check, teaching section, capture-lessons section, verify with `github-skill-maintenance`):
+  - [ ] `r-reproducible-pipeline`: targets, renv and Quarto project structure for multi-step analyses, re-running the whole
+    analysis including on HPC (`crew.cluster`, `future.batchtools`). Distinct from `reproducible-research-data` (the deposit).
+    If it ships cluster scripts it needs the "Where this skill runs" section (assistant runs locally only).
+  - [ ] `manuscript-writing-quarto`: Quarto manuscripts with journal templates, CSL, cross-references, supplementary material,
+    co-author review. **Caveat: not for autonomous writing.** Scope is linting, layout and proofreading only. Every edit needs
+    explicit user approval (show a diff or list first). **Never edit `.bib` files automatically**; propose entries or fixes as
+    text for the user to apply. No large generated prose.
+  - [ ] `python-r-interop`: reticulate and uv environments, R/Python data exchange via Arrow/parquet, Windows pitfalls seen in
+    this repo (blocked `~/.posit` paths from the R session, hdf5r dimension order, pandas pins).
+  - [ ] `git-for-research-projects`: Git conventions for analysis repos, large files (git-lfs, DVC), `.gitignore` for data and
+    secrets, release tagging linked to Zenodo DOIs. Overlaps `github-skill-maintenance` only in commit steps.
+  - [ ] `grant-and-cv-support`: publication, citation and funding data from OpenAlex and ORCID, formatting for CVs and grant
+    applications (narrative CV, DORA style, output summaries). **Caveat as for the manuscript skill:** no large automatic prose
+    generation; most text is written by the user; the assistant structures, checks and formats, and every edit is user-approved.
+    Pairs with `job-opportunity-watch`.
 
 ## Log
 
@@ -331,7 +348,14 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   insertion, backups, opportunity upsert/expire, headless digest. Bugs found and fixed: invalid-byte pages broke `gsub`,
   `table[["x"]]` on missing names, TSV quoting. `lint_skills()` clean, `skills-ref` valid, no version claims. Not tested:
   Task Scheduler/hook, real vacancy verification by the assistant, non-English title filter quality, other machines.
-  Not yet committed.
+  Committed with the Step 4b change.
+- 2026-10-23: `job-opportunity-watch`: new Step 4b (social discovery) that explicitly uses `social-research-search` and requires a
+  ledger of useful hashtags/search terms per platform (`state/social_tags.tsv`; `jw_tags_read/record/review/set_status` in
+  `jobwatch.R`; status changes only after user confirmation, backup first, rows never deleted). Tested the helpers on a scratch
+  ledger (create, `#` stripping, counts, review suggestions, refusal without `confirmed`). `lint_skills()` clean, `skills-ref`
+  valid. Not tested: a real discovery run, how well Bluesky free-text terms fit the ledger. Also added five todo skills
+  (`r-reproducible-pipeline`, `manuscript-writing-quarto`, `python-r-interop`, `git-for-research-projects`, `grant-and-cv-support`).
+
 
 ## About the local user
 
