@@ -1,0 +1,16 @@
+# Environment (recreated from pyproject.toml + uv.lock; commit those two, not this)
+.venv/
+
+# Snakemake state and generated output (all regenerable from code, config and raw data)
+.snakemake/
+results/
+logs/
+benchmarks/
+report.html
+report.zip
+
+# Secrets and local overrides
+.env
+
+# Raw data is deposited elsewhere (see README); do not commit large inputs
+resources/

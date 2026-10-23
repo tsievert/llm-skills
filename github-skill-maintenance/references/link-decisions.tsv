@@ -10,3 +10,7 @@ deeplabcut-hpc	hpc-python-code	no-backlink	deeplabcut-hpc loads the generic skil
 deeplabcut-hpc	hpc-resource-allocation	no-backlink	Sizing advice is generic; hpc-gpu-jobs links to both	2026-10-23
 mixed-models-glmm	openalex	no-backlink	openalex is the standing literature tool (user memory rule), not a per-skill pointer	2026-10-23
 manuscript-figures-ggplot	social-research-search	no-backlink	One-off source for community notes; social search stays task-oriented	2026-10-23
+python-reproducible-pipeline	hpc-cluster-docs	no-backlink	Generic first-step skill; stays free of workflow-tool links	2026-10-23
+python-reproducible-pipeline	hpc-python-code	no-backlink	Generic language skill about code inside one job; hpc-job-scripts carries the pipeline pointer	2026-10-23
+python-reproducible-pipeline	hpc-r-code	no-backlink	Generic language skill; same reason as hpc-python-code	2026-10-23
+python-reproducible-pipeline	hpc-resource-allocation	no-backlink	Sizing advice is generic; it needs no pointer to every workflow skill	2026-10-23

@@ -104,6 +104,7 @@ template against each repository's own template files.
 
 - `animal-behaviour-tracking-analysis`: the typical behavioural data (DLC outputs, per-animal metrics) to document in a deposit.
 - `manuscript-figures-ggplot`: figures that use the same column labels as the data dictionary.
+- `python-reproducible-pipeline`: a pinned, re-runnable workflow (uv lock, Snakemake) to deposit with the data so the results can be regenerated.
 
 ## Explain the reasoning (teaching rule)
 

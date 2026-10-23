@@ -1,0 +1,5 @@
+# Every value a script depends on must reach the rule through `params:` (or `input:`),
+# otherwise Snakemake does not rerun when it changes. See workflow/Snakefile.
+samples: [A, B, C]
+n: 50
+seed: 7

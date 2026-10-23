@@ -114,6 +114,7 @@ guess or proceed on assumptions.
 
 - `deeplabcut-hpc`: DeepLabCut jobs, which add DLC-specific settings to the script rules above.
 - `hpc-resource-allocation`: sizing the requests after a first run.
+- `python-reproducible-pipeline`: when many dependent steps outgrow a hand-written array or dependency chain, a Snakemake workflow with the Slurm executor plugin.
 
 ## Explain the reasoning (teaching rule)
 

@@ -5,7 +5,7 @@ description: Turns DeepLabCut (DLC) pose output into behavioural results. Basic 
 
 # Animal behaviour tracking analysis (DLC to keypoint-MoSeq and beyond)
 
-Scope: **downstream of DLC**, two routes that can be combined. (a) **Hypothesis-driven basic metrics** (distance, speed, immobility, time in ROI, entries, latency, path shape) with `scripts/dlc_metrics.py` / `dlc_metrics.R`, see [references/dlc-basic-metrics.md](references/dlc-basic-metrics.md). (b) **Unsupervised syllables with keypoint-MoSeq (kpms)**, the rest of this file. Not yet covered: supervised classifiers (SimBA etc.), B-SOiD/VAME. If the user wants those, say this skill does not cover them yet and offer to extend it.
+Scope: **downstream of DLC**, two routes that can be combined. (a) **Hypothesis-driven basic metrics** (distance, speed, immobility, time in ROI, entries, latency, path shape) with `scripts/dlc_metrics.py` / `dlc_metrics.R`, see [references/dlc-basic-metrics.md](references/dlc-basic-metrics.md). (b) **Unsupervised syllables with keypoint-MoSeq (kpms)**, the rest of this file. Out of scope: other behaviour-classification tools (SimBA, B-SOiD, VAME). If the user asks for those, say this skill does not cover them.
 
 keypoint-moseq changes fast (six releases between 2026-10-20 and 2026-10-22, when this was written). **Do not rely on memory for signatures or config keys.** Check the installed version and the stable docs (https://keypoint-moseq.readthedocs.io/en/stable/) before writing code.
 
@@ -88,6 +88,7 @@ Basic-metrics scripts: tested on synthetic DLC-format CSV/h5 (single and multi-a
 - `hpc-python-code` and `hpc-r-code`: code that runs the fits or analyses inside cluster jobs.
 - `manuscript-figures-ggplot`: journal-ready figures from the summaries and model results.
 - `data-repository-readme`: README and data dictionary for depositing the tracking data and metrics.
+- `python-reproducible-pipeline`: wrapping DLC output, metrics, fits and statistics into one re-runnable, pinned workflow (Snakemake + uv).
 
 ## Explain the reasoning (teaching rule)
 

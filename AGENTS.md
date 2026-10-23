@@ -107,8 +107,8 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
 - [x] `mixed-models-glmm` (done 2026-10-23, see Log): lme4, glmmTMB, DHARMa, performance, emmeans. Repeated-measures behaviour trials,
   random effects, zero inflation, overdispersion, model selection, residual checks, reporting. Link to `gam-mgcv`.
 - [~] `animal-behaviour-tracking-analysis`: v1 (keypoint-MoSeq) and v2 (basic DLC metrics) done, see Log. Still open:
-  SimBA/B-SOiD/VAME, validation of immobility/freezing thresholds against manual scoring, real-data tests.
-  Link to `deeplabcut-hpc`.
+  validation of immobility/freezing thresholds against manual scoring, real-data tests.
+  SimBA/B-SOiD/VAME are out of scope for now (decision 2026-10-23). Link to `deeplabcut-hpc`.
 - [ ] `reproducible-research-data`: FAIR data deposits (Figshare "Data for:" style), data dictionaries,
   `renv`/`uv` lockfiles, Quarto manuscripts, code and data archive per paper.
 - [x] `manuscript-figures-ggplot` (done 2026-10-23, see Log; not yet committed): journal-ready figures (colour-blind-safe
@@ -139,7 +139,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
     applications (narrative CV, DORA style, output summaries). **Caveat as for the manuscript skill:** no large automatic prose
     generation; most text is written by the user; the assistant structures, checks and formats, and every edit is user-approved.
     Pairs with `job-opportunity-watch`.
-  - [ ] `python-reproducible-pipeline`: Python counterpart of `r-reproducible-pipeline`. uv (pyproject, lockfile, pinned Python),
+  - [~] `python-reproducible-pipeline` (drafted 2026-10-23, see Log; not yet committed): Python counterpart of `r-reproducible-pipeline`. uv (pyproject, lockfile, pinned Python),
     multi-step workflow tools (Snakemake, or DVC/Prefect/Dagster; compare and pick with the user), config and seeds, notebooks
     or Quarto as the report layer, re-running the whole chain including on HPC (Snakemake Slurm executor plugin). Pairs with
     `python-r-interop` and `hpc-python-code`. If it ships cluster scripts it needs the "Where this skill runs" section.
@@ -408,3 +408,15 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
 - Useful context for future tasks: works with GAMs (mgcv, gratia), HPC/Slurm clusters, DeepLabCut, R and Python.
   Check the OpenAlex profile for their publications to infer field conventions or to find their own papers
   (e.g. for self-citation checks or "my work on X" requests).
+
+- 2026-10-23: Drafted `python-reproducible-pipeline` (uv + Snakemake default, Slurm executor plugin; not committed). Files: SKILL.md,
+  `references/` (`tool-choice`, `snakemake-slurm`, `environments-and-pinning`, `sources`), `assets/project-template/` (two-rule workflow,
+  config, logs, benchmarks, report entry, Slurm profile with placeholders), `scripts/check_pipeline.py` (static checker). Research in
+  `research/pipeline-resources-ledger.md` (shared with the planned `r-reproducible-pipeline` and `python-r-interop`; not a skill).
+  Tested locally (Windows, Snakemake 9.27.1, plugin 2.8.0, uv 0.12.5): template run, incremental rerun via params, report (needs pygments),
+  Slurm profile dry run, profile loading, stale-lock detection, checker on clean and seeded-defect copies (bugs found and fixed:
+  docstring false positive, `uv run` hiding a stale lock). Observed but unexplained: a touch without content change does not rerun
+  (checksum hypothesis untested). Not tested: real Slurm, NFS, Linux/macOS/WSL, conda/containers, Quarto step, uv on a cluster. Prefect,
+  Dagster, Nextflow, pytask judged from docs only. Link audit: backlinks added in `animal-behaviour-tracking-analysis`,
+  `data-repository-readme`, `hpc-job-scripts`; four `no-backlink` rows recorded. `lint_skills()` and `check_skill_links()` clean (20 skills),
+  `skills-ref` valid.

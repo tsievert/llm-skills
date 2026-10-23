@@ -1,0 +1,47 @@
+configfile: "config/config.yaml"
+
+SAMPLES = config["samples"]
+
+
+rule all:
+    input:
+        "results/summary.csv",
+
+
+rule simulate:
+    """One task per sample: independent, so it becomes one Slurm job each."""
+    output:
+        "results/simulated/{sample}.csv",
+    params:
+        n=config["n"],
+        # Distinct, reproducible seed per sample, derived from the config seed
+        seed=lambda wildcards: config["seed"] + SAMPLES.index(wildcards.sample),
+    log:
+        "logs/simulate/{sample}.log",
+    benchmark:
+        "benchmarks/simulate/{sample}.tsv"
+    resources:
+        mem_mb=500,
+        runtime=5,  # minutes
+    script:
+        "scripts/simulate.py"
+
+
+rule summarise:
+    input:
+        expand("results/simulated/{sample}.csv", sample=SAMPLES),
+    output:
+        report(
+            "results/summary.csv",
+            caption="report/summary.rst",
+            category="Results",
+        ),
+    log:
+        "logs/summarise.log",
+    benchmark:
+        "benchmarks/summarise.tsv"
+    resources:
+        mem_mb=500,
+        runtime=5,
+    script:
+        "scripts/summarise.py"

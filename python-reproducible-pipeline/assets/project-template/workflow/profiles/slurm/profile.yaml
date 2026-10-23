@@ -1,0 +1,21 @@
+# UNTESTED ON A REAL CLUSTER. Replace every <PLACEHOLDER> with values from the site's
+# documentation or from the user's own `sinfo` / `sacctmgr` output, never guess them.
+# Use: snakemake --workflow-profile slurm   (looks in workflow/profiles/slurm/)
+executor: slurm
+jobs: 20                 # maximum jobs submitted at once; follow the site's fair-use rules
+latency-wait: 60         # seconds to wait for outputs to appear on a shared filesystem
+keep-going: true
+rerun-incomplete: true
+printshellcmds: true
+
+default-resources:
+  slurm_partition: "<PARTITION>"
+  slurm_account: "<ACCOUNT>"     # remove the line if the site does not use accounts
+  mem_mb: 2000                   # use mem_mb everywhere; mem_mb and mem_mb_per_cpu are mutually exclusive
+  runtime: 30                    # minutes
+
+# Per-rule overrides after measuring (see the hpc-resource-allocation skill):
+# set-resources:
+#   summarise:
+#     mem_mb: 4000
+#     runtime: 60

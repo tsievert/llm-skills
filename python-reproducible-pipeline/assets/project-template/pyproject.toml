@@ -1,0 +1,20 @@
+[project]
+name = "analysis-pipeline"
+version = "0.1.0"
+description = "Reproducible multi-step analysis driven by Snakemake"
+requires-python = ">=3.12"
+# Direct dependencies only; uv.lock records the full resolution.
+# pygments is needed by `snakemake --report` and is not pulled in by snakemake itself.
+dependencies = [
+    "snakemake>=9.27",
+    "snakemake-executor-plugin-slurm>=2.8",
+    "pygments",
+]
+
+[tool.uv]
+# Analysis project, not an installable package: do not build or install it into the environment.
+package = false
+
+# Optional date pin (lightweight alternative or complement to the lock file): resolution ignores
+# releases after this timestamp. Uncomment and set the date of the analysis.
+# exclude-newer = "2026-10-23T00:00:00Z"
