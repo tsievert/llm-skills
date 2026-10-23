@@ -511,3 +511,13 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   Proposed split and refactor of `data-repository-readme` are in ledger section 7; five questions for the user in section 9.
   Also added `!renv.lock` next to `!uv.lock` in `.gitignore` (same `*.lock` incident class). Not done: any skill file, link audit, tests of
   repository APIs, `git filter-repo`, gitleaks, DVC, DataLad.
+
+- 2026-10-23 (round 2, same research): User decisions recorded in ledger section 10: three skills (RRD, GIT, README refactor); target repositories
+  Dryad, Figshare, Zenodo, institutional; target journals Oecologia, Behavioral Ecology and Sociobiology, Ecosphere, Behavioral Ecology and Computers
+  and Electronics in Agriculture; Syncthing only as a short hazard note; DVC/DataLad as a decision table with plain-language explanation. Journal
+  policies collected from search excerpts only (pages blocked): Behavioral Ecology needs CSV data plus README archived at submission (GitHub not
+  accepted, code not required, no Dryad fee payment from 2026); Ecosphere/ESA needs data and novel code on acceptance; CEA (Elsevier Option C)
+  requires deposit or a reason plus a data statement at submission; Springer journals require a data availability statement. Zenodo sandbox test
+  with the user's token **failed with HTTP 403** on authenticated endpoints (public endpoint 200), probably a production token or missing
+  scopes; the token was used in memory only and is deliberately not recorded anywhere; user should revoke it and store a new sandbox token as
+  `ZENODO_SANDBOX_TOKEN` in `~/.Renviron`. Standing rule for tokens: never write them to files, memory or commits.
