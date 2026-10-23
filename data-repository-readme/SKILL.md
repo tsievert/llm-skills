@@ -1,6 +1,6 @@
 ---
 name: data-repository-readme
-description: 'Writes and reviews README files for research data deposits (Dryad, Zenodo, Figshare, OSF, institutional repositories): looks up the target repository''s current README requirements online, drafts the README from a template, builds a data dictionary skeleton from the actual files, and lints the result for missing sections, undocumented files, placeholders and non-ISO dates. Use when the user asks for a README, data dictionary, codebook, or documentation for a dataset, data deposit, "Data for: ..." entry or supplementary data archive, or wants a README checked before upload.'
+description: 'Writes and reviews README files for research data deposits (Dryad, Zenodo, Figshare, OSF, institutional repositories): looks up the target repository''s current README requirements online, drafts the README from a template, builds a data dictionary skeleton from the actual files, and lints the result for missing sections, undocumented files, placeholders and non-ISO dates. Use when the user asks for a README, data dictionary, codebook, or documentation for a dataset, data deposit, "Data for: ..." entry or supplementary data archive, or wants a README checked before upload. Git hygiene, secrets and release tagging belong to git-for-research-projects.'
 ---
 
 # Data repository README

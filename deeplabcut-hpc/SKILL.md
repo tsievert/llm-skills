@@ -1,6 +1,6 @@
 ---
 name: deeplabcut-hpc
-description: Sets up and runs DeepLabCut (DLC) pose estimation on HPC clusters and headless GPU machines - environment install (PyTorch/CUDA, no GUI), training and video-analysis batch scripts, pytorch_config.yaml settings, and DLC-specific failure modes. Use when the user mentions DeepLabCut, DLC, deeplabcut.train_network, analyze_videos, pose_cfg.yaml, pytorch_config.yaml, or markerless pose estimation, especially together with Slurm, a cluster, or GPUs. Combine with the generic hpc-* skills.
+description: Sets up and runs DeepLabCut (DLC) pose estimation on HPC clusters and headless GPU machines - environment install (PyTorch/CUDA, no GUI), training and video-analysis batch scripts, pytorch_config.yaml settings, and DLC-specific failure modes. Use when the user mentions DeepLabCut, DLC, deeplabcut.train_network, analyze_videos, pose_cfg.yaml, pytorch_config.yaml, or markerless pose estimation, especially together with Slurm, a cluster, or GPUs. Combine with the generic hpc-* skills. For metrics or statistics on the tracked output use animal-behaviour-tracking-analysis.
 ---
 
 # DeepLabCut on HPC

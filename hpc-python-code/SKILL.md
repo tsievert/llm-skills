@@ -1,6 +1,6 @@
 ---
 name: hpc-python-code
-description: Writes and reviews Python code that runs inside HPC batch jobs (Slurm and similar). Covers unbuffered output and the logging module, log and console output volume, matching multiprocessing/joblib/BLAS threads to the CPU allocation, job-array task IDs and seeds, SIGUSR1/SIGTERM handling, atomic checkpoints and resume, environments and file I/O on shared filesystems, and a tested Python skeleton. Use when the user asks for Python code, a training or analysis script, or parallelism that will run on a cluster, or reports missing/late log output, oversubscribed CPUs, or lost progress.
+description: Writes and reviews Python code that runs inside HPC batch jobs (Slurm and similar). Covers unbuffered output and the logging module, log and console output volume, matching multiprocessing/joblib/BLAS threads to the CPU allocation, job-array task IDs and seeds, SIGUSR1/SIGTERM handling, atomic checkpoints and resume, environments and file I/O on shared filesystems, and a tested Python skeleton. Use when the user asks for Python code, a training or analysis script, or parallelism that will run on a cluster, or reports missing/late log output, oversubscribed CPUs, or lost progress. For the sbatch script itself use hpc-job-scripts; for a multi-step Snakemake workflow use python-reproducible-pipeline.
 ---
 
 # Python on HPC

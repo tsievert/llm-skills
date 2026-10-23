@@ -1,6 +1,6 @@
 ---
 name: manuscript-figures-ggplot
-description: 'Builds journal-ready figures in R with ggplot2 and patchwork: raw data first, honest uncertainty, colour-blind-safe palettes (viridis and relatives preferred), panels built at the journal column width, text and line sizes in points, vector PDF or TIFF/PNG export, and checks for embedded fonts, text size and colour-vision deficiency. Use when the user asks for a publication, manuscript, thesis or journal figure, figure size, DPI, fonts, panel labels (a, b, c), multi-panel layout, colour-blind-safe colours, "bad plot" advice, bar versus dot or box plots, or revising figures after review. Not for exploratory plots or Shiny.'
+description: 'Builds journal-ready figures in R with ggplot2 and patchwork: raw data first, honest uncertainty, colour-blind-safe palettes (viridis and relatives preferred), panels built at the journal column width, text and line sizes in points, vector PDF or TIFF/PNG export, and checks for embedded fonts, text size and colour-vision deficiency. Use when the user asks for a publication, manuscript, thesis or journal figure, figure size, DPI, fonts, panel labels (a, b, c), multi-panel layout, colour-blind-safe colours, "bad plot" advice, bar versus dot or box plots, or revising figures after review. Not for exploratory plots or Shiny; for plotting GAM smooths start with gam-interpretation.'
 ---
 
 # Manuscript figures with ggplot2

@@ -1,0 +1,141 @@
+{
+  "skill": "clash-areas (multi-skill regression set)",
+  "note": "Expected = skill that should load. Observed = simulated selection from descriptions only (3 subagent runs, shuffled order), not the real loader. Re-run after changing descriptions.",
+  "queries": [
+    {
+      "id": 1,
+      "area": "GAM interpret vs fit",
+      "query": "I fitted a bam() with s(time, by = group) and want a plot of the difference between the two groups over time with a simultaneous confidence band.",
+      "expected": "gam-interpretation",
+      "should_trigger": true,
+      "split": "train",
+      "observed_2026_10_23": "gam-interpretation (3/3)"
+    },
+    {
+      "id": 2,
+      "area": "GAM fit vs interpret",
+      "query": "gam.check() says the k-index for my s(day) is low and edf is close to k. Should I raise k or is it something else?",
+      "expected": "gam-mgcv",
+      "should_trigger": true,
+      "split": "validation",
+      "observed_2026_10_23": "gam-mgcv (3/3)"
+    },
+    {
+      "id": 3,
+      "area": "mixed vs GAM",
+      "query": "My glmmTMB model with a random slope for animal gives a singular fit warning and DHARMa shows overdispersion. What do I do?",
+      "expected": "mixed-models-glmm",
+      "should_trigger": true,
+      "split": "train",
+      "observed_2026_10_23": "mixed-models-glmm (3/3)"
+    },
+    {
+      "id": 4,
+      "area": "pipeline R",
+      "query": "I have six R scripts that I run by hand in order, and I want only the changed ones to rerun and my package versions pinned. Where do I start?",
+      "expected": "r-reproducible-pipeline",
+      "should_trigger": true,
+      "split": "train",
+      "observed_2026_10_23": "r-reproducible-pipeline (3/3)"
+    },
+    {
+      "id": 5,
+      "area": "pipeline Python",
+      "query": "I have Python scripts plus a bash step per sample and want a workflow where only changed steps rerun, with a uv lockfile.",
+      "expected": "python-reproducible-pipeline",
+      "should_trigger": true,
+      "split": "validation",
+      "observed_2026_10_23": "python-reproducible-pipeline (3/3)"
+    },
+    {
+      "id": 6,
+      "area": "pipeline ambiguous",
+      "query": "Turn my analysis folder (some R, some Python scripts) into something a collaborator can rerun with one command.",
+      "expected": "r-reproducible-pipeline|python-reproducible-pipeline",
+      "should_trigger": true,
+      "split": "train",
+      "observed_2026_10_23": "both pipeline skills (3/3)"
+    },
+    {
+      "id": 7,
+      "area": "HPC kill vs script",
+      "query": "My job died with OUT_OF_MEMORY after three hours. How much memory should I request next time?",
+      "expected": "hpc-resource-allocation",
+      "should_trigger": true,
+      "split": "train",
+      "observed_2026_10_23": "hpc-resource-allocation (3/3) + hpc-cluster-docs (3/3)"
+    },
+    {
+      "id": 8,
+      "area": "HPC GPU vs sizing",
+      "query": "Write me a Slurm script to train a PyTorch model on 4 GPUs with torchrun.",
+      "expected": "hpc-gpu-jobs",
+      "should_trigger": true,
+      "split": "validation",
+      "observed_2026_10_23": "hpc-gpu-jobs (3/3) + hpc-cluster-docs (3/3)"
+    },
+    {
+      "id": 9,
+      "area": "HPC script vs python code",
+      "query": "I submitted my sbatch script but the .out file is empty and I cannot tell what happened.",
+      "expected": "hpc-job-scripts",
+      "should_trigger": true,
+      "split": "train",
+      "observed_2026_10_23": "hpc-job-scripts (3/3) + hpc-cluster-docs (3/3)"
+    },
+    {
+      "id": 10,
+      "area": "HPC R vs pipeline/sizing",
+      "query": "I want to run my R script on the cluster, but mclapply is grabbing every core on the node. How do I fix the worker count?",
+      "expected": "hpc-r-code",
+      "should_trigger": true,
+      "split": "train",
+      "observed_2026_10_23": "hpc-r-code (3/3) + hpc-cluster-docs (3/3)"
+    },
+    {
+      "id": 11,
+      "area": "HPC python vs script",
+      "query": "My Python script on Slurm only prints output at the very end; I also want it to checkpoint when it gets SIGUSR1.",
+      "expected": "hpc-python-code",
+      "should_trigger": true,
+      "split": "validation",
+      "observed_2026_10_23": "hpc-python-code (3/3) + hpc-cluster-docs (3/3)"
+    },
+    {
+      "id": 12,
+      "area": "DLC downstream vs tracking",
+      "query": "I have DLC csv files from an open field test and want distance travelled and time in the centre zone per animal.",
+      "expected": "animal-behaviour-tracking-analysis",
+      "should_trigger": true,
+      "split": "train",
+      "observed_2026_10_23": "animal-behaviour-tracking-analysis (3/3)"
+    },
+    {
+      "id": 13,
+      "area": "DLC tracking vs downstream",
+      "query": "deeplabcut.train_network crashes with a CUDA error on our cluster node. How do I set up the environment?",
+      "expected": "deeplabcut-hpc",
+      "should_trigger": true,
+      "split": "train",
+      "observed_2026_10_23": "deeplabcut-hpc (3/3) + hpc-gpu-jobs (2/3) or hpc-cluster-docs (1/3)"
+    },
+    {
+      "id": 14,
+      "area": "git vs README",
+      "query": "I accidentally committed an API token in my analysis repo and the .gitignore doesnt seem to work. How do I clean this up?",
+      "expected": "git-for-research-projects",
+      "should_trigger": true,
+      "split": "validation",
+      "observed_2026_10_23": "git-for-research-projects (3/3)"
+    },
+    {
+      "id": 15,
+      "area": "README vs git",
+      "query": "I need a README and data dictionary for my Figshare deposit of behavioural trial data.",
+      "expected": "data-repository-readme",
+      "should_trigger": true,
+      "split": "train",
+      "observed_2026_10_23": "data-repository-readme (3/3)"
+    }
+  ]
+}

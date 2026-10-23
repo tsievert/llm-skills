@@ -1,6 +1,6 @@
 ---
 name: github-skill-maintenance
-description: Maintains the llm-skills GitHub repo of custom skills. Lints skills against the Agent Skills spec and the repo's standing rules (teaching section, HPC "Where this skill runs", links, CRLF, truncated descriptions), finds stale package-version claims, audits the auto-sync hook and skills.paths config, and guides testing, commit and push of skill changes. Use when the user asks to check, lint, validate, review, test, update, release or sync skills, asks why a skill is not loading or not triggering, or wants a periodic skill health check.
+description: Maintains the llm-skills GitHub repo of custom skills. Lints skills against the Agent Skills spec and the repo's standing rules (teaching section, HPC "Where this skill runs", links, CRLF, truncated descriptions), finds overlapping skill scopes (clashes) and stale package-version claims, audits the auto-sync hook and skills.paths config, and guides testing, commit and push of skill changes. Use when the user asks to check, lint, validate, review, test, update, release or sync skills, asks why a skill is not loading or not triggering, or wants a periodic skill health check.
 metadata:
   version: "1.0"
 ---
@@ -43,6 +43,18 @@ and say what it would change.
    pointer to every domain skill that uses them. Hub skills (this one, `skill-lessons`,
    `skill-feedback-triage`) and the boilerplate "Explain the reasoning" and "Capture lessons"
    sections are ignored. The check is textual: it sees a name, not whether the link makes sense.
+1c. **Scope clashes.** Skills whose descriptions claim the same requests load together or get mixed up.
+   ```r
+   source("github-skill-maintenance/scripts/check_skill_clashes.R")
+   check_skill_clashes()                  # or check_skill_clashes(new = "my-skill")
+   ```
+   Flags pairs with similar description vocabulary (IDF-weighted cosine, default threshold 0.15) and
+   whether the descriptions name each other (`handoff`: none, one, both). `warn` (no hand-off) needs a
+   decision: reword, add a hand-off sentence, or record `accepted` with a reason in
+   `references/clash-decisions.tsv`. Run it for every new or changed skill. The ownership table and
+   description-writing rules are in [references/skill-boundaries.md](references/skill-boundaries.md);
+   update the table when adding a skill. The score is lexical: it cannot see meaning and cannot prove
+   triggering (that needs the queries in step 5).
 2. **Independent spec check.** `uvx --from skills-ref agentskills validate <skill-dir>`
    (PyPI `skills-ref`, the reference validator; its README calls it a demonstration
    library). The bare command `uvx skills-ref` fails on Windows; use `--from`. It accepts

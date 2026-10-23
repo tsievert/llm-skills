@@ -1,6 +1,6 @@
 ---
 name: hpc-gpu-jobs
-description: Writes and reviews GPU batch jobs on HPC clusters (Slurm gres/gpus syntax, CPU-to-GPU ratios, DataLoader workers, CUDA modules, single- and multi-GPU PyTorch launch with torchrun or srun, ports and rendezvous, GPU monitoring, node-local data staging, checkpointing). Use when the user asks for a GPU or deep-learning job script, how many GPUs/CPUs/memory to request, why a GPU job is slow, idle, or hangs, or how to monitor GPU utilisation on a cluster.
+description: Writes and reviews GPU batch jobs on HPC clusters (Slurm gres/gpus syntax, CPU-to-GPU ratios, DataLoader workers, CUDA modules, single- and multi-GPU PyTorch launch with torchrun or srun, ports and rendezvous, GPU monitoring, node-local data staging, checkpointing). Use when the user asks for a GPU or deep-learning job script, which GPU directives or CPU-to-GPU ratio to use, why a GPU job is idle or hangs, or how to monitor GPU utilisation on a cluster. To size requests from measured usage or diagnose OUT_OF_MEMORY or TIMEOUT use hpc-resource-allocation.
 ---
 
 # GPU jobs on HPC

@@ -1,6 +1,6 @@
 ---
 name: gam-interpretation
-description: Visualizes and cautiously interprets fitted generalized additive models (mgcv GAMs, GAMMs, bam) using gratia, ggplot2 and related tools. Covers partial-effect plots, partial residuals, response-scale predictions, surfaces, group comparisons, derivatives, simultaneous intervals, posterior simulation, and calibrated wording for reporting uncertain results. Use when the user asks to plot, explain, interpret, report, or write up what a GAM shows, or asks whether a smooth effect is real, significant, linear, or different between groups. Checks the installed gratia version and recent developments before suggesting functions.
+description: Visualizes and cautiously interprets fitted generalized additive models (mgcv GAMs, GAMMs, bam) using gratia, ggplot2 and related tools. Covers partial-effect plots, partial residuals, response-scale predictions, surfaces, group comparisons, derivatives, simultaneous intervals, posterior simulation, and calibrated wording for reporting uncertain results. Use when the user asks to plot, explain, interpret, report, or write up what a GAM shows, or asks whether a smooth effect is real, significant, linear, or different between groups. Checks the installed gratia version and recent developments before suggesting functions. Fitting and diagnosing the model belongs to gam-mgcv; final journal figure formatting to manuscript-figures-ggplot.
 license: MIT
 metadata:
   author: tsievert

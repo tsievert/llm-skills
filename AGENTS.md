@@ -76,6 +76,15 @@ Read the relevant file first when starting or revising a skill, and append to it
   let generic skills (`hpc-*`, `openalex`) collect a pointer to every domain skill. Planned skills that do not exist yet
   are not linked until they are written.
 
+- **Watch for skill clashes (added 2026-10-23).** The assistant picks a skill from its description alone, so overlapping
+  descriptions make two skills load or the wrong one load. When creating or changing a skill: (1) read
+  `github-skill-maintenance/references/skill-boundaries.md` (ownership map and description rules) before writing the
+  description; (2) run `check_skill_clashes(new = "<skill>")` and resolve every `warn` (narrow the wording, add a hand-off
+  sentence naming the neighbour, or record `accepted` with a reason in `references/clash-decisions.tsv`); (3) add the skill
+  to the ownership table; (4) do not copy another skill's API or function advice into a body, point to it. A hand-off
+  sentence goes in both skills' descriptions. Planned skills (`reproducible-research-data`, `stats-reporting-and-review`,
+  `python-r-interop`, `manuscript-writing-quarto`) must define their territory against the table before they are written.
+
 ## Auto-sync protocol (status: installed and verified in a live session)
 
 Goal: skills are installed globally (all projects) and kept current with GitHub.
@@ -424,6 +433,23 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   accepts wildcards, uv `--link-mode clone`/copy behaviour, Linux/macOS, a second independent report for any issue. Also added the
   openalex full-text retrieval (`scripts/fetch_fulltext.R`, `references/fulltext.md`; committed earlier). Watermark set; processed files
   moved to `~/.posit/lessons/inbox/processed/`.
+
+- 2026-10-23: Skill clash audit (not committed yet). Method: IDF-weighted cosine similarity of the 22 descriptions, then manual reading
+  of the Related-skills sections and of the overlapping body sections. Real clashes (score before): `python-`/`r-reproducible-pipeline`
+  0.52 (both claimed the tool decision), `gam-mgcv`/`gam-interpretation` 0.24 (gam-mgcv claimed interpreting, plotting and
+  glmmTMB; its Interpretation section duplicated gratia advice that only `gam-interpretation` version-checks), HPC family (failure
+  words "killed", "out of memory", "how many GPUs" claimed by three skills; `hpc-r-code` claimed "an R pipeline"). Fix: narrowed
+  descriptions and added hand-off sentences in 16 skills; slimmed the gam-mgcv section. Accepted overlaps (reason recorded): the two
+  language twins, lessons writer/reader, `hpc-cluster-docs` gate. New: `github-skill-maintenance/scripts/check_skill_clashes.R`
+  (`check_skill_clashes()`), `references/skill-boundaries.md` (ownership map, description rules, procedure, open items),
+  `references/clash-decisions.tsv`, workflow step 1c, standing rule "Watch for skill clashes". After: no findings at threshold 0.15;
+  at 0.1 only the generic `hpc-*` vocabulary noise. `lint_skills()`, `check_skill_links()`, `skills-ref validate` (15 changed skills)
+  clean. Not tested: real trigger queries (score is lexical), body duplication beyond the GAM pair (see open items in
+  skill-boundaries.md), the threshold on a larger skill set. No separate skill created: the task is a maintenance step, so it
+  extends `github-skill-maintenance`.
+  Follow-up: proxy trigger test with 15 queries (`github-skill-maintenance/assets/trigger-queries-clash-areas.json`), three subagent
+  runs that saw only descriptions: expected skill in 45/45 selections; `hpc-cluster-docs` co-loads on most HPC queries (gate by design).
+  Not tested: real loader, near-miss should-not-trigger queries. Summary in `skill-boundaries.md` open items.
 
 ## About the local user
 

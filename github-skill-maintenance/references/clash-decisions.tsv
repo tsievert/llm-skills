@@ -1,0 +1,7 @@
+# Decisions about overlapping skill descriptions, read by check_skill_clashes().
+# decision = accepted: the pair overlaps in vocabulary on purpose; give the reason. Order of a/b does not matter.
+# Add a row only after reading both descriptions and the boundary map (references/skill-boundaries.md).
+a	b	decision	reason	date
+hpc-python-code	hpc-r-code	accepted	Language twins: the same topics (logging, threads, checkpoints) for different languages; the language decides which loads	2026-10-23
+skill-lessons	skill-feedback-triage	accepted	Writer and reader of one inbox; each description says what the other does	2026-10-23
+hpc-cluster-docs	hpc-job-scripts	accepted	Gate then work: cluster-docs runs first and hands over; its description is about identifying the site, not writing scripts	2026-10-23

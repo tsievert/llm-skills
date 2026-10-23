@@ -1,6 +1,6 @@
 ---
 name: gam-mgcv
-description: Fits, checks, interprets and plots generalized additive models (GAMs) and generalized additive mixed models (GAMMs) in R with mgcv and related packages (gratia, gamm4, glmmTMB, brms, scam, DHARMa, marginaleffects). Covers choice of smooths and basis dimension k, REML, families, random effects and hierarchical GAMs, by-variables and interactions, autocorrelation, bam for large data, diagnostics (gam.check, appraise, concurvity), prediction, posterior simulation, and difference or derivative estimation. Use when the user mentions GAM, GAMM, mgcv, gam(), bam(), s(), te(), ti(), smooths, splines, edf, gratia, or modelling non-linear effects.
+description: Fits and checks generalized additive models (GAMs) and generalized additive mixed models (GAMMs) in R with mgcv and related packages (gratia, gamm4, scam, DHARMa, brms). Covers choice of smooths and basis dimension k, REML, families, random-effect smooths and hierarchical GAMs, by-variables and interactions, autocorrelation, bam for large data, and diagnostics (gam.check, appraise, concurvity). Use when the user mentions GAM, GAMM, mgcv, gam(), bam(), s(), te(), ti(), smooths, splines, edf, or modelling non-linear effects. For plotting, interpreting or reporting a fitted GAM use gam-interpretation; for mixed models without smooth terms use mixed-models-glmm.
 license: MIT
 metadata:
   author: tsievert
@@ -83,14 +83,12 @@ Plain `gam()` assumes independent residuals. With time series, spatial or repeat
 
 ## Interpretation and prediction
 
-For plotting, interpretation, comparisons, and careful wording of results, use the `gam-interpretation` skill (it also checks the installed gratia version and recent developments). Basics:
+Plotting, partial effects, simultaneous intervals, group comparisons, derivatives, posterior simulation and the wording of results belong to the `gam-interpretation` skill. It checks the installed gratia version first, which this skill does not, so gratia function advice lives only there. Fitting-side basics:
 
-- Partial effects: `gratia::draw(m)`, `gratia::smooth_estimates()` + `add_confint()` for custom ggplot2 plots. Smooths are centred, so they show effects relative to the intercept, not the response scale.
-- Whole-response predictions: `predict(m, newdata, type = "link", se.fit = TRUE)` then back-transform with `family(m)$linkinv`, giving valid intervals on the response scale. Use `gratia::fitted_values()`, `conditional_values()` or `data_slice()` to build grids.
-- Exclude random effects from predictions with `exclude = "s(g)"` (and supply a dummy level) or use `gratia::data_slice()`; hold other covariates at typical values.
-- Do not extrapolate outside the data; use `gratia::too_far()` or `exclude.too.far`-style masks for surfaces.
-- Pointwise intervals do not control coverage across the whole curve; for statements about the whole smooth use simultaneous intervals (`gratia::confint(type = "simultaneous")`, `simultaneous_bands`).
-- Group comparisons and rates of change: `gratia::difference_smooths()`, `conditional_differences()`, `derivatives()`. Uncertainty of derived quantities: posterior simulation with `smooth_samples()`, `fitted_samples()`, `posterior_samples()` (see gratia posterior simulation article).
+- Smooths are centred, so partial-effect plots show effects relative to the intercept, not the response scale.
+- Whole-response predictions: `predict(m, newdata, type = "link", se.fit = TRUE)`, then back-transform with `family(m)$linkinv`, which gives valid intervals on the response scale.
+- Exclude random effects from predictions with `exclude = "s(g)"` (and supply a dummy level); hold other covariates at typical values.
+- Do not extrapolate outside the data.
 
 ## Large data
 
