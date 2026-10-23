@@ -94,10 +94,16 @@ and say what it would change.
 - **Unquoted `#` in a description.** YAML ends a plain scalar at ` #`, so "Covers #SBATCH
   directives" silently cuts the description there (verified with two parsers). Quote the
   whole value, or write "SBATCH". Linter check: `description`.
-- **CRLF in scripts.** Tools on Windows can leave CRLF in the working copy even though
-  `.gitattributes` forces LF in the index (`git ls-files --eol` shows `i/lf w/crlf`). A
-  script copied to the cluster from the working copy then fails. Fix with
-  `sed -i 's/\r$//' <file>` in Git Bash before copying.
+- **CRLF in scripts and Markdown.** Tools on Windows can leave CRLF in the working copy even
+  though `.gitattributes` forces LF in the index (`git ls-files --eol` shows `i/lf w/crlf`). A
+  script copied to the cluster from the working copy then fails, and multi-line string
+  replacements in `SKILL.md` or reference files report "string not found" while single-line
+  ones work. Run `git ls-files --eol <file>` before a multi-line edit. Fix with
+  `sed -i 's/\r$//' <file>` in Git Bash.
+- **Apostrophe in a single-quoted description.** A bare apostrophe (a possessive such as
+  "user's") ends the YAML scalar and the linter reports "YAML does not parse". Avoid
+  apostrophes in descriptions or double them (`''`), and run `lint_skills()` after every
+  description edit.
 - **Dead links** between skills after a file is moved or was never created. Linter
   check: `links`.
 - **`~` in R on Windows** is `Documents`, not the profile directory. The scripts use

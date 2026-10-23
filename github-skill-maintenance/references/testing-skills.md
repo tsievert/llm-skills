@@ -76,6 +76,15 @@ whether the skill is ever used.
   shared cache for every project. Point caches at a scratch folder when a test must write into an environment (renv: `RENV_PATHS_CACHE`,
   uv: `UV_CACHE_DIR`).
 
+## Testing several neighbouring skills together (proxy test)
+
+The manual protocol above assumes fresh conversations and one skill at a time. For a family of
+skills with overlapping scope, a cheaper proxy is to write about 15 realistic queries with the
+expected skill, then give subagents only the names and descriptions and ask which skill they
+would load, three runs each (example: `assets/trigger-queries-clash-areas.json`). It tests
+description wording only, not the real loader, not near-miss queries that should trigger
+nothing, and not the skill bodies. Results so far are in `skill-boundaries.md` (open items).
+
 ## When to stop
 
 Stop when the failures left are inconsistent rather than systematic, or when a change

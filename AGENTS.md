@@ -511,7 +511,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   negative case, restore from a P3M snapshot URL. (Committed in c4fd1fd; the template `uv.lock` was untracked until the next commit, see below.)
 
 ## Lessons triage state
-- Lessons usage watermark: 2026-10-23T19:33:29
+- Lessons usage watermark: 2026-10-23T23:23:10
 
 - 2026-10-23: Commit audit (`git status`, `--ignored`, tracked-file counts per skill, `origin/main` comparison). All 21 skills and
   `research/` were committed and pushed (HEAD 1551556 = origin/main); the "not yet committed" notes above were stale and are corrected.
@@ -602,3 +602,11 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   (`//`) inside a node returned the first record for every row (use `.//`); `local-name()` is needed because the XML has a namespace.
   Findings: re3data search is fuzzy (an "Aarhus" query returned unrelated entries) and incomplete (no DeiC Dataverse), so web search stays
   mandatory. My earlier claim in the same session that ERDA was the Aarhus example without mentioning other options was the gap the user caught.
+
+- 2026-10-23: Second `skill-feedback-triage` run: 4 inbox files (4 use-case entries, 2 lessons, 1 user-correction; one project, so every issue is a single
+  report). Outcomes: (1) apostrophe in a single-quoted description breaks frontmatter: `fix`, pitfall added to `github-skill-maintenance/SKILL.md`
+  (not re-run, standard YAML behaviour); (2) multi-line edits fail on CRLF working copies: `fix`, CRLF pitfall widened to Markdown and reference files,
+  confirmed with `git ls-files --eol`; (3) no guidance for testing neighbouring skills together: `add-note`, proxy-test section in
+  `references/testing-skills.md`; (4) institution-discovery user correction: already fixed earlier, rejected as a new change; (5) openalex duplicate
+  records in title search: `park` (file stays in the inbox). Working copies of the two edited files normalised to LF. `lint_skills()` clean (23),
+  `skills-ref` valid. Not verified: a second independent report for any issue. Watermark set to 2026-10-23T23:23:10.
