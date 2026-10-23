@@ -74,7 +74,7 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
 
 Before each: follow the working rules above (check agentskills.io docs, check CRAN for helpers, use `create-skill`).
 
-- [ ] `mixed-models-glmm`: lme4, glmmTMB, DHARMa, performance, emmeans. Repeated-measures behaviour trials,
+- [x] `mixed-models-glmm` (done 2026-10-23, see Log): lme4, glmmTMB, DHARMa, performance, emmeans. Repeated-measures behaviour trials,
   random effects, zero inflation, overdispersion, model selection, residual checks, reporting. Link to `gam-mgcv`.
 - [~] `animal-behaviour-tracking-analysis`: v1 (keypoint-MoSeq) and v2 (basic DLC metrics) done, see Log. Still open:
   SimBA/B-SOiD/VAME, validation of immobility/freezing thresholds against manual scoring, real-data tests.
@@ -197,6 +197,20 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   Poisson GEE tested in the kpms venv. Findings: plain binomial on frame counts was strongly overdispersed (AIC 4915 vs 763
   beta-binomial); compositional closure produced a spurious "decrease" in a Python simulation. Installed from CRAN: vegan,
   permute, coxme, lmerTest. Not tested: real data, power analysis, DirichletReg/compositions routes.
+- 2026-10-23: Added `mixed-models-glmm` (SKILL.md, `references/pitfalls-and-reporting.md`, `scripts/glmm_templates.R`).
+  Blocks 1-5 reuse the tested stats_demo.R templates (Gamma, binomial/beta-binomial, nbinom2 offset, emmeans, Holm);
+  new tested blocks: zero inflation with emmeans `component` cond/zi/response, dispformula, random intercept vs slope
+  (singular fit with corr -1 reproduced), lmerTest Satterthwaite, performance icc/r2/check_singularity. Script ran clean
+  with glmmTMB 1.1.15.2, DHARMa 0.5.0, emmeans 2.0.4, lme4 2.0.6, performance 0.19.0. Findings: `testCategorical(plot=FALSE)`
+  errors in DHARMa 0.5.0; testZeroInflation p=0.07 while AIC favoured ZI by 37. Checked that `recalculateResiduals(group=)`,
+  `ordbeta`, `beta_family`, `diagnose`, `nbinom1` exist. Not tested: real data, rptR (not installed), ar1/exp covariance
+  structures, pbkrtest bootstrap with glmmTMB, brms. Not yet committed.
+- 2026-10-23: Installed `rptR` 0.9.23 from CRAN; tested Gaussian and Poisson `rpt()` (block 9b in `glmm_templates.R`; full script
+  reruns clean, noisy progress bar and singular-fit warnings in bootstraps). Added "Issues reported for ecological and behavioural
+  data" to `mixed-models-glmm/references/pitfalls-and-reporting.md` from OpenAlex (R/httr2; authors verified via API, abstracts only,
+  no full texts) plus glmmTMB GitHub issue titles (#536, #830, #522, #888, #744, titles only). OpenAlex gotcha: wildcards are
+  rejected inside quoted phrases in `title_and_abstract.search.exact` (HTTP 400). Caught one misattribution (W2055156391 is
+  Cleasby et al. 2014) by checking authorships.
 
 ## About the local user
 
