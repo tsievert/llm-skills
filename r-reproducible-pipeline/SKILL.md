@@ -192,6 +192,7 @@ session guard), which the checker reports as INFO.
 - `hpc-resource-allocation`: sizing `memory_gigabytes_required` and `time_minutes` from `sacct` measurements.
 - `manuscript-figures-ggplot`: journal-ready figures produced inside targets.
 - `data-repository-readme`: documenting the code and data deposit that accompanies the pipeline.
+- `reproducible-research-data`: assembling and checking the deposit (which repository, journal timing, clean-clone test of this pipeline).
 - `git-for-research-projects`: `.gitignore` for `_targets/` and the data folder, keeping `renv.lock` tracked, tagging a version.
 
 ## Explain the reasoning (teaching rule)

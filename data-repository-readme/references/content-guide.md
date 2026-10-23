@@ -82,7 +82,8 @@ Suggestions for the user's usual data types; adapt to the repository.
   if sub-folders are used independently.
 - Data README vs software README (Cornell): if the deposit is mainly code, use the
   software README guide; if mainly data with analysis scripts, use the data README and add a
-  short "Code and software" section. For GitHub-archived code, consider CITATION.cff.
+  short "Code and software" section. Archiving code from GitHub with a DOI (CITATION.cff, tags) is
+  covered in `git-for-research-projects`; which repository to use is in `reproducible-research-data`.
 - Large machine-readable dictionaries: a `data_dictionary.csv` or `datapackage.json`
   can sit next to the README. Keep the README as the human entry point.
 

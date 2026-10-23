@@ -1,13 +1,13 @@
 ---
 name: git-for-research-projects
-description: 'Sets up and audits Git repositories for research analysis projects: .gitignore and .gitattributes starters for R, Python and Quarto, what to commit and what not (large data stay on the server; a tracked manifest with checksums records them), preventing and cleaning up committed secrets with git filter-repo, Windows line endings, repositories inside Syncthing, OneDrive or Dropbox folders, and tagging a release with CITATION.cff for a Zenodo DOI. Ships read-only R helpers audit_repo(), release_check(), data_manifest(), verify_manifest() and write_citation_cff(). Use when the user asks about .gitignore, a file wrongly ignored or wrongly tracked, a committed token or password, CRLF or line-ending problems, files rejected by GitHub for size, tagging a paper version, the Zenodo-GitHub integration, CITATION.cff, or whether a project folder is safe to sync. README and data dictionary content belongs to data-repository-readme.'
+description: 'Sets up and audits Git repositories for research analysis projects: .gitignore and .gitattributes starters for R, Python and Quarto, what to commit and what not (large data stay on the server; a tracked manifest with checksums records them), preventing and cleaning up committed secrets with git filter-repo, Windows line endings, repositories inside Syncthing, OneDrive or Dropbox folders, and tagging a release with CITATION.cff for a Zenodo DOI. Use when the user asks about .gitignore, a file wrongly ignored or wrongly tracked, a committed token or password, CRLF or line-ending problems, files rejected by GitHub for size, tagging a paper version, the Zenodo-GitHub integration, CITATION.cff, or whether a project folder is safe to sync. README content belongs to data-repository-readme; choosing a repository and assembling the deposit to reproducible-research-data.'
 ---
 
 # Git for research projects
 
 Repository hygiene around an analysis project: what goes into Git, what stays out, how to keep
 secrets and large data out, and how to tag a version that a paper can cite. It does not cover
-the data deposit itself (which repository, journal policy, file layout of the deposit) and
+the data deposit itself (`reproducible-research-data`: which repository, journal policy, file layout of the deposit) and
 does not replace a Git tutorial. `references/sources.md` lists what was read and when.
 
 **Owner's standing decision:** large data are never stored in GitHub repositories. They stay on
@@ -95,6 +95,7 @@ very large histories (`history = TRUE` runs `git log --all`).
 - `r-reproducible-pipeline`: the targets, renv and Quarto project whose lockfiles and `_targets.R` must be tracked and whose store must be ignored.
 - `python-reproducible-pipeline`: the uv and Snakemake project, same rules (`uv.lock` tracked, `.snakemake/` and `.venv/` ignored).
 - `data-repository-readme`: the README and data dictionary for the deposit; where the originals live goes there.
+- `reproducible-research-data`: the deposit as a whole: which repository and journal rules apply, a checksummed staging copy from the server data, pre-upload checks and the data availability statement.
 - `hpc-job-scripts`: sbatch and shell scripts must keep LF line endings when they are copied to a cluster.
 
 ## Explain the reasoning (teaching rule)

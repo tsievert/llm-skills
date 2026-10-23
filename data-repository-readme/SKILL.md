@@ -1,6 +1,6 @@
 ---
 name: data-repository-readme
-description: 'Writes and reviews README files for research data deposits (Dryad, Zenodo, Figshare, OSF, institutional repositories): looks up the target repository''s current README requirements online, drafts the README from a template, builds a data dictionary skeleton from the actual files, and lints the result for missing sections, undocumented files, placeholders and non-ISO dates. Use when the user asks for a README, data dictionary, codebook, or documentation for a dataset, data deposit, "Data for: ..." entry or supplementary data archive, or wants a README checked before upload. Git hygiene, secrets and release tagging belong to git-for-research-projects.'
+description: 'Writes and reviews README files for research data deposits (Dryad, Zenodo, Figshare, OSF, institutional repositories): looks up the target repository''s current README requirements online, drafts the README from a template, builds a data dictionary skeleton from the actual files, and lints the result for missing sections, undocumented files, placeholders and non-ISO dates. Use when the user asks for a README, data dictionary, codebook, or documentation for a dataset, data deposit, "Data for: ..." entry or supplementary data archive, or wants a README checked before upload. Choosing the repository, journal policy and the whole deposit belong to reproducible-research-data; Git hygiene, secrets and release tagging to git-for-research-projects.'
 ---
 
 # Data repository README
@@ -14,6 +14,7 @@ was verified on 2026-10-23.
 1. **Establish the target.** Ask which repository (Dryad, Zenodo, Figshare, OSF, institutional,
    domain-specific), which journal (data policy, double-anonymous review?), and whether the
    deposit is mostly data or mostly code. If unknown, use the generic structure and say so.
+   Deciding *where* to deposit, what to include or which licence belongs to `reproducible-research-data`; settle it there and return with the target.
 2. **Currency check (do not skip).** Open the repository's current README and file-requirement
    pages (URLs in [references/sources.md](references/sources.md)) with `webfetch` or
    `web_search`; for a journal, open its data policy. Compare their headings, mandatory
@@ -59,9 +60,9 @@ was verified on 2026-10-23.
 - Dates as `YYYY-MM-DD`. Software names with versions (`sessionInfo()`, `renv.lock`, `uv.lock`).
 - If the journal is double-anonymous, omit names, emails and ORCIDs until acceptance (Dryad guidance).
 - Avoid legal-sounding conditions ("must cite"); encourage citation instead (Dryad guidance).
-- Do not upload, publish or submit anything for the user. Publishing to Zenodo or Figshare is
+- Do not upload, publish or submit anything for the user (deposit rules: `reproducible-research-data`). Publishing to Zenodo or Figshare is
   permanent in practice; the user decides.
-- Personal data or sensitive-species locations: flag and ask before including them.
+- Personal data or sensitive-species locations: flag and ask before including them (what may be deposited: `reproducible-research-data`).
 - If a file in the deposit is not in the README, either document it or tell the user it should be
   removed from the deposit.
 
@@ -77,7 +78,7 @@ data). CRAN installs are allowed; GitHub or R-universe installs need the user's 
 
 ## Reference files
 
-- [references/sources.md](references/sources.md): URLs of repository and generic guidance, standards,
+- [references/sources.md](references/sources.md): URLs of README guidance and repository README pages (licences, identifiers, FAIR, limits and journal policies moved to `reproducible-research-data`),
   what was verified, and how to look for changes. Read this at step 2.
 - [references/content-guide.md](references/content-guide.md): what each section needs, do/do not, field
   additions for behavioural ecology, tracking and chemistry data, and what the assistant must never infer.
@@ -106,6 +107,7 @@ template against each repository's own template files.
 - `manuscript-figures-ggplot`: figures that use the same column labels as the data dictionary.
 - `python-reproducible-pipeline`: a pinned, re-runnable workflow (uv lock, Snakemake) to deposit with the data so the results can be regenerated.
 - `r-reproducible-pipeline`: the R counterpart (targets, renv lockfile, Quarto report) to deposit with the data.
+- `reproducible-research-data`: the deposit as a whole: what to deposit, which repository and journal rules apply (and when), licences and identifiers, a checksummed staging copy and pre-upload checks.
 - `git-for-research-projects`: the repository side of a deposit: what stays out of Git, a checksum manifest of server-held data, tagging a version and CITATION.cff.
 
 ## Explain the reasoning (teaching rule)

@@ -9,7 +9,7 @@ override anything here.
 
 - [Generic guidance (repository-independent)](#generic-guidance)
 - [Repository-specific guidance](#repository-specific-guidance)
-- [Standards a README should point to](#standards)
+- [Standards a README should point to](#standards) (moved)
 - [What was verified and what was not](#verified)
 - [How to look for changes](#how-to-look-for-changes)
 
@@ -55,18 +55,15 @@ Not obtainable: the Borealis `.xlsx` data dictionary and the 20 analysed example
 | Zenodo: record metadata | https://help.zenodo.org/docs/deposit/about-records/ and https://help.zenodo.org/docs/deposit/describe-records/ | Which fields live in the form (title, creators, description, license, keywords, funding) and are therefore not to be duplicated only in the README. Zenodo's own pages disagree on file edits after publication (the about-records page says files cannot be modified, the create-upload page mentions a 45-day window), so finish and check the README before publishing and confirm the current rule. |
 | Zenodo: Ghent University guide | https://onderzoektips.ugent.be/en/tips/00002267/ | Practical advice: description is not the paper abstract; use a README for file organisation. Secondary source. |
 | Figshare | see above | Title, description, keywords, license are mandatory form fields; README is an uploaded file. |
-| Others (OSF, Mendeley Data, institutional repositories, domain repositories such as GBIF, ENA, Movebank, MorphoSource) | search "[repository] README requirements" and the repository's help centre | Domain repositories often require metadata standards instead of or in addition to a README (for example Darwin Core, EML, MIAME). Ask the user. |
+| Others (OSF, Mendeley Data, institutional repositories such as ERDA or a Dataverse (see `reproducible-research-data`), domain repositories such as GBIF, ENA, Movebank, MorphoSource) | search "[repository] README requirements" and the repository's help centre | Domain repositories often require metadata standards instead of or in addition to a README (for example Darwin Core, EML, MIAME). Ask the user. |
 
 ## Standards
 
-Point the README at these rather than reinventing them. Open the live page before quoting details.
-
-- Dates: ISO 8601, `YYYY-MM-DD` (Cornell and UBC both recommend it).
-- Identifiers: DOI (DataCite), ORCID for people, ROR for organisations, funder and grant IDs.
-- Licenses: Creative Commons chooser https://creativecommons.org/choose/ and SPDX identifiers for code https://spdx.org/licenses/. Repositories may force one (Dryad: CC0).
-- FAIR principles: https://www.go-fair.org/fair-principles/ (page not retrievable on 2026-10-23; the Zenodo principles page https://about.zenodo.org/principles/ maps FAIR to concrete repository behaviour).
-- Controlled vocabularies and taxonomies listed by Cornell: ITIS (https://www.itis.gov/), GCMD keywords, IUPAC Gold Book, Gene Ontology.
-- Machine-readable companions: Frictionless Data Package (`datapackage.json`), Darwin Core / EML for biodiversity data, CITATION.cff for software.
+The README itself needs only: dates as ISO 8601 (`YYYY-MM-DD`; Cornell and UBC both recommend it), the licence named in full with its version, ORCID for people and ROR for organisations where known, and the
+dataset DOI once it exists. The broader material (licence choice, identifiers, FAIR, controlled vocabularies, machine-readable companions
+such as `datapackage.json` and CITATION.cff) moved to the `reproducible-research-data` skill,
+`references/licences-and-identifiers.md`. Repository limits, institutional archives (ERDA, ULiège Dataverse) and journal data policies are
+in its `references/repositories.md` and `references/journal-policies.md`; this file keeps only the README pages of the repositories.
 
 ## Verified
 

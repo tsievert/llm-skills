@@ -18,3 +18,4 @@ r-reproducible-pipeline	hpc-cluster-docs	no-backlink	Generic first-step skill; s
 r-reproducible-pipeline	hpc-resource-allocation	no-backlink	Sizing advice is generic; it needs no pointer to every workflow skill	2026-10-23
 r-reproducible-pipeline	manuscript-figures-ggplot	no-backlink	Figures are one step of many; the figure skill stays free of pipeline pointers	2026-10-23
 git-for-research-projects	hpc-job-scripts	no-backlink	Generic HPC skill with its own CRLF linter; should not collect a pointer to every skill that mentions line endings	2026-10-23
+reproducible-research-data	manuscript-figures-ggplot	no-backlink	Figures are one input to a deposit (source data); the figure skill stays free of deposit pointers	2026-10-23

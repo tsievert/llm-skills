@@ -222,3 +222,37 @@ Large files will **not** live in GitHub repositories. They stay on the universit
 - RRD skill: the deposit assembles files from the server, so the manifest and checksum step matters more (the copy that reaches the repository can be verified against the server copy); the README must say where the original lives and which copy is deposited; check each repository's real limits live (Zenodo 50 GB and 100 files per upload through the form, Dryad 10 GB per file recommended and 2 TB per publication through the web interface, both read 2026-10-23).
 - "Linked" data: which of Dryad, Figshare, Zenodo and the institutional repository allow an external link instead of an upload is **not established yet** (Zenodo's form takes files; related identifiers can point elsewhere; a link is not a preserved copy and may break). To check before the skill claims anything; a journal that demands archiving (Behavioral Ecology, Ecosphere, CEA) will usually need an actual deposit or an established domain repository, so linking is probably only acceptable for very large secondary files with a stated reason.
 - Open: how the user's university server is reached from the analysis machine (mapped drive, SFTP) and whether it is backed up; whether the server copy is read-only; which institutional repository applies (Jyvaskyla or Aarhus).
+
+## 11. Round 4 (2026-10-23): institutional archives and the build of `reproducible-research-data`
+
+User decisions: external links are not a hard requirement; institutional questions are answered when the skill is used; research with Aarhus (ERDA) and Liège
+as examples; fetch failures are handled at trigger time. The README refactor was done in the same session.
+
+| Source | Status | What it gave |
+|---|---|---|
+| AU guidance portal for ERDA (medarbejdere.au.dk, `.../erda-guidance-portal`) | read | Open research data only (no personal, patentable, confidential, strategic or export-controlled data; SIF instead); frozen archives for permanent read-only publication, workgroup shares, share links; replication (15-minute snapshots kept 8 days, secondary site over 14 km daily, kept 30 days); no enforced quota; single-file transfer; rejected file-name characters; accounts expire. **No DOI procedure on the page** |
+| ERDA user guide v8, April 2026 (`erda.au.dk/public/au-erda-user-guide.pdf`) | read via `curl` and `pdftotext -layout` (fetch tool returns binary) | Archive form (name, author, description, choose files, public yes/no, preview, finalize "permanently freezes"); copy not move; SFTP `io.erda.au.dk:2222`, WebDAVS, rsync, HTTPS, ssh keys; 2-factor recommended for mounting; the text has no "DOI" at all |
+| ERDA front-page snippet (`erda.au.dk/about-snippet.html`) | search excerpt | "archiving and publication with AU DOIs" (wording copied from the Copenhagen page); conflicts with the guide, so DOI status is open |
+| Roskilde University report (rucforsk.ruc.dk) | search excerpt | Says the (Copenhagen) ERDA is a file archive without DOI, metadata or licensing; older and about another ERDA instance |
+| AU Library data-management pages | search excerpts | Names Zenodo (50 GB per dataset) and Mendeley Data as general repositories; Pure registers data |
+| ULiège Dataverse (`dataverse.uliege.be`) | search excerpt of the home page | Institutional open research data repository (FAIR); sample citation with DOI prefix `10.58119/ULG` (ULiège Open Data Repository); login to add data; fetch of the page failed ("Network error") |
+| ULiège Open Science site and Science Roadmap 2023-2028 | search excerpts | ORBi is the publications repository (DSpace, 2008); Dataverse for datasets with metadata, PIDs, licences; ORCID encouraged; a work-data storage system is promised |
+| `lib.uliege.be/fr/uliege-dataverse` | search excerpt (FR); `/en/` returns 404 | Short purpose text only |
+| Generic Dataverse guides and other installations (recherche.data.gouv.fr, Polytechnique Montréal, Dataverse docs) | search excerpts | CC0 default; DOI reserved at draft and activated at publication; private URL; cannot delete files after publication without deleting the dataset; **limits differ per installation, so none were carried over to ULiège** |
+
+Not established: ERDA DOI behaviour; ULiège Dataverse eligibility, size limits, curation, licence default, versioning; whether either archive satisfies a given journal's "permanent public repository" wording; Figshare limits; any live journal page. These are written into `reproducible-research-data/references/repositories.md` as open questions for trigger time.
+
+Local tests: see the Log entry in `AGENTS.md` (check_deposit and stage_deposit on a scratch deposit). Gotchas found: the session guard blocks creating a file named `.Renviron` even in a scratch folder (test with another secret-like name); NTFS cannot create case-only name pairs, so that check is untested; `list.files(all.files = TRUE)` returns the whole `.git` tree, so junk directories are collapsed to one finding and dropped from later checks; reading only the first 1 MB for the UTF-8 test needs the last 3 bytes dropped to avoid a false positive on a split multibyte character.
+
+### 11.1 Follow-up: Aarhus has more than ERDA (user correction, same day)
+
+| Source | Status | What it gave |
+|---|---|---|
+| AU Library data-management page (`library.au.dk/en/researchers/datamanagement`) | read (fetch) | "Selected general repositories": Pure, Zenodo, Figshare (free or institutional account), LOAR; points to re3data; **no Dataverse and no ERDA mentioned** |
+| AU research-data-management page (`medarbejdere.au.dk/en/research-data-management`) | search excerpt | Names Dataverse (Harvard Dataverse figures: 2.5 GB per file, 1 TB), Zenodo (50 GB per dataset) and Mendeley Data |
+| DeiC Dataverse service pages (`deic.dk/.../deic-dataverse`) and user guide | search excerpts | National Danish repository; universities have their own collections; DOIs; curation by the university; WAYF login; use requires agreements between the university and DeiC; excerpt (about 326 days old) said only Copenhagen could publish and others were reviewing agreements sent in October 2024; user guide: 1 GB per file, 100 files per dataset, auto-unzip, MD5 duplicate check, Private URL for reviewers, files open by default |
+| KU Library tools page, Roskilde library guide (42 days old), DeiC FAIR pages | search excerpts | Datasets online at least 10 years after publication; all Danish universities offered DeiC Dataverse in 2026; a demo installation exists for training |
+| re3data API (`/api/beta/repositories?query=`, `/repository/<id>`) | tested | Keyless XML. LOAR entry lists Aarhus University among its institutions (DOI and handle, versioning yes, last update 2024-01-09). ULiège Dataverse entry r3d100014621: DOI, CC licences, upload restricted to institutional membership, versioning yes, updated 2026-03-30. No DeiC Dataverse hit in the queries tried; "Aarhus" query returns unrelated entries |
+
+Open: AU's current DeiC Dataverse access (ask AU Library or the local anchor point); whether an ERDA frozen archive gets a DOI; LOAR upload conditions and limits; ULiège Dataverse limits and curation.
+Skill consequence: institution discovery is a mandatory workflow step, with re3data as a supplement to web search (`reproducible-research-data/scripts/find_repositories.R`).

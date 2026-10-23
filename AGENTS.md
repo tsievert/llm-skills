@@ -138,7 +138,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
 - [~] `animal-behaviour-tracking-analysis`: v1 (keypoint-MoSeq) and v2 (basic DLC metrics) done, see Log. Still open:
   validation of immobility/freezing thresholds against manual scoring, real-data tests.
   SimBA/B-SOiD/VAME are out of scope for now (decision 2026-10-23). Link to `deeplabcut-hpc`.
-- [~] `reproducible-research-data` (research round 1 done 2026-10-23, see Log and `research/data-and-git-ledger.md`; no skill files yet):
+- [x] `reproducible-research-data` (built 2026-10-23, see Log; not yet committed; research in `research/data-and-git-ledger.md` sections 10-11; README refactor done):
   FAIR data deposits (Figshare "Data for:" style), data dictionaries,
   `renv`/`uv` lockfiles, Quarto manuscripts, code and data archive per paper. Proposed scope: the deposit as a whole (what to
   deposit, layout, licences, repository and journal policy, manifest, clean-clone test, DOI and versions); `data-repository-readme`
@@ -569,3 +569,36 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   `lint_skills()` and `check_skill_links()` clean (22 skills), `skills-ref` valid for the new skill and the three edited ones. Backlinks added in
   `r-reproducible-pipeline`, `python-reproducible-pipeline`, `data-repository-readme`; one `no-backlink` row (`hpc-job-scripts`). Not tested: Linux/macOS,
   push or GitHub Support side of a rewrite, gitleaks, pre-commit, case collisions and long paths, real Zenodo release, `git2rdata`, submodules.
+
+- 2026-10-23: Built `reproducible-research-data` (SKILL.md; `scripts/check_deposit.R` with `check_deposit()` and `stage_deposit()`;
+  references `repositories`, `journal-policies`, `contents-and-layout`, `licences-and-identifiers`; assets `data-availability-statements.md`,
+  `deposit-checklist.md`). User decisions: external links not a hard requirement; institutional questions are resolved when the skill
+  triggers (Aarhus ERDA and ULiège Dataverse are worked examples); pages that cannot be fetched are handled at trigger time (ask the user
+  to paste text). Online sources: ERDA AU guidance portal (page read) and ERDA user guide v8 April 2026 (PDF read with `pdftotext`; the
+  fetch tool shows only binary), ERDA/ULiège pages as search excerpts; `dataverse.uliege.be` home as excerpt only (fetch and `lib.uliege.be/en`
+  failed or 404). **ERDA DOI not established** (front-page text says "AU DOIs", portal and guide do not describe a DOI procedure). **ULiège
+  Dataverse limits, eligibility, curation and licence not established.** Refactor of `data-repository-readme`: the Standards section moved to
+  `reproducible-research-data/references/licences-and-identifiers.md`, description and step 1 hand off the repository/journal/deposit decisions,
+  rules and Related skills point to the new skill, `content-guide.md` CITATION.cff text now points to `git-for-research-projects`; backlinks added
+  in `git-for-research-projects` (description trimmed to stay under 950 characters), `r-reproducible-pipeline`, `python-reproducible-pipeline`;
+  one `no-backlink` row (`manuscript-figures-ggplot`); `skill-boundaries.md` table and open items updated. Tested on Windows (R 4.6.0): `check_deposit()`
+  on a seeded scratch deposit (all intended checks fired; the `.Renviron` test file was blocked by the session guard, so a `secrets.yml` stand-in was used),
+  `stage_deposit()` refusals, copy plus manifest, tamper detection. Not tested: case-only collisions, Linux/macOS, SFTP-mounted ERDA, the clean-clone
+  procedure end to end, real uploads, trigger queries. Checks: `lint_skills()` no findings (23 skills), `check_skill_links()` clean,
+  `check_skill_clashes(new=)` clean at 0.15, `skills-ref` valid for the six touched skills, `check_versions()` zen4R same. The working copies
+  of three README-skill files and three neighbour `SKILL.md` files had CRLF; normalised to LF (index was already LF). Not committed yet.
+
+- 2026-10-23 (follow-up, `reproducible-research-data`): user pointed out that Aarhus also has a Dataverse, so the skill must not trust the user's
+  own list of institutional repositories. New workflow step 2 "Discover the options": ask for all institutions (current, previous,
+  collaborating) and the country, search the web for the library and national offers, query re3data, tabulate what the user named versus
+  what else turned up, flag conflicts, let the user choose; new rule "the user's list is a starting point". `repositories.md` now has an
+  "Institution discovery" method plus Aarhus and ULiège as worked examples. Findings for Aarhus: AU Library lists Pure, Zenodo, Figshare and
+  LOAR (not Dataverse, not ERDA); national **DeiC Dataverse** (dataverse.deic.dk; per-university collection; user guide: 1 GB per file,
+  100 files per dataset, curation by the university, Private URL for reviewers) but **AU's access status is unclear** (a DeiC page
+  excerpt said only Copenhagen could publish and others were still reviewing agreements; a Roskilde page says all universities get access in
+  2026). LOAR lists Aarhus among its institutions (re3data, updated 2024-01-09). ULiège Dataverse in re3data: DOI, CC licences, upload
+  restricted to institutional membership, versioning yes (updated 2026-03-30). New `scripts/find_repositories.R`: `re3data_search()`,
+  `re3data_search_many()`, `re3data_info()` (keyless re3data beta API, httr2 + xml2). Bugs found and fixed in testing: an absolute XPath
+  (`//`) inside a node returned the first record for every row (use `.//`); `local-name()` is needed because the XML has a namespace.
+  Findings: re3data search is fuzzy (an "Aarhus" query returned unrelated entries) and incomplete (no DeiC Dataverse), so web search stays
+  mandatory. My earlier claim in the same session that ERDA was the Aarhus example without mentioning other options was the gap the user caught.

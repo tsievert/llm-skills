@@ -169,6 +169,7 @@ ERROR until the `<PLACEHOLDER>` values in its profile are replaced.
 - `hpc-r-code`: R steps and R environments on a cluster.
 - `animal-behaviour-tracking-analysis`: a typical pipeline to wrap (DeepLabCut output to metrics to statistics).
 - `data-repository-readme`: documenting the code and data deposit that accompanies the pipeline.
+- `reproducible-research-data`: assembling and checking the deposit (which repository, journal timing, clean-clone test of this pipeline).
 - `git-for-research-projects`: `.gitignore` for `.venv/`, `.snakemake/` and the data folder, keeping `uv.lock` tracked, tagging a version.
 - `r-reproducible-pipeline`: the R-centred counterpart (targets, renv, Quarto) and the other side of the "choose the tool" decision.
 
