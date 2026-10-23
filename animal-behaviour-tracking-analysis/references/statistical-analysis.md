@@ -1,6 +1,15 @@
 # From extracted metrics to statistical analysis
 
-Contents: principles, data layout, choosing the model, basic-metric templates, design issues, keypoint-MoSeq (what is built in, what to do instead), Python route, reporting.
+## Contents
+
+- [Principles](#principles)
+- [Data layout: one tidy row per recording](#data-layout-one-tidy-row-per-recording)
+- [Which model for which metric](#which-model-for-which-metric)
+- [Design issues that change the model](#design-issues-that-change-the-model)
+- [keypoint-MoSeq: what is built in, and why to export instead](#keypoint-moseq-what-is-built-in-and-why-to-export-instead)
+- [Python route (statsmodels)](#python-route-statsmodels)
+- [Reporting checklist](#reporting-checklist)
+
 
 All code below is in [scripts/stats_demo.R](../scripts/stats_demo.R), which simulates a 24-animal, 3-group, 2-session design (48 recordings) and runs every model. It is a set of templates tested for running correctly on simulated data. It does not replace choosing the model for your design, and the effects it finds are the ones built into the simulation. For modelling depth see the `gam-mgcv` and `gam-interpretation` skills (time courses) and the planned `mixed-models-glmm` skill.
 

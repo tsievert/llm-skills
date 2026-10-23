@@ -1,8 +1,18 @@
 # keypoint-MoSeq workflow reference
 
+## Contents
+
+- [Pipeline (interactive Python API, as in the tutorial)](#pipeline-interactive-python-api-as-in-the-tutorial)
+- [Output structure](#output-structure)
+- [Config keys that matter](#config-keys-that-matter)
+- [Kappa (stickiness) and syllable duration](#kappa-stickiness-and-syllable-duration)
+- [Checking the fit](#checking-the-fit)
+- [Applying a fitted model to new recordings](#applying-a-fitted-model-to-new-recordings)
+- [Advanced options (from the docs, none run here)](#advanced-options-from-the-docs-none-run-here)
+- [Data requirements (FAQ)](#data-requirements-faq)
+
 Source: kpms stable docs (modeling tutorial, FAQs, advanced topics, io API) read on 2026-10-23, plus runs on 0.6.6. Re-check against the installed version.
 
-Contents: pipeline, config keys, choosing inputs, kappa and latent_dim, checking the fit, model selection, applying to new data, advanced options, data requirements.
 
 ## Pipeline (interactive Python API, as in the tutorial)
 

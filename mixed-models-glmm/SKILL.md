@@ -24,7 +24,7 @@ Tested, runnable templates for every pattern below: [scripts/glmm_templates.R](s
    | Counts, different exposure | add `offset(log(exposure))` | Contrast with `emmeans(..., offset = 0)` for rates per unit |
    | Many zeros | `ziformula = ~ 1` or `~ group` | See zero inflation below |
    | Proportion with no N | `beta_family()`; 0/1 values need `ordbeta` or a transformation | Do not use `lm` on arcsine |
-   | Time to event with censoring | `coxme` (survival), not a GLMM | see animal-behaviour-tracking-analysis `references/statistical-analysis.md` |
+   | Time to event with censoring | `coxme` (survival), not a GLMM | see the `animal-behaviour-tracking-analysis` skill, file statistical-analysis.md |
    | Non-linear in time/space | GAM | use the `gam-mgcv` skill |
 
 3. **Fit the full model of the pre-specified question first** (fixed effects of interest, covariates, design-justified random effects). Do not drop terms by stepwise p-values.

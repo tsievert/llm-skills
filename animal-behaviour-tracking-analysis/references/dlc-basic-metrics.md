@@ -1,6 +1,17 @@
 # Basic metrics from DLC output: distance, speed, immobility, ROI occupancy
 
-Contents: pipeline and decisions, scripts, worked numbers, metric notes, statistics, existing tools, animovement (R), caveats.
+## Contents
+
+- [Pipeline (order matters)](#pipeline-order-matters)
+- [Scripts (same definitions in R and Python; tested to give identical results)](#scripts-same-definitions-in-r-and-python-tested-to-give-identical-results)
+- [Worked numbers: why smoothing and thresholds matter (synthetic data)](#worked-numbers-why-smoothing-and-thresholds-matter-synthetic-data)
+- [Metric notes](#metric-notes)
+- [Statistics (short)](#statistics-short)
+- [Existing tools (documentation read 2026-10-23; trajr, animovement and movement were installed and run)](#existing-tools-documentation-read-2026-10-23-trajr-animovement-and-movement-were-installed-and-run)
+- [animovement in R (installed and tested 2026-10-23)](#animovement-in-r-installed-and-tested-2026-10-23)
+- [movement in Python (installed and tested 2026-10-23)](#movement-in-python-installed-and-tested-2026-10-23)
+- [Caveats](#caveats)
+
 
 Use this for hypothesis-driven measures (how far, how fast, how long in a zone, how often immobile). It complements keypoint-MoSeq (unsupervised syllables); the two can be run on the same DLC files.
 

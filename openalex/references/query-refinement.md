@@ -1,5 +1,10 @@
 # Query refinement and citing-works screening
 
+## Contents
+
+- [General query refinement workflow](#general-query-refinement-workflow)
+- [Screening a citing-works list for a topical subset](#screening-a-citing-works-list-for-a-topical-subset)
+
 Lessons learned building literature-search queries and screening citing-works
 lists against the live OpenAlex API. Applies whether querying via the MCP
 tools (`keyword_search`, `find_keywords`, `group_works`) or raw R/httr2.

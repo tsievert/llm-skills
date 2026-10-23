@@ -39,6 +39,10 @@ Repository of custom Posit Assistant skills, synced via GitHub
   replace their thinking. Explanations stay short: a sentence or two, the trade-off, the decision that is the user's,
   a pointer for depth. Implemented as a section "Explain the reasoning (teaching rule)" at the end of each `SKILL.md`;
   new skills must include it.
+- **Verify before reporting ready (added 2026-10-23).** Before telling the user that a new or changed skill is ready to
+  commit, always load and follow the `github-skill-maintenance` skill: run `lint_skills()` (and `skills-ref validate`
+  for the skill) and fix or report every error and warning, run `check_versions()` if the skill names package versions,
+  and state in the reply what was checked and what was not. Do not use the words "ready" or "done" while errors remain.
 
 ## Auto-sync protocol (status: installed and verified in a live session)
 
@@ -101,7 +105,7 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   reviewer-response drafting, checks for pseudoreplication, multiple testing, p-hacking.
 - [ ] `chemical-ecology-data`: GC-MS peak processing in R (xcms, MSnbase), compound annotation, multivariate
   analysis (PERMANOVA, PCA, PLS-DA). Narrow use; confirm the user still does pheromone chemistry.
-- [ ] `github-skill-maintenance`: skill test/lint workflow, review of `sync-skills` hook and `skills.paths`
+- [x] `github-skill-maintenance` (done 2026-10-23, see Log): skill test/lint workflow, review of `sync-skills` hook and `skills.paths`
   config, version notes, periodic check for stale package-version claims in `gam-mgcv`, `gam-interpretation`,
   `deeplabcut-hpc`.
 - [ ] `literature-review-workflow`: extend `openalex` with screening log, deduplication, PRISMA-style flow,
@@ -225,6 +229,22 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   no full texts) plus glmmTMB GitHub issue titles (#536, #830, #522, #888, #744, titles only). OpenAlex gotcha: wildcards are
   rejected inside quoted phrases in `title_and_abstract.search.exact` (HTTP 400). Caught one misattribution (W2055156391 is
   Cleasby et al. 2014) by checking authorships.
+
+- 2026-10-23: Added `github-skill-maintenance` (SKILL.md; `scripts/lint_skills.R`, `check_versions.R`, `check_sync_setup.R`;
+  `references/sync-and-config-facts.md`, `references/testing-skills.md`; `assets/trigger-queries.template.json`). Built from
+  agentskills.io (specification, evaluating skills, optimizing descriptions), the Claude best-practices guide, and the Posit
+  Assistant skills/hooks/config docs. CRAN check: no skill-specific package; used `yaml`, `jsonlite`, `gert`, `utils`. PyPI
+  `skills-ref` (via `uvx --from skills-ref agentskills validate`; plain `uvx skills-ref` fails) passes all 13 skills. Linter
+  findings on the existing skills (NOT yet fixed): (1) `hpc-job-scripts` description is truncated at "Covers" because an
+  unquoted ` #SBATCH` starts a YAML comment (confirmed with R `yaml` and `skills-ref`); (2) CRLF in the working copy of
+  `hpc-job-scripts/scripts/check_sbatch.sh`, `hpc-job-scripts/assets/python-scratch-job.sh` and
+  `animal-behaviour-tracking-analysis/scripts/dlc_metrics.py` (index is LF); (3) `mixed-models-glmm/SKILL.md` links to
+  `references/statistical-analysis.md`, which only exists in `animal-behaviour-tracking-analysis`; plus info items (reference
+  files over 100 lines without a TOC; `hpc-job-scripts` has no "Use when" wording after the truncation). `check_versions()`
+  flags only kpms 0.6.6 (latest 0.7.1) and gratia claims (dev builds newer than CRAN 0.11.2); the rest match.
+  `check_sync_setup()` tested with synthetic cfg lists and live git state; R was blocked from reading the real
+  `~/.posit/assistant/settings.json` (session file guard, not worked around), so that path is untested. Note: the
+  `mixed-models-glmm` entry above says "Not yet committed" but it is in commit f57ecd1.
 
 ## About the local user
 

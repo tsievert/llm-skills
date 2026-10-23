@@ -1,0 +1,10 @@
+{
+  "skill": "REPLACE-WITH-SKILL-NAME",
+  "split": "train or validation; fix the assignment before iterating",
+  "queries": [
+    { "query": "A realistic prompt that should load the skill, with file names and casual wording.", "should_trigger": true, "split": "train" },
+    { "query": "A terse prompt that names the domain only implicitly.", "should_trigger": true, "split": "validation" },
+    { "query": "A near miss that shares keywords with the skill but needs a different skill.", "should_trigger": false, "split": "train" },
+    { "query": "Another near miss, phrased formally.", "should_trigger": false, "split": "validation" }
+  ]
+}

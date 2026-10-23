@@ -1,5 +1,14 @@
 # R workflow: openalexR + httr2
 
+## Contents
+
+- [openalexR for standard fields](#openalexr-for-standard-fields)
+- [Batch ID/DOI lookups](#batch-iddoi-lookups)
+- [`group_by` for topic clustering](#group_by-for-topic-clustering)
+- [Detecting conference papers / paratext — no reliable signal](#detecting-conference-papers--paratext--no-reliable-signal)
+- [Deduplication](#deduplication)
+- [Known field quirks](#known-field-quirks)
+
 Use this path when the MCP tools don't fit — bulk pagination combined with
 local regex/dplyr filtering, a kept/reproducible script, custom joins across
 several fetches, or fields the MCP tools don't expose.
