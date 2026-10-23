@@ -1,0 +1,12 @@
+# Decisions about one-way skill links, read by check_skill_links().
+# decision = no-backlink: A mentions B, and B deliberately does not mention A. Give a reason.
+# Add a row only after deciding; if a backlink makes sense, edit B's SKILL.md instead.
+from	to	decision	reason	date
+animal-behaviour-tracking-analysis	hpc-cluster-docs	no-backlink	Generic HPC skills should not list every domain skill; deeplabcut-hpc is the only DLC-specific HPC link	2026-10-23
+animal-behaviour-tracking-analysis	hpc-job-scripts	no-backlink	Same: generic job-script skill stays free of domain links	2026-10-23
+animal-behaviour-tracking-analysis	hpc-python-code	no-backlink	Same: generic language skill	2026-10-23
+animal-behaviour-tracking-analysis	hpc-r-code	no-backlink	Same: generic language skill	2026-10-23
+deeplabcut-hpc	hpc-python-code	no-backlink	deeplabcut-hpc loads the generic skills (parent); hpc-gpu-jobs and hpc-job-scripts link back as the closest match	2026-10-23
+deeplabcut-hpc	hpc-resource-allocation	no-backlink	Sizing advice is generic; hpc-gpu-jobs links to both	2026-10-23
+mixed-models-glmm	openalex	no-backlink	openalex is the standing literature tool (user memory rule), not a per-skill pointer	2026-10-23
+manuscript-figures-ggplot	social-research-search	no-backlink	One-off source for community notes; social search stays task-oriented	2026-10-23

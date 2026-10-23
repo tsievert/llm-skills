@@ -47,6 +47,14 @@ Repository of custom Posit Assistant skills, synced via GitHub
   (self-improvement rule)" that points to the `skill-lessons` skill (generic, anonymised entries into
   `~/.posit/lessons/inbox/`). New skills must include it; `lint_skills()` errors without it. Entries are triaged here with
   `skill-feedback-triage`. Lesson files and `usage.tsv` are never committed.
+- **Link skills to each other (added 2026-10-23).** Every skill must point to the neighbouring skills a user would plausibly
+  need next, in a short "Related skills" section placed before "Explain the reasoning" (one line per skill, saying what
+  it is for; match the wording of the existing sections). When adding or changing a skill, (1) add the forward links, (2)
+  check whether each target needs a backlink, and (3) run `check_skill_links()` from `github-skill-maintenance`. A missing
+  backlink is a decision, not an automatic fix: add it if someone using the target would plausibly need this skill,
+  otherwise record a `no-backlink` row with a reason in `github-skill-maintenance/references/link-decisions.tsv`. Do not
+  let generic skills (`hpc-*`, `openalex`) collect a pointer to every domain skill. Planned skills that do not exist yet
+  are not linked until they are written.
 
 ## Auto-sync protocol (status: installed and verified in a live session)
 
@@ -131,6 +139,10 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
     applications (narrative CV, DORA style, output summaries). **Caveat as for the manuscript skill:** no large automatic prose
     generation; most text is written by the user; the assistant structures, checks and formats, and every edit is user-approved.
     Pairs with `job-opportunity-watch`.
+  - [ ] `python-reproducible-pipeline`: Python counterpart of `r-reproducible-pipeline`. uv (pyproject, lockfile, pinned Python),
+    multi-step workflow tools (Snakemake, or DVC/Prefect/Dagster; compare and pick with the user), config and seeds, notebooks
+    or Quarto as the report layer, re-running the whole chain including on HPC (Snakemake Slurm executor plugin). Pairs with
+    `python-r-interop` and `hpc-python-code`. If it ships cluster scripts it needs the "Where this skill runs" section.
 
 ## Log
 
@@ -355,6 +367,14 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   ledger (create, `#` stripping, counts, review suggestions, refusal without `confirmed`). `lint_skills()` clean, `skills-ref`
   valid. Not tested: a real discovery run, how well Bluesky free-text terms fit the ledger. Also added five todo skills
   (`r-reproducible-pipeline`, `manuscript-writing-quarto`, `python-r-interop`, `git-for-research-projects`, `grant-and-cv-support`).
+
+- 2026-10-23: Cross-skill link audit. Added "Related skills" sections (or extended existing ones) in 15 skills (`gam-mgcv`,
+  `gam-interpretation`, `mixed-models-glmm`, `deeplabcut-hpc`, `hpc-cluster-docs`, `hpc-gpu-jobs`, `hpc-job-scripts`,
+  `hpc-python-code`, `hpc-r-code`, `hpc-resource-allocation`, `animal-behaviour-tracking-analysis`, `data-repository-readme`,
+  `openalex`, `social-research-search`, `job-opportunity-watch`). New standing rule "Link skills to each other". New
+  `github-skill-maintenance/scripts/check_skill_links.R` (`check_skill_links()`: one-way, unknown-skill, isolated; hubs and
+  boilerplate sections ignored) and `references/link-decisions.tsv` (eight reasoned `no-backlink` decisions); workflow step 1b.
+  Heuristic is textual (a skill name appearing), not semantic. Not tested: `scope = "all"` on real findings beyond a run.
 
 
 ## About the local user

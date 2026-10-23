@@ -27,6 +27,22 @@ and say what it would change.
    ```
    Errors break the spec or a standing rule, warnings are likely problems, info is for
    judgement. Output columns: skill, level, check, message.
+1b. **Cross-skill links.** Skills should point to each other where a user would plausibly need the
+   neighbour, and links should go both ways unless there is a reason not to:
+   ```r
+   source("github-skill-maintenance/scripts/check_skill_links.R")   # uses find_repo_root() from lint_skills.R
+   check_skill_links()               # scope = "all" also counts mentions in references/ and scripts
+   ```
+   Findings: `one-way` (A names B, B does not name A; the `skill` column is the one that would
+   get the backlink), `unknown-skill` (a backticked name in a "Related skills" or "Next skills"
+   section that is not a skill here), `isolated` (no links in or out). A one-way link is a
+   **decision, not a defect**: ask whether someone using B would plausibly need A. If yes, add a
+   one-line pointer to B's "Related skills" section in B's existing wording. If no, record a
+   `no-backlink` row with a reason in `references/link-decisions.tsv` so it is not raised again.
+   Never bulk-add backlinks: generic skills (the `hpc-*` set, `openalex`) should not accumulate a
+   pointer to every domain skill that uses them. Hub skills (this one, `skill-lessons`,
+   `skill-feedback-triage`) and the boilerplate "Explain the reasoning" and "Capture lessons"
+   sections are ignored. The check is textual: it sees a name, not whether the link makes sense.
 2. **Independent spec check.** `uvx --from skills-ref agentskills validate <skill-dir>`
    (PyPI `skills-ref`, the reference validator; its README calls it a demonstration
    library). The bare command `uvx skills-ref` fails on Windows; use `--from`. It accepts
