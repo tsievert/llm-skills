@@ -521,3 +521,9 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   with the user's token **failed with HTTP 403** on authenticated endpoints (public endpoint 200), probably a production token or missing
   scopes; the token was used in memory only and is deliberately not recorded anywhere; user should revoke it and store a new sandbox token as
   `ZENODO_SANDBOX_TOKEN` in `~/.Renviron`. Standing rule for tokens: never write them to files, memory or commits.
+
+- 2026-10-23 (round 3, same research): Zenodo **sandbox test completed** with a working sandbox token (first one was a mismatch, revoked by the user). Findings in ledger
+  10.3: zen4R 0.10.6 `sandbox = TRUE` uses the host `zenodo-rdm-qa.web.cern.ch` (same backend as `sandbox.zenodo.org`; pass `url = "https://sandbox.zenodo.org/api"` explicitly),
+  draft create, tiny upload, read back and draft delete worked, nothing published, `setUploadType` deprecated, `addCreator` with an affiliation string 404s, `record$getFiles`
+  not a method. Token never written anywhere. User decision (ledger 10.4): large files stay on university servers and are deposited or linked from there, never stored in GitHub
+  repositories, so GIT covers no LFS or DVC walkthrough and RRD gets a manifest and checksum step plus a README line on where the original data live.

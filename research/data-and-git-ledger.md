@@ -198,3 +198,27 @@ whether CEA co-submission of data via Data in Brief or Mendeley Data applies, an
 - Direct `httr2` probe, host `sandbox.zenodo.org` only: `user/records` 403 and `deposit/depositions` 403 with the bearer token, while the public `records` endpoint returned 200 (129,985 records). So the host is reachable, and the token is not accepted for authenticated calls. Likely causes (not distinguishable from the response): the token was created on zenodo.org instead of sandbox.zenodo.org (the two sites have separate accounts and tokens), or it lacks scopes (`deposit:write`, `deposit:actions` needed for create and publish; `deposit:read` for listing). No request was sent to the production site. The token was used in memory only: not written to any file, not stored by keyring, not committed.
 - Security note: the token was pasted into the chat and appears in the R console history; it should be revoked in the sandbox account and replaced by one stored in `~/.Renviron` as `ZENODO_SANDBOX_TOKEN` (never in project files).
 - Still to test once a working sandbox token exists: create a draft, set metadata, upload a small file, read it back, delete the draft (never publish except in the sandbox, and only if the test needs the version DOI behaviour); record the actual `zen4R` call sequence and gotchas; compare with a plain `httr2` route.
+
+### 10.3 Zenodo sandbox test: **completed** with a working sandbox token (later in round 2)
+
+The second token (created on sandbox.zenodo.org, original revoked by the user) authenticated. Used in memory only; nothing was written to disk or committed; only `sandbox.zenodo.org` was contacted.
+
+| Step | Result |
+|---|---|
+| `ZenodoManager$new(sandbox = TRUE, token = ...)` | Connects, **but in zen4R 0.10.6 `sandbox = TRUE` points at `https://zenodo-rdm-qa.web.cern.ch/api`**, not `sandbox.zenodo.org`. Both hosts returned the same newest record id (625586), so they are the same backend, but the skill should pass `url = "https://sandbox.zenodo.org/api"` explicitly (zen4R then sets `sandbox` TRUE itself) so the target is visible in the code |
+| Build a record | Works with `ZenodoRecord$new()`, `setTitle`, `setResourceType("dataset")` (`setUploadType` is deprecated), `setDescription`, `addCreator(name = "Family, Given")`, `setLicense("cc0-1.0")`. `addCreator(firstname, lastname, affiliation = "None")` failed with a 404 on the affiliation lookup (an affiliation string must match Zenodo's ROR-based vocabulary, or be omitted). `setAccessRight()` does not exist in this version |
+| `zen$depositRecord(rec, publish = FALSE)` | Draft created (id 625588), DOI reserved (`10.5072/...` is the sandbox prefix, not a real DOI) |
+| `zen$uploadFile(path, record = draft)` | Upload completed for a tiny CSV; a harmless warning "No bucket link for record" appears; progress bar noise |
+| Read back | `zen$getDepositionById(id)` works and shows state `draft`; `record$getFiles()` does **not** exist (not a method), so the file list call still needs the right accessor (untested) |
+| `zen$deleteRecord(id)` | Draft deleted, account back to 0 depositions. **Nothing was published**, so the 45-day edit window, new-version DOIs and concept DOI behaviour are still untested |
+
+Gotchas for the skill: use the explicit sandbox URL; affiliations and creators need the new vocabulary-aware API; a draft deletion loses the reserved DOI (matches the docs); keep the token in an environment variable (`ZENODO_SANDBOX_TOKEN`) and pass it in code, never in project files; the console echoes the code, so a token typed literally into code ends up in R history.
+
+### 10.4 User decision on large files (2026-10-23)
+
+Large files will **not** live in GitHub repositories. They stay on the university servers and are either added from there to a data repository (deposited) or linked. Consequences:
+
+- GIT skill: no Git LFS or DVC walkthrough; the repository holds code, small text data and lockfiles; data folders are ignored with the `dir/*` plus `!` pattern (negation under an excluded parent does nothing); a tracked manifest (path, size, sha256) records what the ignored data are; check for accidental large files with a size scan.
+- RRD skill: the deposit assembles files from the server, so the manifest and checksum step matters more (the copy that reaches the repository can be verified against the server copy); the README must say where the original lives and which copy is deposited; check each repository's real limits live (Zenodo 50 GB and 100 files per upload through the form, Dryad 10 GB per file recommended and 2 TB per publication through the web interface, both read 2026-10-23).
+- "Linked" data: which of Dryad, Figshare, Zenodo and the institutional repository allow an external link instead of an upload is **not established yet** (Zenodo's form takes files; related identifiers can point elsewhere; a link is not a preserved copy and may break). To check before the skill claims anything; a journal that demands archiving (Behavioral Ecology, Ecosphere, CEA) will usually need an actual deposit or an established domain repository, so linking is probably only acceptable for very large secondary files with a stated reason.
+- Open: how the user's university server is reached from the analysis machine (mapped drive, SFTP) and whether it is backed up; whether the server copy is read-only; which institutional repository applies (Jyvaskyla or Aarhus).
