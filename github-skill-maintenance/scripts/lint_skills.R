@@ -155,6 +155,8 @@ lint_one_skill <- function(dir) {
   # --- repo standing rules (AGENTS.md) ---
   if (!any(grepl("^#+\\s*Explain the reasoning", fm$body)))
     add("error", "repo-rule", "Missing section 'Explain the reasoning (teaching rule)'.")
+  if (!identical(skill, "skill-lessons") && !any(grepl("^#+\\s*Capture lessons", fm$body)))
+    add("error", "repo-rule", "Missing section 'Capture lessons (self-improvement rule)' (see skill-lessons).")
   script_files <- files[grepl("^(scripts|assets)/", files)]
   is_hpc <- grepl("^hpc-|-hpc$", skill) || any(vapply(script_files, function(p) {
     any(grepl("^\\s*#SBATCH\\s", readLines(file.path(dir, p), warn = FALSE)))

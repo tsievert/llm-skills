@@ -43,6 +43,10 @@ Repository of custom Posit Assistant skills, synced via GitHub
   commit, always load and follow the `github-skill-maintenance` skill: run `lint_skills()` (and `skills-ref validate`
   for the skill) and fix or report every error and warning, run `check_versions()` if the skill names package versions,
   and state in the reply what was checked and what was not. Do not use the words "ready" or "done" while errors remain.
+- **Capture lessons (added 2026-10-23).** Every skill except `skill-lessons` must end with a section "Capture lessons
+  (self-improvement rule)" that points to the `skill-lessons` skill (generic, anonymised entries into
+  `~/.posit/lessons/inbox/`). New skills must include it; `lint_skills()` errors without it. Entries are triaged here with
+  `skill-feedback-triage`. Lesson files and `usage.tsv` are never committed.
 
 ## Auto-sync protocol (status: installed and verified in a live session)
 
@@ -293,6 +297,26 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   scale, `facet_manual`, `labs(alt)`, `labs(dictionary)`, stretchy colourbar, `element_geom`, geomtextpath, `ggview::canvas`.
   `camcorder` 0.1.0 recorded 0 files under ggplot2 4.0.3. Installed from CRAN: ggview, camcorder, geomtextpath, pdftools.
   Not read: Rennie workshop slides, Posit cheatsheet content pages. Not yet committed.
+
+- 2026-10-23: Added the lessons-learned feedback loop. New skills `skill-lessons` (capture protocol, entry format, privacy rules,
+  `scripts/lesson_helpers.R`, `references/hook-setup.md`) and `skill-feedback-triage` (`scripts/read_lessons.R`,
+  `references/triage-method.md`); `scripts/lessons-hook.sh` (one script for `PostToolUse` matcher `skill` and `Stop`); a
+  "Capture lessons" section appended to the other 16 skills; `lint_skills()` now errors when it is missing. Designed from the
+  hooks docs (Stop can return `decision: "block"`; `stop_hook_active`; SessionEnd cannot inject and has a 5 s budget; hooks
+  additive). Hooks added to global `settings.json` (backup `settings.json.bak-lessons`), data under `~/.posit/lessons/`
+  (`inbox/`, `usage.tsv`, `state/`). Tested: hook with synthetic payloads (no-skill Stop silent, non-repo skill ignored, usage
+  log, error count, one block per session with valid JSON, turn limit 6, `stop_hook_active`, existing inbox file suppresses,
+  Windows `cwd` to project name); live: loading a skill in this session wrote a `usage.tsv` row with the real payload
+  (transcript_path is `conversation.json`, tool_response is an object); `lesson_add()` scrub, validation, front matter, fallback
+  text when R is blocked; `read_lessons()` overview, dupes, problems on synthetic files; `lint_skills()` no findings for 18
+  skills; `skills-ref validate` valid for both new skills. Findings: the assistant's R session cannot write or read outside
+  the project (`dir.create` on `~/.posit/lessons` blocked), the `write` tool and bash can, so lesson entries are saved with
+  `write` and triage copies the inbox into the project with `cp`; each hook call costs about 0.5 s on Windows (Git Bash
+  start-up), so tool-error counting is implemented but not enabled in the matcher. Not tested: the Stop block in a real
+  session (whether the model follows the reminder), the `write` tool permission prompt in other workspaces, multi-machine
+  collection, `check_sync_setup()` against the new hooks, any real lesson. Follow-up: `usage.tsv` is append-only; triage
+  records a watermark line (`- Lessons usage watermark: <ISO time>`, section "Lessons triage state" in this file) via
+  `triage_watermark()` / `triage_watermark_set()` and `read_usage(since = )`; tested on scratch files. Committed and pushed.
 
 ## About the local user
 

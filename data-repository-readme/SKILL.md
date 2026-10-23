@@ -103,3 +103,7 @@ template against each repository's own template files.
 ## Explain the reasoning (teaching rule)
 
 The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were or were not done: why a repository page was consulted, why a field was left `[TODO]` instead of inferred, why a checker finding is a heuristic, and why a choice such as license or deposit scope is theirs. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference (for example `references/sources.md`) for depth rather than lecturing.
+
+## Capture lessons (self-improvement rule)
+
+If while using this skill an error it did not anticipate occurs, its advice or code fails, the user corrects it, a package version or API differs from what it states, or it lacks guidance the task needs, record a generic, anonymised entry by following the `skill-lessons` skill: no project data, IDs or paths; write it when the issue is resolved and mention it in one sentence. Skip one-off user preferences. Entries are hypotheses for later triage in the llm-skills repo (`skill-feedback-triage`), not facts.
