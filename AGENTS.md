@@ -20,7 +20,7 @@ Repository of custom Posit Assistant skills, synced via GitHub
 - The same applies to hooks and sync scripting: check the hooks docs
   (https://assistant.posit.co/docs/features/hooks/) before changing hook config.
 
-## Auto-sync protocol (status: planned, not yet implemented)
+## Auto-sync protocol (status: installed and tested in isolation; not yet verified in a live session)
 
 Goal: skills are installed globally (all projects) and kept current with GitHub.
 
@@ -53,7 +53,7 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
   (`~/Sync_Home_Work/llm-skills`) last.
 - Script: `scripts/sync-skills.sh` (versioned in this repo). Derives the repo dir from its
   own location, throttles via `~/.posit/state/llm-skills-last-check`, fails open.
-- Hook entry (global settings); enable only after the first push to origin/main:
+- Hook entry (installed in global settings on 2026-10-23, together with `skills.paths`):
   `{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"bash C:/Users/thorb/Sync_Home_Work/llm-skills/scripts/sync-skills.sh","timeout":20}]}]}}`
 - Docs say new skills are available "in your next conversation".
 
@@ -68,3 +68,11 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
 
 - 2026-10-23: Approach chosen (SessionStart hook + `git pull --ff-only`). Repo is
   currently empty of skills.
+- 2026-10-23: `openalex` skill copied into the repo; first commit pushed to origin/main.
+- 2026-10-23: `scripts/sync-skills.sh` written. Tested against a scratch bare repo with an
+  isolated HOME: up to date, throttled, dirty tree (skip + warn), clean fast-forward, local
+  ahead (skip + warn), offline (silent). All exit 0.
+- 2026-10-23: SessionStart hook and `skills.paths` added to `~/.posit/assistant/settings.json`.
+  TODO: in a new conversation, verify `/openalex` resolves and
+  `~/.posit/state/llm-skills-last-check` is created; then delete the old
+  `~/.posit/assistant/skills/openalex`.
