@@ -118,3 +118,18 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
   contrast to ~1e-15), ale, theme API, n_draws migration error, draw formals. difference_smooths still fails on sz.
   variance_comp(type="terms") output identical to "penalty" (flagged). Updated recent-developments.md,
   sz-smooths.md, visualisation.md, uncertainty-and-inference.md. Not committed or pushed yet.
+
+## About the local user
+
+- Name: Thorbjörn Sievert (git `user.name`; email `thorbjoern.sievert@gmx.net`, git `user.email`).
+- GitHub: https://github.com/tsievert (this repo: https://github.com/tsievert/llm-skills).
+- OpenAlex author profile: https://openalex.org/A5050945345 (API: https://api.openalex.org/authors/A5050945345).
+  Found 2026-10-23 as the single hit for "Thorbjörn Sievert": 20 works, 235 citations, last known institution
+  University of Jyväskylä. Profile not manually verified; the ORCID below came from OpenAlex itself.
+- ORCID: https://orcid.org/0000-0002-4242-3779
+- Machine: Windows 11, RStudio, R 4.6.0 with Rtools45, Git Bash. Home sync folder: `C:\Users\thorb\Sync_Home_Work`.
+- Standing preferences (see user memory): use OpenAlex, not web search, for literature tasks; prefer
+  `openalexR`/`httr2` or the `openalex` MCP server.
+- Useful context for future tasks: works with GAMs (mgcv, gratia), HPC/Slurm clusters, DeepLabCut, R and Python.
+  Check the OpenAlex profile for their publications to infer field conventions or to find their own papers
+  (e.g. for self-citation checks or "my work on X" requests).
