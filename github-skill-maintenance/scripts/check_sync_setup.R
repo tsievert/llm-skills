@@ -107,6 +107,88 @@ check_sync_setup <- function(repo = NULL, fetch = FALSE,
   if (nzchar(Sys.getenv("PA_DISABLE_HOOKS")))
     add("PA_DISABLE_HOOKS", "warn", "Environment kill switch is set in this R session.")
 
+  # --- lessons hooks (PostToolUse matcher "skill" + Stop; see the skill-lessons skill) ---
+  lessons_hook_entries <- function(event) {
+    out <- list()
+    for (g in cfg$hooks[[event]]) for (h in g$hooks) {
+      if (grepl("lessons-hook", if (is.null(h$command)) "" else h$command))
+        out[[length(out) + 1]] <- list(cmd = h$command, matcher = if (is.null(g$matcher)) "" else g$matcher,
+                                       timeout = h$timeout,
+                                       extra = setdiff(names(h), c("type", "command", "timeout", "args")))
+    }
+    out
+  }
+  matcher_hits <- function(m, tool) {
+    if (!nzchar(m) || m == "*") return(TRUE)
+    if (grepl("^[A-Za-z0-9_ ,|-]*$", m)) return(tool %in% trimws(strsplit(m, "[,|]")[[1]]))
+    grepl(m, tool)
+  }
+  post <- lessons_hook_entries("PostToolUse")
+  stop_ <- lessons_hook_entries("Stop")
+  add("lessons PostToolUse hook", if (length(post)) "ok" else "warn",
+      if (length(post)) post[[1]]$cmd else "No lessons-hook command under hooks.PostToolUse: skill loads are not logged.")
+  add("lessons Stop hook", if (length(stop_)) "ok" else "warn",
+      if (length(stop_)) stop_[[1]]$cmd else "No lessons-hook command under hooks.Stop: no end-of-session reminder.")
+  if (length(post)) {
+    add("lessons matcher covers 'skill'", if (matcher_hits(post[[1]]$matcher, "skill")) "ok" else "error",
+        paste0("matcher = '", post[[1]]$matcher, "' (the usage log needs the skill tool)."))
+    if (matcher_hits(post[[1]]$matcher, "bash") || post[[1]]$matcher %in% c("", "*"))
+      add("lessons matcher cost", "info", "Matcher also fires on code/shell tools: each call costs about 0.5 s on Windows (Git Bash start-up). Intended only when error counting is wanted.")
+  }
+  les <- c(post, stop_)
+  if (length(les)) {
+    cmds_l <- vapply(les, function(e) e$cmd, "")
+    scripts_l <- unique(sub("^\\s*bash\\s+", "", cmds_l))
+    if (length(scripts_l) > 1) add("lessons hooks share one script", "warn", paste(scripts_l, collapse = " | "))
+    if (.Platform$OS.type == "windows")
+      add("lessons hooks use bash explicitly", if (all(grepl("^\\s*bash\\s", cmds_l))) "ok" else "warn",
+          "Shell-form hooks run under cmd.exe on Windows.")
+    bad_fields <- unique(unlist(lapply(les, function(e) e$extra)))
+    add("lessons hook handler fields", if (length(bad_fields)) "error" else "ok",
+        if (length(bad_fields)) paste("Unsupported fields (handler is skipped):", paste(bad_fields, collapse = ", ")) else "Only type, command, timeout.")
+    tos <- unlist(lapply(les, function(e) e$timeout))
+    add("lessons hook timeout", if (length(tos) == length(les) && all(tos <= 30)) "ok" else "warn",
+        if (length(tos)) paste(tos, collapse = ", ") else "Not set: defaults to 600 s for these events.")
+    for (script in scripts_l) {
+      if (!file.exists(script)) { add("lessons hook script exists", "error", script); next }
+      add("lessons hook script exists", "ok", script)
+      b <- readBin(script, "raw", file.size(script))
+      add("lessons hook line endings", if (as.raw(13) %in% b) "error" else "ok",
+          if (as.raw(13) %in% b) "CRLF present; bash will fail." else "LF only.")
+      txt <- readLines(script, warn = FALSE)
+      add("lessons hook exits 0", if (any(grepl("exit [1-9]", txt))) "warn" else "ok",
+          "Fail open: a non-zero exit only logs a warning, but the script should never need one.")
+      add("lessons hook stop-loop guard", if (any(grepl("stop_hook_active", txt))) "ok" else "error",
+          "A Stop hook that blocks must check stop_hook_active or it can loop.")
+      if (.Platform$OS.type == "windows" || nzchar(Sys.which("bash"))) {
+        st <- suppressWarnings(system2("bash", c("-n", shQuote(script)), stdout = FALSE, stderr = FALSE))
+        add("lessons hook syntax (bash -n)", if (identical(st, 0L)) "ok" else "error", script)
+      }
+    }
+  }
+  # Data folder: the assistant's R session may not read outside the project; report that
+  # as info and give the shell commands instead of working around the guard.
+  ldir <- file.path(home, ".posit/lessons")
+  seen <- tryCatch({
+    list(usage = if (file.exists(file.path(ldir, "usage.tsv"))) readLines(file.path(ldir, "usage.tsv"), warn = FALSE) else NULL,
+         inbox = list.files(file.path(ldir, "inbox"), pattern = "\\.md$"),
+         processed = list.files(file.path(ldir, "inbox", "processed"), pattern = "\\.md$"),
+         reminded = list.files(file.path(ldir, "state"), pattern = "\\.reminded$"))
+  }, error = function(e) e)
+  if (inherits(seen, "error")) {
+    add("lessons data", "info", paste("Not readable from this R session (path guard). Run in a shell:",
+        "wc -l ~/.posit/lessons/usage.tsv; ls ~/.posit/lessons/inbox | wc -l; ls ~/.posit/lessons/state/*.reminded | wc -l"))
+  } else {
+    n_u <- length(seen$usage)
+    last <- if (n_u) strsplit(utils::tail(seen$usage, 1), "\t")[[1]][1] else NA
+    add("lessons usage log", if (n_u) "ok" else "info",
+        sprintf("%d skill load(s) logged; last: %s", n_u, if (is.na(last)) "none" else last))
+    add("lessons inbox", "info", sprintf("%d unprocessed file(s), %d processed.", length(seen$inbox), length(seen$processed)))
+    add("lessons reminders vs entries", if (length(seen$reminded) > 0 && length(seen$inbox) == 0) "warn" else "info",
+        sprintf("%d session(s) reminded, %d inbox file(s). Many reminders and no entries means the reminder is not followed, or nothing went wrong; read the reminded sessions to tell which.",
+                length(seen$reminded), length(seen$inbox)))
+  }
+
   # --- throttle stamp ---
   if (file.exists(stamp)) {
     age <- as.numeric(difftime(Sys.time(), file.mtime(stamp), units = "hours"))

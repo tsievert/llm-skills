@@ -73,7 +73,21 @@ changing hook or path config; they may have moved on.
 - local branch not `main`, uncommitted tracked changes, or local ahead of `origin/main`
   (all of which make the hook skip the pull and print a one-line note)
 
-Not covered by any script: whether a pulled skill is picked up mid-session (docs say next
+The same script also audits the lessons hooks (`scripts/lessons-hook.sh`, see the
+`skill-lessons` skill). Documented facts it relies on: `PostToolUse` matches on the tool
+name (`skill`), `Stop` ignores `matcher`, a Stop hook can block with
+`{"decision":"block","reason":...}` and must honour `stop_hook_active` or it can loop,
+handlers with `if`/`async`/`shell` are skipped with a warning, hooks run sequentially and
+additively, and a matcher that also matches code or shell tools costs one Git Bash start-up
+(about 0.5 s on Windows) per call. Checks: both entries present, matcher covers `skill`,
+only `type`/`command`/`timeout`, `bash` prefix, timeout at most 30 s, script exists, LF
+endings, `bash -n`, exits 0, `stop_hook_active` guard, one shared script. It also reads
+`~/.posit/lessons` (usage rows and last time, inbox and processed counts, sessions
+reminded vs entries written) and falls back to shell commands when the R session may not
+read that folder.
+
+Not covered by any script: whether the model follows the Stop reminder (compare reminded
+sessions with inbox files over time), whether a pulled skill is picked up mid-session (docs say next
 conversation) and behaviour on a second machine. Test the second machine by running
 `check_sync_setup(fetch = TRUE)` there after the first session.
 

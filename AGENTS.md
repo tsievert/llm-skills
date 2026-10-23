@@ -317,6 +317,9 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   collection, `check_sync_setup()` against the new hooks, any real lesson. Follow-up: `usage.tsv` is append-only; triage
   records a watermark line (`- Lessons usage watermark: <ISO time>`, section "Lessons triage state" in this file) via
   `triage_watermark()` / `triage_watermark_set()` and `read_usage(since = )`; tested on scratch files. Committed and pushed.
+  Then `check_sync_setup()` gained a lessons-hook audit (PostToolUse `skill` matcher, Stop entry, handler fields, bash prefix,
+  timeout, script LF/`bash -n`/`stop_hook_active`, data-folder counts). Tested with synthetic good/bad configs and a synthetic
+  lessons folder, and on the user's real `settings.json` pasted as text (R cannot read that file; all ok). Committed and pushed.
 
 ## About the local user
 

@@ -41,7 +41,8 @@ and say what it would change.
    ("tested with X" is a valid statement); it means re-test or reword. Plain-text names of
    packages that are not installed are skipped on purpose, and `deeplabcut` is only found
    when written as `deeplabcut <version>`. Treat it as a candidate list.
-4. **Sync setup.** Read-only audit of settings, hook, stamp and git state:
+4. **Sync and hook setup.** Read-only audit of settings, the sync hook, the lessons hooks
+   (PostToolUse `skill` and Stop), the lessons data folder, stamp and git state:
    ```r
    source("github-skill-maintenance/scripts/check_sync_setup.R")
    check_sync_setup(fetch = TRUE)
@@ -93,7 +94,9 @@ was tested with synthetic good and bad `cfg` lists (clone missing from paths, no
 missing script, `useHooks = "none"`, no stamp) and live git state; reading the real
 `settings.json` from R was blocked by the session guard, so that code path is untested in
 this session. Not tested: Linux or macOS, `bash -n` on non-Windows, the manual trigger
-protocol end to end, a second machine.
+protocol end to end, a second machine. The lessons-hook audit was tested with synthetic
+good and bad `cfg` lists (wrong matcher, `async` field, wrong script path, missing hooks)
+and a synthetic lessons folder; it has not seen the real `settings.json` (blocked, see above).
 
 ## Explain the reasoning (teaching rule)
 
