@@ -113,7 +113,7 @@ triage_watermark_set <- function(time, agents = "AGENTS.md") {
 lesson_overview <- function(lessons, usage = NULL) {
   skills <- sort(unique(c(lessons$skill, if (!is.null(usage)) usage$skill)))
   types <- c("bug", "missing-guidance", "outdated-fact", "user-correction",
-             "env-difference", "worked-well")
+             "env-difference", "worked-well", "use-case")
   res <- data.frame(skill = skills, stringsAsFactors = FALSE)
   if (!is.null(usage)) {
     res$loads <- as.integer(table(factor(usage$skill, skills)))
@@ -142,7 +142,7 @@ lesson_dupes <- function(lessons, max_dist = 0.35) {
 }
 
 lesson_problems <- function(lessons) {
-  types <- c("bug", "missing-guidance", "outdated-fact", "user-correction", "env-difference", "worked-well")
+  types <- c("bug", "missing-guidance", "outdated-fact", "user-correction", "env-difference", "worked-well", "use-case")
   bad <- function(cond, why) if (any(cond, na.rm = TRUE)) data.frame(file = lessons$file[cond %in% TRUE],
                                                                       skill = lessons$skill[cond %in% TRUE],
                                                                       title = lessons$title[cond %in% TRUE],

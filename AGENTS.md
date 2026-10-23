@@ -376,6 +376,16 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   boilerplate sections ignored) and `references/link-decisions.tsv` (eight reasoned `no-backlink` decisions); workflow step 1b.
   Heuristic is textual (a skill name appearing), not semantic. Not tested: `scope = "all"` on real findings beyond a run.
 
+- 2026-10-23: Lessons loop made stronger: new entry type `use-case` (one short generic summary per session that used a repo
+  skill, written even when nothing failed; `usecase_add()` in `skill-lessons/scripts/lesson_helpers.R`, new SKILL.md section).
+  `scripts/lessons-hook.sh`: Stop reminder now asks for a use-case entry always plus lessons, pilot `LESSONS_TURN_LIMIT` default 2
+  (was 6; raise once capture is shown to work), and every reminder is logged to `~/.posit/lessons/reminders.tsv` so loads
+  (`usage.tsv`) vs reminders vs inbox files show where capture fails. `skill-feedback-triage` accepts the type
+  (`read_lessons.R`, `triage-method.md`). Tested: hook with synthetic payloads (silent turn 1, one valid block on turn 2,
+  reminders row, silent turn 3), `usecase_add()` output, reader/overview on a use-case file, `lint_skills()` clean (19),
+  `skills-ref` valid. Not tested: a real session (does the model follow the reminder), R writing to the inbox (blocked, the
+  `write` tool is the fallback).
+
 
 ## About the local user
 

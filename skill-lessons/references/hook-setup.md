@@ -11,7 +11,7 @@ handles two events, chosen from the `hook_event_name` in the JSON payload on std
 |---|---|---|
 | `PostToolUse` | `skill` | Appends `timestamp, session, project folder, skill` to `~/.posit/lessons/usage.tsv`, only for skills that exist in this repo. Loading `skill-lessons` marks the session as captured. |
 | `PostToolUse` | optional `executeCode\|executeR\|bash` | Counts error-like tool responses (a pattern in `ERR_PATTERN`), only in sessions that already loaded a repo skill. Stores a count, never text. Costs about 0.5 s per call on Windows (Git Bash start-up), so it is off by default. |
-| `Stop` | none | If a repo skill was used and no lesson exists yet, once per session, when an error was counted or `LESSONS_TURN_LIMIT` (default 6) Stop events have passed, returns `{"decision":"block","reason":...}`. The reason asks the assistant to load `skill-lessons` and write the entry to a named inbox path. |
+| `Stop` | none | If a repo skill was used and no entry exists yet, once per session, when an error was counted or `LESSONS_TURN_LIMIT` (pilot default 2) Stop events have passed, appends a row to `reminders.tsv` and returns `{"decision":"block","reason":...}`. The reason asks the assistant to load `skill-lessons` and write to a named inbox path: always a `use-case` summary, plus lesson entries if any. |
 
 `Stop` ignores `matcher`. `stop_hook_active: true` always exits quietly so a block can
 never loop. All paths exit 0 (fail open). `SessionEnd` is not used: it cannot inject
@@ -37,12 +37,13 @@ with a warning, so keep entries to `type`, `command`, `timeout`.
 |---|---|
 | `inbox/<project>_<YYYYMMDD-HHMMSS>_<session8>.md` | lesson entries |
 | `usage.tsv` | skill load log, tab-separated, no header |
+| `reminders.tsv` | one row per Stop reminder issued (time, session, project, skills, errors, turns); compare with inbox files to see whether reminders were followed |
 | `state/<session>.{errors,turns,reminded,captured}` | per-session counters and flags, deleted after 30 days |
 | `state/DEBUG` | create this empty file to dump raw hook payloads to `state/debug-payloads.jsonl` (may hold private content; delete afterwards) |
 
 ## Tuning
 
-- `LESSONS_TURN_LIMIT`: Stop events (after the first repo-skill load) before a reminder
+- `LESSONS_TURN_LIMIT` (pilot default 2; raise once capture is shown to work): Stop events (after the first repo-skill load) before a reminder
   without an error. Lower is more reminders, higher misses more user corrections.
 - `LESSONS_DIR`, `LLM_SKILLS_DIR`: override the data and repo locations (used for tests).
 - Add the tool matcher to `PostToolUse` only if the turn limit proves too blunt.

@@ -28,6 +28,18 @@ Write the entry when the issue is resolved (or clearly unresolved), not at the e
 session, because sessions can end abruptly. Tell the user in one sentence that an entry was
 recorded and where.
 
+## Use-case summary (every session that used a skill)
+
+Besides lessons, write one short `use-case` entry per session in which a repo skill was
+used, even when nothing went wrong. It proves the capture path works and shows what the
+skills are actually used for. Use `usecase_add()` (below) or the same block by hand:
+heading `## <main-skill>: use case (<outcome>)`, `type: use-case`, `symptom` = one to three
+generic sentences on the task ("fit a zero-inflated GLMM to repeated-measures counts,
+40 animals x 3 sessions"), `context` = all skills used, `resolution` = outcome
+(`worked`, `worked-with-workaround`, `partly-worked`, `failed`, `abandoned`), `evidence` =
+friction or "none". Same privacy rules as lessons. If the hook reminder names a file,
+write the use-case entry first, then any lesson entries into the same file.
+
 ## Privacy (hard rules)
 
 The repo is public and the inbox may be shared. Entries must be generic:
@@ -65,7 +77,7 @@ environment: {os: "Windows 11", r: "4.6.0", python: null, packages: {mgcv: "1.9-
 ---
 
 ## gam-mgcv: k.check returns NA for sz smooths
-- type: bug | missing-guidance | outdated-fact | user-correction | env-difference | worked-well
+- type: bug | missing-guidance | outdated-fact | user-correction | env-difference | worked-well | use-case
 - symptom: what happened, generic terms
 - context: function/package + version, data type and size (anonymised)
 - tried: what was attempted, in order
@@ -106,8 +118,10 @@ path. If the front matter already exists in the file, append only the `##` block
 
 - A `PostToolUse` hook logs each load of a repo skill to `~/.posit/lessons/usage.tsv`
   (timestamp, session, project folder, skill). That log needs no model cooperation.
-- A `Stop` hook may remind the assistant once per session to record lessons, after an
-  error-like tool result or many turns. Loading this skill suppresses the reminder.
+- A `Stop` hook reminds the assistant once per session to write a use-case summary and any
+  lessons, after an error-like tool result or `LESSONS_TURN_LIMIT` turns (pilot default 2).
+  Each reminder is logged to `~/.posit/lessons/reminders.tsv`. Loading this skill
+  suppresses the reminder (the use-case entry is then still expected from this skill).
   Setup, tests and limits: [references/hook-setup.md](references/hook-setup.md).
 - The inbox is read by `skill-feedback-triage`. Entries are hypotheses until reproduced.
 

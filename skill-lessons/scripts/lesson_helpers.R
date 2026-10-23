@@ -9,7 +9,7 @@
 # environment variable LESSONS_DIR is set (used for tests).
 
 lesson_types <- c("bug", "missing-guidance", "outdated-fact", "user-correction",
-                  "env-difference", "worked-well")
+                  "env-difference", "worked-well", "use-case")
 lesson_generality <- c("general", "likely-user-specific", "unsure")
 lesson_confidence <- c("high", "medium", "low")
 
@@ -109,4 +109,20 @@ lesson_add <- function(skill, title, type, symptom, context = "", tried = "",
     cat(text, sep = "\n")
   }
   invisible(list(file = file, text = text, written = ok))
+}
+
+# One short, generic summary of what a skill was used for (type "use-case"). Written
+# every session a repo skill was used, with or without problems, so usage is visible and
+# the capture path is proven to work. `skills` may name several; the first is the heading.
+usecase_add <- function(skills, summary, outcome = c("worked", "worked-with-workaround",
+                                                      "partly-worked", "failed", "abandoned"),
+                        friction = "none", ...) {
+  outcome <- match.arg(outcome)
+  stopifnot(length(skills) >= 1)
+  lesson_add(skill = skills[1], title = paste0("use case (", outcome, ")"), type = "use-case",
+             symptom = summary,
+             context = paste("skills used:", paste(skills, collapse = ", ")),
+             tried = "n/a", resolution = outcome,
+             evidence = friction, suggested_change = "none",
+             confidence = "medium", generality = "general", ...)
 }

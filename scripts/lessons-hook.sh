@@ -6,8 +6,10 @@
 #     - other tools: count tool responses that look like errors, but only in sessions
 #       that already loaded one of this repo's skills. Only a count is stored, never text.
 #   Stop
-#     - at most ONCE per session, ask the assistant to record lessons if a repo skill was
-#       used and (an error was seen OR many turns have passed) and no lesson was written yet.
+#     - at most ONCE per session, ask the assistant to write a use-case summary (always) and
+#       lesson entries (if any) when a repo skill was used and (an error was seen OR
+#       LESSONS_TURN_LIMIT turns have passed) and no entry was written yet. Each reminder
+#       is logged to ~/.posit/lessons/reminders.tsv so triggering can be checked.
 # Always exits 0 (fail open). Output on stdout is JSON only when it blocks a Stop.
 # Local state only: ~/.posit/lessons/{usage.tsv,state/,inbox/}. Nothing leaves the machine.
 #
@@ -19,7 +21,7 @@ INBOX="$LESSONS_DIR/inbox"
 STATE="$LESSONS_DIR/state"
 USAGE="$LESSONS_DIR/usage.tsv"
 REPO_DIR="${LLM_SKILLS_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-TURN_LIMIT="${LESSONS_TURN_LIMIT:-6}"   # Stop events after the first skill load
+TURN_LIMIT="${LESSONS_TURN_LIMIT:-2}"   # Stop events after the first skill load (pilot: low; raise later)
 ERR_PATTERN='Error( in|:)|Traceback|Execution halted|could not find function|there is no package|ModuleNotFoundError|command not found|No such file or directory|unused argument|object .* not found'
 
 payload=$(cat 2>/dev/null) || exit 0
@@ -74,7 +76,8 @@ case "$event" in
       # JSON-safe path: forward slashes only (a Windows path would need escaped backslashes).
       file=$(cygpath -m "$file" 2>/dev/null || printf '%s' "$file")
       file=${file//\\//}
-      reason="Lessons check (automatic hook; skills used this session: ${skills}; error-like tool results: ${errs}). If any of these happened while using a skill: an unanticipated error, advice or code that failed, a user correction, a version or API mismatch, or missing guidance, load the skill-lessons skill and write the entry to ${file}. If none applies, do nothing. Do not repeat your earlier answer; keep any reply to one short sentence."
+      printf '%s\t%s\t%s\t%s\terrors=%s\tturns=%s\n' "$(date +%Y-%m-%dT%H:%M:%S)" "$sid" "$project" "$skills" "$errs" "$turns" >> "$LESSONS_DIR/reminders.tsv"
+      reason="Lessons check (automatic hook; skills used this session: ${skills}; error-like tool results: ${errs}). Load the skill-lessons skill and write to ${file}: (1) ALWAYS one use-case entry (type use-case): a generic one to three sentence summary of what the user was doing with the skill(s), the outcome, and any friction; no data values, names or paths. (2) Additionally one lesson entry per unanticipated error, failed advice or code, user correction, version or API mismatch, or missing guidance. Do not repeat your earlier answer; keep any reply to one short sentence."
       printf '{"decision":"block","reason":"%s"}\n' "$reason"
     fi
     ;;
