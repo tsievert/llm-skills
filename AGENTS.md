@@ -249,6 +249,26 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   `mixed-models-glmm` entry above says "Not yet committed" but it is in commit f57ecd1. Standing rule "Verify before
   reporting ready" added to the working rules.
 
+- 2026-10-23: Added `data-repository-readme` (SKILL.md, `assets/README_template.md`, `references/sources.md` with live
+  URLs for Cornell, Dryad, Zenodo, Figshare, UBC/Borealis, Harvard and a "how to look for changes" list,
+  `references/content-guide.md`, `scripts/draft_data_dictionary.R`, `scripts/check_readme.R`). The workflow forces a
+  currency check against the target repository's live pages. Built from webfetch/search of those pages; not read: the
+  Dryad template file itself, go-fair.org (fetch returned nothing), journal policies. Installed `frictionless` 1.3.0 from CRAN
+  (infers column types only). Tested both scripts on a synthetic deposit with seeded defects (two bugs found and fixed:
+  perl regex for backticked filenames, mixed ISO/non-ISO dates). `lint_skills()` no findings, `skills-ref` valid,
+  `check_versions()` OK for frictionless. Not tested: Excel/HDF5 input, real submissions. Not yet committed.
+  Follow-up same day: read the Dryad template in full (4 sections, no author/license/contact; added
+  `assets/README_dryad.md` and `check_readme(profile = "dryad")`). Installed and tested dataspice 1.1.1, codebook 0.10.1,
+  skimr 2.2.2, frictionless 1.3.0 (`references/optional-packages.md`): skimr and frictionless useful for QA;
+  dataspice wrote given name "T" as `true`, not a README tool; codebook outputs HTML for survey data;
+  `compact_codebook()` left a stray `figure/` PDF in the working directory (removed). frictionless infers
+  `string` for a column with mixed date formats and only warns when the type is set to `date` explicitly.
+  Second follow-up: read Cornell data and software templates (eCommons REST `/server/api/core/bitstreams/<id>/content`
+  works with curl; `/bitstreams/<id>/download` gives 405), UBC template and sample, Borealis report PDF (`pdftotext`):
+  added tier labels (Borealis minimum 9 / enhanced 13), header "generated/updated" line, two contacts, ancillary and
+  not-included data, abbreviations/codes glossary, version section, `assets/README_software.md`, info-level
+  enhanced-element checks in `check_readme()`. Not obtained: Borealis xlsx and the 20 example READMEs.
+
 ## About the local user
 
 - Name: Thorbjörn Sievert (git `user.name`; email `thorbjoern.sievert@gmx.net`, git `user.email`).
