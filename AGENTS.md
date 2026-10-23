@@ -19,6 +19,12 @@ Repository of custom Posit Assistant skills, synced via GitHub
   and best-practice sources) rather than relying on memory.
 - The same applies to hooks and sync scripting: check the hooks docs
   (https://assistant.posit.co/docs/features/hooks/) before changing hook config.
+- When developing a skill or changing its function, always check the R ecosystem (CRAN) for
+  an R package that could improve it (e.g. replace hand-written helpers, add capability).
+  - Installing or updating from CRAN is always allowed without asking.
+  - Installing or updating from Bioconductor (via `BiocManager`) is also always allowed without asking (rule added 2026-10-23).
+  - Installing or updating from GitHub (or any non-CRAN source, e.g. R-universe) requires
+    stopping and asking the user for explicit permission first.
 
 ## Auto-sync protocol (status: installed and verified in a live session)
 
@@ -63,6 +69,29 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
 - ~~Delete the old `~/.posit/assistant/skills/openalex`~~ Done 2026-10-23 (repo copy replaces it).
 - Whether sync should delete skills removed from the repo (default: no).
 - Handling local uncommitted edits in the clone (default: skip pull and warn).
+
+## Todo: skills to create (planned 2026-10-23; `[~]` = partly done)
+
+Before each: follow the working rules above (check agentskills.io docs, check CRAN for helpers, use `create-skill`).
+
+- [ ] `mixed-models-glmm`: lme4, glmmTMB, DHARMa, performance, emmeans. Repeated-measures behaviour trials,
+  random effects, zero inflation, overdispersion, model selection, residual checks, reporting. Link to `gam-mgcv`.
+- [~] `animal-behaviour-tracking-analysis`: v1 (keypoint-MoSeq) and v2 (basic DLC metrics) done, see Log. Still open:
+  SimBA/B-SOiD/VAME, validation of immobility/freezing thresholds against manual scoring, real-data tests.
+  Link to `deeplabcut-hpc`.
+- [ ] `reproducible-research-data`: FAIR data deposits (Figshare "Data for:" style), data dictionaries,
+  `renv`/`uv` lockfiles, Quarto manuscripts, code and data archive per paper.
+- [ ] `manuscript-figures-ggplot`: journal-ready figures (colour-blind-safe palettes, size/DPI, patchwork panels,
+  consistent themes, export). Link to the model skills.
+- [ ] `stats-reporting-and-review`: effect sizes and uncertainty, power/sample size, pre-registration,
+  reviewer-response drafting, checks for pseudoreplication, multiple testing, p-hacking.
+- [ ] `chemical-ecology-data`: GC-MS peak processing in R (xcms, MSnbase), compound annotation, multivariate
+  analysis (PERMANOVA, PCA, PLS-DA). Narrow use; confirm the user still does pheromone chemistry.
+- [ ] `github-skill-maintenance`: skill test/lint workflow, review of `sync-skills` hook and `skills.paths`
+  config, version notes, periodic check for stale package-version claims in `gam-mgcv`, `gam-interpretation`,
+  `deeplabcut-hpc`.
+- [ ] `literature-review-workflow`: extend `openalex` with screening log, deduplication, PRISMA-style flow,
+  BibTeX export for Quarto. Lower priority (search step already covered).
 
 ## Log
 
@@ -125,6 +154,49 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
   deliberately not covered (no free keyless access; Nitter checked and not viable: archived 2026-10-09 after
   X legal action, instances bot-walled). Optional CRAN packages: `bskyr` (needs free Bluesky login), `rtoot`,
   `vosonSML`; not tested. Committed and pushed.
+- 2026-10-23: Added `animal-behaviour-tracking-analysis` v1 (keypoint-MoSeq downstream of DLC; R and Python).
+  Files: `scripts/kpms_headless_fit.py` (resumable headless fit, `--prepare-only`), `kpms_summarise_results.py`
+  (h5py to bouts/usage/transitions CSV), `kpms_results.R` (hdf5r reader plus the same summaries),
+  `assets/kpms_fit.sbatch`, three references. Sources: kpms stable docs (install, modeling, FAQs, advanced, io,
+  analysis), PyPI, GitHub releases/issues. Tested on Windows with kpms 0.6.6 (CPU, pandas<3, uv venv) on synthetic
+  DLC CSVs: fresh fit, AR- and full-phase resume, two concurrent seed fits, `expected_marginal_likelihoods`,
+  R vs Python vs kpms-CSV agreement, nested HDF5 groups, glmmTMB+emmeans per-syllable snippet, igraph snippet,
+  sbatch linter. Findings: kpms 0.7.x (PyPI 0.7.1, 2026-10-22) is not installable on Windows (needs Linux-only
+  jax-cuda12-pjrt); 0.6.6 with pandas 3 breaks `check_nan_proportions`; `extract_results` has no `overwrite` in
+  0.6.6; `setup_project` fails if the folder exists; hdf5r reverses dimension order vs h5py. Installed from CRAN:
+  hdf5r, glmmTMB, emmeans, DirichletReg, reticulate. Not tested: kpms 0.7.x, GPU, Slurm, multi-animal DLC, real
+  data, apply_model, grid movies. Committed and pushed.
+- 2026-10-23: Added basic DLC metrics to `animal-behaviour-tracking-analysis` (v2): `scripts/dlc_metrics.py` (CLI) and
+  `dlc_metrics.R` (functions) for likelihood masking, short-gap interpolation, px-to-cm, Savitzky-Golay, distance,
+  speed, immobility bouts, ROI occupancy (circle/rect/polygon, entries, latency), time bins; plus
+  `references/dlc-basic-metrics.md`. Online sources: `movement` (neuroinformatics-unit, docs v0.17.0), `animovement`
+  (R-universe only, NOT installed, needs user permission), DLC2Kinematics, DLCAnalyzer (ETHZ-INS), dlcpr, DeepOF,
+  DLCutils (its `time_in_each_roi.py` default assigns every frame to the nearest ROI, contradicting its docstring),
+  trajr vignette. Tested on synthetic DLC-format files (single + multi-animal, csv + h5): R == Python to 1e-8, speed
+  and length equal `trajr` 1.5.1. Synthetic demo: jitter without smoothing gave 4% immobile vs 50% true, so
+  thresholds must be validated. Installed from CRAN: signal, trajr. Not tested: real recordings, camera tilt,
+  `movement` package itself.
+- 2026-10-23: User gave explicit permission to install `animovement` from R-universe (non-CRAN rule). Installed
+  animovement 0.8.0.9002 plus anicore, aniread, anispace, aniprocess, anicheck, animetric, anivis (R-universe dev
+  builds) and tested on synthetic DLC CSVs; added a section to `references/dlc-basic-metrics.md`. Findings: distance and
+  circular-ROI time match `dlc_metrics`; speed definition differs; `read_deeplabcut` flips y (set `video_height`);
+  fps via `set_metadata(sampling_rate=)`; `.h5` needs Bioconductor `rhdf5` and prompts interactively (hangs
+  non-interactive sessions); no polygon ROI, entries, latency or immobility functions.
+- 2026-10-23: User allowed Bioconductor installs (rule added to Working rules). Installed `rhdf5` 2.56.1 (BiocManager,
+  Bioc 3.23): animovement reads pandas-fixed and DLC-style table `.h5`, equal to CSV; added `dlc_from_anipoint()` to
+  `dlc_metrics.R` (identical summary to the CSV route). Installed `movement` 0.17.0 (uv, Python 3.12, scratch venv, with
+  `tables`) and tested load/filter/interpolate/savgol/speed/path length/PolygonOfInterest on csv and h5: path length and
+  ROI time within about 0.2% of the scripts; speed definition differs (central difference, as in animovement); no circle
+  ROI, entries or immobility; `compute_region_occupancy` not run. Section added to `references/dlc-basic-metrics.md`.
+- 2026-10-23: Added `references/statistical-analysis.md` and `scripts/stats_demo.R` (metrics and kpms usage to statistics).
+  Verified from the kpms 0.6.6 source: built-in tests are permutation Kruskal-Wallis per syllable (BH over syllables) plus
+  Dunn post hoc, unit = recording, `index.csv` has only `name` and `group`; so it handles more than 2 groups (the user
+  remembered 2) but has no covariates, interactions, nesting or effect sizes. Demo (simulated 24 animals x 2 sessions) ran
+  clean: Gamma/binomial/beta-binomial/nbinom2 GLMMs, coxme latency, bam time course, per-syllable nbinom2 + BH, PERMANOVA
+  with whole-animal permutations, CLR-PCA + lmer, bout-duration lmer, transition binomial GLMM; statsmodels MixedLM and
+  Poisson GEE tested in the kpms venv. Findings: plain binomial on frame counts was strongly overdispersed (AIC 4915 vs 763
+  beta-binomial); compositional closure produced a spurious "decrease" in a Python simulation. Installed from CRAN: vegan,
+  permute, coxme, lmerTest. Not tested: real data, power analysis, DirichletReg/compositions routes.
 
 ## About the local user
 
@@ -137,6 +209,13 @@ Goal: skills are installed globally (all projects) and kept current with GitHub.
 - Machine: Windows 11, RStudio, R 4.6.0 with Rtools45, Git Bash. Home sync folder: `C:\Users\thorb\Sync_Home_Work`.
 - Standing preferences (see user memory): use OpenAlex, not web search, for literature tasks; prefer
   `openalexR`/`httr2` or the `openalex` MCP server.
+- Research field (from OpenAlex works list, 2026-10-23; 15 works 2015-2021, not manually verified): behavioural
+  ecology of small mammals, mainly bank voles (predation risk, predator odour, alarm pheromones, transgenerational
+  and in utero effects), plus chemical senses (predator odour components in mice) and small-rodent population
+  cycles (Oecologia review, ~159 citations). Venues: Oecologia, Ecosphere, Behavioral Ecology and Sociobiology,
+  Frontiers in Ecology and Evolution, Integrative Zoology, Chemical Senses. Publishes datasets on Figshare
+  ("Data for: ..." entries). Earlier affiliation KTH (Sweden), later Jyväskylä (Finland). Data likely: behavioural
+  trials, repeated measures/mixed models, chemical (pheromone) analysis, field trapping/population time series.
 - Useful context for future tasks: works with GAMs (mgcv, gratia), HPC/Slurm clusters, DeepLabCut, R and Python.
   Check the OpenAlex profile for their publications to infer field conventions or to find their own papers
   (e.g. for self-citation checks or "my work on X" requests).
