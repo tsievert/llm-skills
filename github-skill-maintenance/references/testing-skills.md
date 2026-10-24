@@ -117,6 +117,16 @@ contextual phrasing (per the checklist above), and does it tell the assistant th
 *while working* (file contents, filenames, existing scripts) counts as a trigger just as much as the
 user's own words?
 
+**Plan mode does not appear to suppress this**, based on one live trial (2026-10-24): a plan file that
+named `mixed-models-glmm` only as background guidance ("this is the kind of modeling choice this skill
+documents conventions for"), not as an explicit "load skill X" step, still led the assistant to call the
+`skill` tool unprompted during the post-approval implementation turn. Approval mode (Normal/Auto/YOLO) is
+a separate, global setting unrelated to skill loading; nothing in the documented Plan-mode mechanics
+suggests skill discovery is special-cased there. Treat this as one data point, not a guarantee — if a
+real case of a plan-then-implement turn skipping an obviously relevant skill shows up, it is likely the
+same undertrigger pattern above (description wording), not a Plan-mode-specific effect, so check the
+description first.
+
 ## When to stop
 
 Stop when the failures left are inconsistent rather than systematic, or when a change
