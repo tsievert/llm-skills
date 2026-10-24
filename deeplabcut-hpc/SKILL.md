@@ -126,6 +126,15 @@ DLC moves fast, so an unexpected error is often a known bug, a regression in the
 
 This skill was written from the official docs only. Nothing here has been run on a real cluster. If a command or key fails on the cluster, trust the live docs and the cluster version's `help()` output (ask the user to paste it) over this file, and tell the user which part was wrong.
 
+**Real-use evidence (2026-10-24, user project, two independent sessions):** diagnosing a
+multi-animal-to-single-animal project split that produced fewer annotated frames than expected
+(cross-referencing a Slurm console log, a JSON manifest/validation report and a checksum
+manifest), and building a small orchestrator to submit multiple training jobs with varying
+hyperparameters, checked against HPC and DLC best practices (headless-plotting backend,
+dataloader-worker sizing, a shared-resource race condition in one script — all fixed and
+verified locally with `bash -n`, the bundled sbatch linter, and dry runs, no cluster access
+needed). Still not run on a real cluster.
+
 ## Related skills
 
 - `animal-behaviour-tracking-analysis`: what to do with the DLC output (likelihood masking, distance, speed, ROI time, keypoint-MoSeq syllables).

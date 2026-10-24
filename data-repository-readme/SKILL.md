@@ -13,8 +13,12 @@ was verified on 2026-10-23.
 
 1. **Establish the target.** Ask which repository (Dryad, Zenodo, Figshare, OSF, institutional,
    domain-specific), which journal (data policy, double-anonymous review?), and whether the
-   deposit is mostly data or mostly code. If unknown, use the generic structure and say so.
+   deposit is mostly data or mostly code.
    Deciding *where* to deposit, what to include or which licence belongs to `reproducible-research-data`; settle it there and return with the target.
+   **Repository not yet decided:** this is a named, valid path, not a stopgap — draft with the
+   generic structure, say so to the user, and add a note inside the drafted README itself (e.g.
+   "repository not yet chosen; re-check this README's sections once it is") so the flag survives
+   into the file and is not only spoken in the conversation.
 2. **Currency check (do not skip).** Open the repository's current README and file-requirement
    pages (URLs in [references/sources.md](references/sources.md)) with `webfetch` or
    `web_search`; for a journal, open its data policy. Compare their headings, mandatory

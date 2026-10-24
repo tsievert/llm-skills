@@ -589,7 +589,31 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   real sessions to tell either way).
 
 ## Lessons triage state
-- Lessons usage watermark: 2026-10-23T23:23:10
+- Lessons usage watermark: 2026-10-24T17:22:20
+
+- 2026-10-24: Third `skill-feedback-triage` run. 9 inbox files (12 entries): the two that led to the already-built
+  `skill-trigger-hook.sh` and `skill-file-signal-hook.sh` (logged earlier the same day) were treated as `fix, already
+  applied` and archived with no further edit; `openalex` duplicate-title-search entry stayed `park` (unchanged since
+  the 2026-10-23 run, no new independent report); four `add-note` fixes applied after user approval:
+  `data-repository-readme` step 1 now names "repository not yet decided" as an explicit path (flag written into the
+  drafted README itself, not just spoken); `deeplabcut-hpc`'s "Not verified" section gained a real-use evidence
+  paragraph (two independent real-project sessions: a frame-count diagnosis and a hyperparameter-sweep orchestrator,
+  no cluster access used); `github-skill-maintenance`'s CRLF pitfall bullet now says `.gitattributes` only covers
+  `.sh`/`.py`/`.md`/`.R` and to re-check with `git ls-files --eol -o -m --exclude-standard` *after* a batch of edits,
+  not only before; a new Pitfalls bullet generalises the frontmatter-`metadata`-must-be-a-flat-string rule beyond its
+  one existing mention inside the file_signals section. Also fixed the underlying `.gitattributes` gap for this repo
+  (`*.R text eol=lf` was missing, the proximate cause of the CRLF entry) and added a note to
+  `skill-feedback-triage/references/triage-method.md` on reading an inbox entry whose skill shows 0 loads in
+  `usage.tsv` since the watermark. Two remaining entries were pure "worked" use-case confirmations already reflected
+  in earlier Log entries; archived with no action. Ironic finding while editing: five files (`.gitattributes`,
+  `data-repository-readme/SKILL.md`, `deeplabcut-hpc/SKILL.md`, `github-skill-maintenance/SKILL.md`,
+  `skill-feedback-triage/references/triage-method.md`, and this `AGENTS.md` file itself) all came back from
+  `edit`/`write` with CRLF and needed `sed -i 's/\r$//'` before `lint_skills()` would accept them or the edit tool
+  would match — live corroboration of the very pitfall being fixed. Checked: `lint_skills()` (only the pre-existing
+  `deeplabcut-hpc` description-length info item), `check_skill_links()` clean (24 skills), `skills-ref validate` for
+  all four touched skills. Not checked: `check_skill_clashes()` (no description text changed), `check_versions()`
+  (no version claims touched). Watermark advanced to 2026-10-24T17:22:20; processed files moved to
+  `~/.posit/lessons/inbox/processed/` (the parked `openalex` file is the only one left in the inbox).
 
 - 2026-10-23: Commit audit (`git status`, `--ignored`, tracked-file counts per skill, `origin/main` comparison). All 21 skills and
   `research/` were committed and pushed (HEAD 1551556 = origin/main); the "not yet committed" notes above were stale and are corrected.

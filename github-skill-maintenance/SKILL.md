@@ -102,7 +102,12 @@ and say what it would change.
   script copied to the cluster from the working copy then fails, and multi-line string
   replacements in `SKILL.md` or reference files report "string not found" while single-line
   ones work. Run `git ls-files --eol <file>` before a multi-line edit. Fix with
-  `sed -i 's/\r$//' <file>` in Git Bash.
+  `sed -i 's/\r$//' <file>` in Git Bash. `.gitattributes` only forces `eol=lf` for `.sh`, `.py`,
+  `.md` and `.R`; a new file type needs its own rule added there first. CRLF also comes back
+  *after* a clean edit (a `write` or `edit` call can reintroduce it even on an already-LF file),
+  so check again at the end of a batch, not only before: run
+  `git ls-files --eol -o -m --exclude-standard <skill>` (covers new and modified files, not just
+  the one you just touched) before lint and commit.
 - **Apostrophe in a single-quoted description.** A bare apostrophe (a possessive such as
   "user's") ends the YAML scalar and the linter reports "YAML does not parse". Avoid
   apostrophes in descriptions or double them (`''`), and run `lint_skills()` after every
@@ -122,6 +127,11 @@ and say what it would change.
   wins. Check the built-in list before choosing a name.
 - **Description drift.** Descriptions that grow past about 950 characters or lose the
   "Use when" wording trigger less reliably; the linter warns on both.
+- **Frontmatter `metadata` values must be flat strings**, never a YAML list (`lint_skills()`
+  errors on anything else). Decide this before writing the frontmatter, not after hitting the
+  error: if a field needs several values, join them into one delimited string (the `file_signals`
+  field uses `'|'`, matching the regex-alternation syntax it is used for) rather than a native
+  YAML sequence.
 
 ## What the linter does not judge
 

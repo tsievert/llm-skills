@@ -50,6 +50,17 @@ without asking. CRAN and Bioconductor installs are allowed.
 Keep each fix minimal and in the right file: SKILL.md stays short, detail goes to
 `references/`. Do not add a lesson's story, only the rule it supports.
 
+## An entry with no matching load
+
+A skill named in an inbox entry can show 0 loads in `usage.tsv` since the watermark. This is not
+necessarily a gap: the skill may have been loaded before the watermark cutoff (loads are
+append-only and never double-counted after a watermark is set), the entry may be a manually
+written one (`session` ending in a non-hash suffix such as `manual` or a free label) rather than
+one captured live, or the usage log may simply not cover that machine or session. Check the
+entry's own `date`/`session` against the watermark and against `usage.tsv` directly before
+treating it as evidence that capture is unreliable; only a load recorded *after* the watermark
+with no entry (or vice versa, within the same session) is a real mismatch worth reporting.
+
 ## Measuring the loop itself
 
 From `usage.tsv` and the inbox: loads per skill, sessions with at least one repo skill,
