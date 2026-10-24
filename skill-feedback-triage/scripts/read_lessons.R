@@ -130,7 +130,7 @@ triage_watermark_set <- function(time, agents = "AGENTS.md") {
 lesson_overview <- function(lessons, usage = NULL) {
   skills <- sort(unique(c(lessons$skill, if (!is.null(usage)) usage$skill)))
   types <- c("bug", "missing-guidance", "outdated-fact", "user-correction",
-             "env-difference", "worked-well", "use-case")
+             "env-difference", "worked-well", "use-case", "new-skill-suggestion")
   res <- data.frame(skill = skills, stringsAsFactors = FALSE)
   if (!is.null(usage)) {
     res$loads <- as.integer(table(factor(usage$skill, skills)))
@@ -160,7 +160,8 @@ lesson_dupes <- function(lessons, max_dist = 0.35) {
 }
 
 lesson_problems <- function(lessons) {
-  types <- c("bug", "missing-guidance", "outdated-fact", "user-correction", "env-difference", "worked-well", "use-case")
+  types <- c("bug", "missing-guidance", "outdated-fact", "user-correction", "env-difference",
+             "worked-well", "use-case", "new-skill-suggestion")
   bad <- function(cond, why) if (any(cond, na.rm = TRUE)) data.frame(file = lessons$file[cond %in% TRUE],
                                                                       skill = lessons$skill[cond %in% TRUE],
                                                                       title = lessons$title[cond %in% TRUE],
@@ -174,5 +175,9 @@ lesson_problems <- function(lessons) {
         bad(!lessons$confidence %in% c("high", "medium", "low") & !(lessons$type %in% "use-case" & is.na(lessons$confidence)),
             "confidence invalid"),
         bad(is.na(lessons$title) | !nzchar(lessons$title), "no title"),
-        if ("known_skill" %in% names(lessons)) bad(!lessons$known_skill, "skill folder not found in the repo"))
+        # "new-skill" is the reserved pseudo-skill name for new-skill-suggestion entries and
+        # by design has no folder yet; don't flag it as a missing/unknown skill
+        if ("known_skill" %in% names(lessons))
+          bad(!lessons$known_skill & !(lessons$type %in% "new-skill-suggestion" & lessons$skill %in% "new-skill"),
+              "skill folder not found in the repo"))
 }

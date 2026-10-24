@@ -56,18 +56,32 @@ If the user collected files from other machines or projects, they go into the sa
      [references/triage-method.md](references/triage-method.md));
    - check the skill text the entry blames: is the claim wrong, missing, or just not read?
    - check CRAN for a package that would remove the problem.
+   - `type: new-skill-suggestion` entries (skill slot `new-skill`) propose a skill that
+     doesn't exist, so there is nothing to reproduce: instead, check for overlap with an
+     existing skill's territory (`github-skill-maintenance/references/skill-boundaries.md`),
+     whether a second, independent report backs the same proposal (one request is weak
+     evidence), and whether the scope in `suggested-change` is narrow enough to describe in
+     a skill `description`.
 4. **Decide per issue.** Outcomes: `fix` (skill text, script or reference changes),
    `add-note` (caveat or "verified on" line), `needs-info` (ask the user to rerun a
    command and paste the output), `reject` (user-specific, or the skill was right), `park`
-   (one low-confidence report; leave it in the inbox so evidence can accumulate).
+   (one low-confidence report; leave it in the inbox so evidence can accumulate), or
+   `new-skill` (build it with `create-skill`, in this triage session, only after the user
+   approves it in step 5 — `new-skill-suggestion` entries exist precisely so that decision
+   is made here, deliberately, rather than on the spot in whatever session first noticed
+   the need).
    Evidence thresholds are in the reference.
 5. **Show the triage table and ask.** Columns: issue, skills, reports (projects),
    reproduced, upstream finding, proposed outcome and change. Wait for the user's choice
    (the `AskUser` tool suits batches) before editing any skill.
-6. **Edit, then verify.** After approval, change the skills, then load and follow
-   `github-skill-maintenance` (`lint_skills()`, `skills-ref validate`, `check_versions()`
-   when versions are named), run any changed script or snippet, and state what was and was
-   not tested. Do not call anything ready while errors remain.
+6. **Edit, then verify.** After approval, change the skills (for a `new-skill` outcome, load
+   `create-skill` and build the new skill folder, including the standing sections this repo
+   requires: subagent-delegation note where it fits, "Related skills", "Explain the
+   reasoning", "Capture lessons"), then load and follow `github-skill-maintenance`
+   (`lint_skills()`, `skills-ref validate`, `check_versions()` when versions are named,
+   `check_skill_clashes()` and `check_skill_links()` for a new skill), run any changed
+   script or snippet, and state what was and was not tested. Do not call anything ready
+   while errors remain.
 7. **Archive.** Move processed files with bash (`mv ... inbox/processed/`) in the real
    inbox, not the copy, keeping parked ones in place. Never truncate or edit `usage.tsv`;
    instead record the watermark with `triage_watermark_set(max(U$time))` (only once the
@@ -88,6 +102,16 @@ projects, one report is an anecdote; say so rather than generalising.
 Entries should already be generic. If one still contains identifiers, paths or data
 values, do not copy it into skills, `AGENTS.md`, commits or search queries; reword it
 generically and tell the user the entry slipped through.
+
+## Related skills
+
+- `skill-lessons`: writes the inbox this skill reads. The entry format, privacy rules and the
+  new-skill-suggestion convention live there, not here.
+- `agents-md-maintenance`: one source of new-skill-suggestion entries triaged here — when it
+  finds a procedure that has outgrown a project's memory file, it logs the suggestion via
+  skill-lessons instead of building the skill itself.
+- `github-skill-maintenance`: the step after a fix or new-skill outcome is approved — lints,
+  tests and verifies the edited or newly built skill before it's called ready.
 
 ## Capture lessons (self-improvement rule)
 

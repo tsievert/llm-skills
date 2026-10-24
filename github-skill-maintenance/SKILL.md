@@ -179,6 +179,16 @@ specific alternatives) was exercised on the two seeded skills (`hpc-job-scripts`
 cost of scanning every skill's frontmatter at scale. See
 [references/skill-trigger-hook.md](references/skill-trigger-hook.md) for detail.
 
+## Related skills
+
+- `skill-lessons`: records real-world lessons and new-skill-suggestion entries; when this
+  skill's own workflow or scripts fail, the fix is logged there, not here.
+- `skill-feedback-triage`: the skill that consumes lessons and calls back into this one
+  (`lint_skills()`, `check_skill_clashes()`, `check_skill_links()`, `check_versions()`) to
+  verify a fix or a newly built skill before calling it ready.
+- create-skill (a built-in skill, not part of this repo): where a new skill gets written;
+  this skill only lints, tests and verifies it afterwards, never authors the content.
+
 ## Explain the reasoning (teaching rule)
 
 The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why a check was run or skipped, which finding is a real defect and which is a judgement call, why a fix is offered rather than applied, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.

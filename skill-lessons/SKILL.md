@@ -1,6 +1,6 @@
 ---
 name: skill-lessons
-description: 'Records generic, anonymised lessons learned about the custom skills in the llm-skills repo into a local inbox, so real-world failures can later be fed back into the skills. Use when a skill''s advice or code failed or needed a workaround, an unanticipated error or version/API mismatch appeared while following a skill, the user corrected the assistant, or a skill lacked guidance the task needed; also when a lessons-check hook message asks for it, or the user types /skill-lessons or asks to log a lesson. Not for triaging collected lessons (use skill-feedback-triage).'
+description: 'Records generic, anonymised lessons learned about the custom skills in the llm-skills repo into a local inbox, so real-world failures can later be fed back into the skills. Use when a skill''s advice or code failed or needed a workaround, an unanticipated error or version/API mismatch appeared while following a skill, the user corrected the assistant, or a skill lacked guidance the task needed; also when a skill''s own workflow (e.g. agents-md-maintenance) identifies that a procedure has outgrown an existing skill and should become a new one, recorded here as a `new-skill-suggestion` entry rather than created immediately; also when a lessons-check hook message asks for it, or the user types /skill-lessons or asks to log a lesson. Not for triaging collected lessons or creating the skill itself (use skill-feedback-triage, which hands off to create-skill after review).'
 ---
 
 # Capture lessons about skills
@@ -18,7 +18,10 @@ Record an entry when, while using a skill, any of these happened:
 - code or advice from the skill failed, or needed a workaround;
 - the user corrected the assistant or overrode the skill's advice;
 - a package version, function or API differed from what the skill states;
-- the skill had no guidance for something the task needed.
+- the skill had no guidance for something the task needed;
+- a skill's own workflow flags that a procedure has grown into something that deserves a new
+  skill (`type: new-skill-suggestion`; see below). This defers the decision to a review
+  session rather than creating the skill on the spot.
 
 Do not record: one-off user preferences, quirks of one dataset, questions that were simply
 answered, or anything the user asked not to share. If unsure whether it generalises, record
@@ -66,7 +69,8 @@ entries from one session go into the same file, one `##` block each.
 ## Entry format
 
 The file starts with front matter (written once, the helper does it), then one block per
-entry. Heading: `## <skill-name>: <short title>`; the skill name must match a skill folder.
+entry. Heading: `## <skill-name>: <short title>`; the skill name must match a skill folder
+(exception: `new-skill-suggestion` entries, below).
 
 ```markdown
 ---
@@ -77,7 +81,7 @@ environment: {os: "Windows 11", r: "4.6.0", python: null, packages: {mgcv: "1.9-
 ---
 
 ## gam-mgcv: k.check returns NA for sz smooths
-- type: bug | missing-guidance | outdated-fact | user-correction | env-difference | worked-well | use-case
+- type: bug | missing-guidance | outdated-fact | user-correction | env-difference | worked-well | use-case | new-skill-suggestion
 - symptom: what happened, generic terms
 - context: function/package + version, data type and size (anonymised)
 - tried: what was attempted, in order
@@ -89,6 +93,31 @@ environment: {os: "Windows 11", r: "4.6.0", python: null, packages: {mgcv: "1.9-
 ```
 
 `worked-well` is allowed: a recommendation that held up on real data is evidence too.
+
+### Proposing a new skill
+
+A `new-skill-suggestion` entry is different from the rest: it proposes a skill that does not
+exist yet, so there is no folder to name. Use the reserved pseudo-name `new-skill` as the
+heading's skill slot, and put the proposed skill name in the title:
+
+```markdown
+## new-skill: chemical-ecology-data
+- type: new-skill-suggestion
+- symptom: why this came up (e.g. a procedure inside another skill or project memory file
+  that has grown past what it should carry)
+- context: what triggered the suggestion, and which existing skill or file it would
+  otherwise have gone into
+- suggested-change: the proposed scope in a sentence or two, close to what would become the
+  skill's `description` frontmatter
+- confidence / generality: as usual (is this one project's need, or does it look reusable?)
+```
+
+`lesson_add(skill = "new-skill", type = "new-skill-suggestion", ...)` enforces the
+pseudo-name and skips the skill-folder check. This entry is never acted on immediately;
+writing it here instead of calling `create-skill` directly defers the decision to the next
+`skill-feedback-triage` run, so a new skill is only built after review, not on the spot
+inside whatever session noticed the need. `agents-md-maintenance` uses this path when
+restructuring a project's memory file turns up a procedure that has outgrown it.
 
 ## How to write it
 
@@ -131,6 +160,18 @@ The assistant, not a program, decides what counts as a lesson, so entries will b
 and some will be wrong or too specific; that is why triage reproduces before editing.
 The reminder fires at most once per session. Sessions on a cluster only produce entries for
 things the user pasted back; this skill does not run on the cluster.
+
+## Related skills
+
+- `skill-feedback-triage`: reads the inbox this skill writes, groups and reproduces entries,
+  and proposes fixes (or, for a new-skill-suggestion entry, a new skill via create-skill)
+  back in the llm-skills repo. This skill never edits anything itself.
+- `agents-md-maintenance`: one caller of the new-skill-suggestion path above — when
+  restructuring a project's memory file turns up a procedure that has outgrown it, it records
+  the suggestion here instead of building the skill on the spot.
+- `github-skill-maintenance`: lints and tests the skills that `skill-feedback-triage` edits
+  after reading entries from here; not something this skill calls directly, but the next step
+  downstream of a fix.
 
 ## Explain the reasoning (teaching rule)
 

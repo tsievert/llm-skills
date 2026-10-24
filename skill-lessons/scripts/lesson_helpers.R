@@ -9,7 +9,7 @@
 # environment variable LESSONS_DIR is set (used for tests).
 
 lesson_types <- c("bug", "missing-guidance", "outdated-fact", "user-correction",
-                  "env-difference", "worked-well", "use-case")
+                  "env-difference", "worked-well", "use-case", "new-skill-suggestion")
 lesson_generality <- c("general", "likely-user-specific", "unsure")
 lesson_confidence <- c("high", "medium", "low")
 
@@ -57,12 +57,18 @@ lesson_add <- function(skill, title, type, symptom, context = "", tried = "",
   confidence <- match.arg(confidence, lesson_confidence)
   generality <- match.arg(generality, lesson_generality)
 
-  # The skill name must be a real skill folder when the repo is known.
+  # The skill name must be a real skill folder when the repo is known, except for the
+  # reserved pseudo-name "new-skill" used by `type = "new-skill-suggestion"` entries, which
+  # by definition propose a skill that does not exist yet (see SKILL.md).
   if (is.null(repo)) {
     cand <- c(Sys.getenv("LLM_SKILLS_DIR", ""), getwd())
     repo <- cand[nzchar(cand) & file.exists(file.path(cand, "gam-mgcv", "SKILL.md"))][1]
   }
-  if (length(repo) && !is.na(repo) && !file.exists(file.path(repo, skill, "SKILL.md")))
+  if (identical(type, "new-skill-suggestion") && !identical(skill, "new-skill"))
+    stop("'new-skill-suggestion' entries use skill = \"new-skill\" (the proposed name goes ",
+         "in `title`), got '", skill, "'", call. = FALSE)
+  if (length(repo) && !is.na(repo) && !identical(skill, "new-skill") &&
+      !file.exists(file.path(repo, skill, "SKILL.md")))
     stop("'", skill, "' is not a skill folder in ", repo, call. = FALSE)
 
   fields <- list(type = type, symptom = symptom, context = context, tried = tried,

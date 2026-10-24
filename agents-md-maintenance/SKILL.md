@@ -1,6 +1,6 @@
 ---
 name: agents-md-maintenance
-description: 'Audits, prunes, and restructures AGENTS.md, CLAUDE.md, and DATABOT.md project-memory files for token economy: flags bloat, stale or contradictory rules, narrative creep, and duplicated content, and moves detail into dated history logs, research ledgers, or on-demand reference docs following progressive disclosure. Checks that the file carries a standing rule to delegate narrowly-scoped, low-judgment tasks to a lower-effort subagent rather than doing everything inline, worded as a conditional win, not a default. Use when the user asks to audit, clean up, trim, restructure, or split an AGENTS.md/CLAUDE.md/DATABOT.md file, says project memory has gotten too long or bloated, or asks what belongs in project memory versus a skill or reference doc. Does not create Agent Skills (use create-skill) and does not own the `.codemap/` pointer section that codebase-map inserts.'
+description: 'Audits, prunes, and restructures AGENTS.md, CLAUDE.md, and DATABOT.md project-memory files for token economy: flags bloat, stale or contradictory rules, narrative creep, and duplicated content, and moves detail into dated history logs, research ledgers, or on-demand reference docs following progressive disclosure. Checks that the file carries a standing rule to delegate narrowly-scoped, low-judgment tasks to a lower-effort subagent rather than doing everything inline, worded as a conditional win, not a default. Use when the user asks to audit, clean up, trim, restructure, or split an AGENTS.md/CLAUDE.md/DATABOT.md file, says project memory has gotten too long or bloated, or asks what belongs in project memory versus a skill or reference doc. Does not create Agent Skills itself (routes new-skill ideas through skill-lessons for later triage, not create-skill) and does not own the `.codemap/` pointer section that codebase-map inserts.'
 ---
 
 # AGENTS.md maintenance
@@ -60,14 +60,19 @@ sections below are ways of applying it systematically.
 - **Split research from decisions.** If a project does enough investigation to need citations or
   source tables (as this repo's `research/` ledgers do), keep that in topic-specific files, not
   inline in the memory file — reference them by path instead of duplicating their content.
-- **Promote a procedure to a skill.** If a block has grown into a multi-step workflow with its
-  own edge cases, it has outgrown the always-loaded file. Hand off to `create-skill` instead of
-  letting it keep growing in place.
+- **Promote a procedure to a skill — but not in this session.** If a block has grown into a
+  multi-step workflow with its own edge cases, it has outgrown the always-loaded file. Don't hand
+  off to create-skill directly: that builds a skill on the spot, in whatever session happened to
+  notice the need, with no review and no check for overlap with an existing skill. Instead,
+  record a new-skill-suggestion entry via the `skill-lessons` skill (proposed name, the trigger,
+  and the scope in a sentence or two) and tell the user it's logged for the next
+  `skill-feedback-triage` run rather than built now. Still flag it to the user in this session —
+  logging it is not silent.
 - **Reference doc vs. full skill.** When extracting a grown procedural block, prefer a plain
   reference doc (read on demand from inside the memory file, or kept in the project) when the
   procedure is project-specific and not reused across projects or conversations. Prefer
-  promoting it to a full Agent Skill via `create-skill` when it would be reused across projects
-  or benefits from independent discovery/triggering rather than being tied to one project's
+  recording a new-skill-suggestion entry (above) when it would be reused across projects or
+  benefits from independent discovery/triggering rather than being tied to one project's
   always-loaded file.
 - **Reference instead of duplicating.** Point at `README.md`, `.gitignore`, or existing docs
   rather than restating their content; duplicated facts drift apart over time.
@@ -105,8 +110,11 @@ concrete file pointers; anything resolved or no longer true.
 
 ## Related skills
 
-- create-skill (a built-in skill, not part of this repo): when a section of the memory file has
-  grown into a multi-step procedure, build it as a skill instead of leaving it in `AGENTS.md`.
+- `skill-lessons`: the hand-off for "this belongs in a skill, not here." Record a
+  new-skill-suggestion entry there (a `type` value, not a skill name) rather than calling
+  create-skill directly, so the new skill is only built after a `skill-feedback-triage` review.
+- create-skill (a built-in skill, not part of this repo): the eventual destination once a
+  new-skill suggestion is reviewed and approved — not something this skill calls directly.
 - `codebase-map`: owns inserting and maintaining the one specific pointer section it adds to a
   project's `AGENTS.md`/`DATABOT.md` (pointing at `.codemap/`). Leave that section alone; this
   skill covers everything else in the file.
