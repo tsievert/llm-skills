@@ -5,3 +5,4 @@ a	b	decision	reason	date
 hpc-python-code	hpc-r-code	accepted	Language twins: the same topics (logging, threads, checkpoints) for different languages; the language decides which loads	2026-10-23
 skill-lessons	skill-feedback-triage	accepted	Writer and reader of one inbox; each description says what the other does	2026-10-23
 hpc-cluster-docs	hpc-job-scripts	accepted	Gate then work: cluster-docs runs first and hands over; its description is about identifying the site, not writing scripts	2026-10-23
+deeplabcut-hpc	hpc-job-scripts	accepted	Intentional co-trigger after the 2026-10-24 undertrigger fix: a DLC training orchestrator/sweep script is real territory for both (DLC specifics vs. generic sbatch structure), and deeplabcut-hpc already says "Combine with the generic hpc-* skills"	2026-10-24

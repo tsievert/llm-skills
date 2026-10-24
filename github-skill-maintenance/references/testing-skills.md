@@ -85,6 +85,38 @@ would load, three runs each (example: `assets/trigger-queries-clash-areas.json`)
 description wording only, not the real loader, not near-miss queries that should trigger
 nothing, and not the skill bodies. Results so far are in `skill-boundaries.md` (open items).
 
+## Common trigger-miss pattern: discovered mid-task, not stated in the request
+
+Found 2026-10-24 from a real conversation log (`dlc-pig-method-paper`): the user asked for "an
+optional orchestrator for the sow and piglet submission scripts... to submit jobs with different
+training parameters". `hpc-job-scripts` and `deeplabcut-hpc` did not trigger, even though the
+assistant then read the actual files (`GDK_DLC_piglet_train_submit.sh`, `GDK_DLC_sow_train_submit.sh`)
+and would have seen `#SBATCH` lines and a DeepLabCut training call. The skills only loaded two turns
+later, once the user explicitly wrote "HPC best practices and DLC API". Lesson, generalised from the
+web sources behind this skill's advice (philschmid.de/agent-skills-tips; agensi.io; selftune.dev;
+atlan.com, 2026): a `description` written only against the *vocabulary a skill author expects*
+("Slurm", "sbatch", "DeepLabCut") misses requests phrased with *domain or project jargon* ("sow and
+piglet submission scripts", "orchestrator for training runs") and, separately, the assistant does not
+automatically re-check skill relevance after reading file content mid-task that makes the match
+obvious — loading happens mainly off the initial message.
+
+Two independent mitigations, both needed:
+
+1. **Widen "Use when" with implicit/contextual phrasing**, not just the literal jargon: cover the
+   *task* ("submit a batch/sweep of runs with different parameters", "retrain after fixing the
+   data") in addition to the *tool* ("Slurm", "sbatch"). Do not add this user's own project-specific
+   terms ("sow", "piglet") to a shared skill description — they do not generalise to other users; the
+   fix is the task-level phrasing, not the brand name.
+2. **Name the file-level signal explicitly in the description** for skills whose domain shows up in
+   file content before it shows up in the user's words (`#SBATCH`/`sbatch`/`srun` for the HPC skills,
+   `import deeplabcut`/`pytorch_config.yaml` for `deeplabcut-hpc`), so the description itself tells
+   the assistant that reading such a file is a trigger, independent of the wording of the request.
+
+When auditing a skill that seems to undertrigger, check both: does the description cover indirect/
+contextual phrasing (per the checklist above), and does it tell the assistant that evidence found
+*while working* (file contents, filenames, existing scripts) counts as a trigger just as much as the
+user's own words?
+
 ## When to stop
 
 Stop when the failures left are inconsistent rather than systematic, or when a change
