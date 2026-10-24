@@ -21,7 +21,7 @@ The assistant runs only on the user's local machine, never on the cluster (same 
 3. **Fit on a GPU node** with `scripts/kpms_headless_fit.py` and `assets/kpms_fit.sbatch` (lint with `hpc-job-scripts/scripts/check_sbatch.sh`). Load `hpc-cluster-docs` first. Details: [references/hpc-and-troubleshooting.md](references/hpc-and-troubleshooting.md).
 4. **Check the fit**: median syllable duration versus target (kappa), number of syllables, stability across seeds (expected marginal likelihood, confusion matrix), and **watch grid movies or trajectory plots** before interpreting or naming any syllable.
 5. **Extract** `results.h5` and summarise with `scripts/kpms_summarise_results.py` (Python, no JAX) or `scripts/kpms_results.R` (R, hdf5r).
-6. **Analyse**: for kpms usage, durations and transitions see [references/downstream-analysis.md](references/downstream-analysis.md); for the step from any metric table to models (design, metadata, mixed models, kpms beyond its built-in tests) see [references/statistical-analysis.md](references/statistical-analysis.md) and the tested template `scripts/stats_demo.R`.
+6. **Analyse**: for kpms usage, durations and transitions see [references/downstream-analysis.md](references/downstream-analysis.md); for the step from any metric table to models (design, metadata, which model for which metric, kpms beyond its built-in tests) see [references/statistical-analysis.md](references/statistical-analysis.md) and the tested template `scripts/stats_demo.R`. For the generic GLMM fitting/diagnostics workflow itself, use `mixed-models-glmm` and its `glmm_templates.R`.
 7. **Record provenance**: kpms/jax versions, seed, kappa(s), iterations, latent_dim, model name, DLC model and shuffle.
 
 ## What runs where
@@ -54,7 +54,7 @@ The assistant runs only on the user's local machine, never on the cluster (same 
 | Movement metrics, ROI, speed in Python | `movement` (PyPI; v0.17.0) | Tested: path length and ROI time agree with the scripts within about 0.2%; polygon ROIs only, no circles, entries or immobility |
 | Movement metrics in R | `animovement` (R-universe, installed with permission), `trajr` and `signal` (CRAN) | Tested: animovement distance and ROI time match the scripts; no polygon ROIs, entries or immobility; `.h5` works with Bioconductor rhdf5 (installed). See the reference |
 | Read results.h5 in R | `hdf5r` (CRAN) | Tested: dimension order, nested groups, values equal to kpms CSV |
-| Mixed models, censored latencies, GAMs | `glmmTMB`, `lme4`/`lmerTest`, `emmeans`, `DHARMa`, `coxme`, `mgcv` (see `mixed-models-glmm` once it exists) | Tested on simulated data in `scripts/stats_demo.R` |
+| Mixed models, censored latencies, GAMs | `glmmTMB`, `lme4`/`lmerTest`, `emmeans`, `DHARMa`, `coxme`, `mgcv` (general GLMM workflow in `mixed-models-glmm`; this skill covers only `coxme` latency, the GAM time course and kpms syllable models) | Tested on simulated data in `scripts/stats_demo.R` |
 | Call Python from R/Quarto | `reticulate` | Mentioned only, not used (fitting belongs on the cluster) |
 | Compositional usage | `DirichletReg`, `compositions` | Not tested |
 | Multivariate usage tests | `vegan` + `permute` (PERMANOVA, whole-animal permutations) | Tested on simulated data in `scripts/stats_demo.R` |
@@ -72,8 +72,8 @@ There is no CRAN package for keypoint-MoSeq itself; the fitting side is Python o
 - [references/keypoint-moseq-workflow.md](references/keypoint-moseq-workflow.md): API walk-through, config keys, kappa tuning, data requirements, advanced options.
 - [references/hpc-and-troubleshooting.md](references/hpc-and-troubleshooting.md): install, GPU/JAX, version findings, job layout, errors, how to search upstream issues.
 - [references/downstream-analysis.md](references/downstream-analysis.md): R and Python recipes, statistics, transitions, validation.
-- [references/statistical-analysis.md](references/statistical-analysis.md): from metric tables to statistics (unit of analysis, tidy layout, model per metric type, mixed models, kpms built-in tests versus export, compositional cautions, Python route, reporting).
-- `scripts/stats_demo.R`: simulated 24-animal design with runnable templates for every model in that reference.
+- [references/statistical-analysis.md](references/statistical-analysis.md): from metric tables to statistics (unit of analysis, tidy layout, which model for which metric, kpms built-in tests versus export, compositional cautions, Python route, reporting). Hands off the generic GLMM workflow to `mixed-models-glmm`.
+- `scripts/stats_demo.R`: simulated 24-animal design with runnable templates for the tracking-specific analyses (latency, GAM time course, kpms syllable usage/transitions/bout durations); the Gamma/binomial/nbinom2/zero-inflation templates for the same design are in `mixed-models-glmm/scripts/glmm_templates.R`.
 - `scripts/kpms_headless_fit.py`: resumable headless fit (run with `--help`).
 - `scripts/kpms_summarise_results.py`: results.h5 to bouts/usage/transitions CSV.
 - `scripts/kpms_results.R`: same summaries in R plus a frame-level reader.
@@ -85,6 +85,7 @@ Basic-metrics scripts: tested on synthetic DLC-format CSV/h5 (single and multi-a
 
 ## Related skills
 
+- `mixed-models-glmm`: the generic GLMM fitting/diagnostics/reporting workflow (family choice, DHARMa, random effects, zero inflation, multiplicity, repeatability) that this skill's model tables and templates hand off to.
 - `hpc-python-code` and `hpc-r-code`: code that runs the fits or analyses inside cluster jobs.
 - `manuscript-figures-ggplot`: journal-ready figures from the summaries and model results.
 - `data-repository-readme`: README and data dictionary for depositing the tracking data and metrics.

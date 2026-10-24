@@ -3,6 +3,12 @@
 # Design simulated: 24 animals (3 groups x 8, both sexes), 2 sessions each = 48 recordings; group effects are built in
 # so the models have something to find. Packages: glmmTMB, DHARMa, emmeans, lme4, lmerTest, survival, coxme, mgcv,
 # vegan, permute (all CRAN).
+#
+# This file covers only what is specific to tracking data: time-to-event latency, a GAM time course, keypoint-MoSeq
+# syllable usage/transitions/durations. For the generic model-choice logic (Gamma/binomial/beta-binomial/nbinom2,
+# offsets, zero inflation, random-slope structure, DHARMa diagnostics, multiplicity, repeatability) see the
+# `mixed-models-glmm` skill and its tested `scripts/glmm_templates.R` (same simulation design, same seed family;
+# blocks 1-5 there are the distance/ROI/entries/multiplicity templates this file used to duplicate).
 
 suppressPackageStartupMessages({
   library(glmmTMB); library(DHARMa); library(emmeans); library(lmerTest)
@@ -31,32 +37,15 @@ meta$entries <- rnbinom(nrow(meta), mu = 0.05 * meta$duration_s * exp(c(0, -0.4,
 lat <- rexp(nrow(meta), rate = exp(-4.2 + c(0, -0.5, 0)[as.integer(meta$group)] + meta$u_roi / 2))
 meta$event <- as.integer(lat < meta$duration_s)       # 0 = never entered: censored at session length
 meta$latency_s <- pmin(lat, meta$duration_s)
+# meta$distance, meta$n_roi/n_valid, meta$entries are simulated here only because the time-course and kpms
+# blocks below reuse the same animal/day structure; fit Gamma/binomial/nbinom2 models on them with
+# `mixed-models-glmm/scripts/glmm_templates.R`, not duplicated here.
 
-# ---- 2. Continuous positive metric (distance): Gamma GLMM -----------------------------------------------------------
-m_dist <- glmmTMB(distance ~ group * day + sex + (1 | animal), family = Gamma(link = "log"), data = meta)
-print(round(testUniformity(simulateResiduals(m_dist), plot = FALSE)$p.value, 3))   # residual check (DHARMa)
-print(emmeans(m_dist, ~ group, type = "response"))
-print(pairs(emmeans(m_dist, ~ group), type = "response"))      # ratios of geometric-mean distance with CIs
-# overall group effect (likelihood-ratio test on ML fits, interaction removed first if not of interest)
-m_dist0 <- update(m_dist, . ~ . - group - group:day)
-print(anova(m_dist0, m_dist))
-
-# ---- 3. Share of time in a ROI: binomial GLMM on frame counts, check overdispersion ---------------------------------
-m_roi <- glmmTMB(cbind(n_roi, n_valid - n_roi) ~ group * day + (1 | animal), family = binomial, data = meta)
-print(testDispersion(simulateResiduals(m_roi), plot = FALSE)$p.value)
-m_roi_bb <- update(m_roi, family = betabinomial)               # use when binomial is overdispersed
-print(AIC(m_roi, m_roi_bb))
-print(pairs(emmeans(m_roi_bb, ~ group), type = "response"))    # odds ratios
-
-# ---- 4. Counts (entries): negative binomial with exposure offset ----------------------------------------------------
-m_ent <- glmmTMB(entries ~ group * day + offset(log(duration_s)) + (1 | animal), family = nbinom2, data = meta)
-print(pairs(emmeans(m_ent, ~ group, offset = 0), type = "response"))   # rate ratios per unit exposure
-
-# ---- 5. Latency to first entry: time-to-event with censoring (never entered = censored at session length) -----------
+# ---- 2. Latency to first entry: time-to-event with censoring (never entered = censored at session length) -----------
 m_lat <- coxme(Surv(latency_s, event) ~ group + sex + (1 | animal), data = meta)
 print(summary(m_lat)$coefficients |> round(3))                  # log hazard ratios; exp() for hazard ratios
 
-# ---- 6. Time courses: binned values as a smooth in time with animal/recording random effects ------------------------
+# ---- 3. Time courses: binned values as a smooth in time with animal/recording random effects ------------------------
 bins <- do.call(rbind, lapply(seq_len(nrow(meta)), function(i) {
   data.frame(recording = meta$recording[i], animal = meta$animal[i], group = meta$group[i], minute = 0:9,
              dist_bin = rgamma(10, shape = 10, rate = 10 / (60 * exp(eff_g[as.character(meta$group[i])] * (0:9) / 9 + meta$u_dist[i] - 0.03 * (0:9)))))
@@ -67,13 +56,7 @@ g_bin <- bam(dist_bin ~ group + s(minute, k = 6) + s(minute, by = group, k = 6, 
 print(round(summary(g_bin)$s.table, 3))
 # interpretation and plotting of GAMs: see the gam-mgcv / gam-interpretation skills
 
-# ---- 7. Several endpoints: pre-specify the primary one, adjust the rest -----------------------------------------------
-pvals <- c(distance = anova(m_dist0, m_dist)$`Pr(>Chisq)`[2],
-           roi_share = anova(update(m_roi_bb, . ~ . - group - group:day), m_roi_bb)$`Pr(>Chisq)`[2],
-           entries = anova(update(m_ent, . ~ . - group - group:day), m_ent)$`Pr(>Chisq)`[2])
-print(round(rbind(raw = pvals, holm = p.adjust(pvals, "holm")), 4))
-
-# ---- 8. keypoint-MoSeq usage: simulate bout counts per syllable ------------------------------------------------------
+# ---- 4. keypoint-MoSeq usage: simulate bout counts per syllable ------------------------------------------------------
 n_syll <- 12
 base <- rnorm(n_syll, 0, 1)
 eff_s <- matrix(0, 3, n_syll, dimnames = list(levels(meta$group), NULL)); eff_s["odourA", 3] <- 1.0; eff_s["odourA", 5] <- -1.0
@@ -87,7 +70,7 @@ usage <- merge(usage, meta[, c("recording", "animal", "group", "sex", "day")], b
 usage$total <- ave(usage$n_bouts, usage$recording, FUN = sum)
 usage$syllable <- factor(usage$syllable)
 
-# 8a. one model per syllable (count with exposure offset), then adjust over syllables
+# 4a. one model per syllable (count with exposure offset), then adjust over syllables
 fit_one <- function(d) {
   m <- glmmTMB(n_bouts ~ group + day + sex + offset(log(total)) + (1 | animal), family = nbinom2, data = d)
   p <- unname(anova(update(m, . ~ . - group), m)$`Pr(>Chisq)`[2])          # overall group effect for this syllable
@@ -100,7 +83,7 @@ sp$p_adj <- p.adjust(sp$lrt_p, "BH")
 res <- merge(res, sp[, c("syllable", "p_adj")], by = "syllable")
 print(subset(res, p_adj < 0.1) |> transform(ratio = round(ratio, 2), lrt_p = signif(lrt_p, 2), p_adj = signif(p_adj, 2)))
 
-# 8b. whole repertoire: PERMANOVA on Hellinger-transformed shares, permuting WHOLE ANIMALS (group is an animal-level factor)
+# 4b. whole repertoire: PERMANOVA on Hellinger-transformed shares, permuting WHOLE ANIMALS (group is an animal-level factor)
 wide <- reshape(usage[, c("recording", "syllable", "n_bouts")], idvar = "recording", timevar = "syllable", direction = "wide")
 rownames(wide) <- wide$recording; wide$recording <- NULL
 shares <- sweep(as.matrix(wide), 1, rowSums(wide), "/")
@@ -110,13 +93,13 @@ ad <- adonis2(sqrt(shares) ~ group, data = md, method = "euclidean", permutation
 print(ad)
 print(anova(betadisper(dist(sqrt(shares)), md$group)))      # check dispersion differences; PERMANOVA is sensitive to them
 
-# 8c. low-dimensional summary: centred log-ratio (pseudocount is a choice, report it), PCA, mixed model on scores
+# 4c. low-dimensional summary: centred log-ratio (pseudocount is a choice, report it), PCA, mixed model on scores
 clr <- log(shares * 400 + 0.5); clr <- clr - rowMeans(clr)
 pc <- prcomp(clr)
 md$PC1 <- pc$x[, 1]; md$PC2 <- pc$x[, 2]
 print(anova(lmer(PC1 ~ group * day + sex + (1 | animal), data = md)))
 
-# ---- 9. Bout durations (dwell time): bout-level mixed model with nested random effects --------------------------------
+# ---- 5. Bout durations (dwell time): bout-level mixed model with nested random effects --------------------------------
 bouts <- do.call(rbind, lapply(seq_len(nrow(meta)), function(i) {
   n <- rpois(1, 30)
   data.frame(recording = meta$recording[i], animal = meta$animal[i], group = meta$group[i],
@@ -126,7 +109,7 @@ m_dur <- lmer(log(dur_s) ~ group + (1 | animal / recording), data = bouts)   # r
 print(round(summary(m_dur)$coefficients, 3))
 print(pairs(emmeans(m_dur, ~ group), type = "response"))       # ratios of geometric-mean bout duration
 
-# ---- 10. One transition: binomial GLMM, successes = transitions to B out of all exits from A -----------------------------
+# ---- 6. One transition: binomial GLMM, successes = transitions to B out of all exits from A -----------------------------
 tr <- do.call(rbind, lapply(seq_len(nrow(meta)), function(i) {
   from_n <- rpois(1, 40); p <- plogis(-0.5 + 0.8 * (meta$group[i] == "odourA"))
   data.frame(recording = meta$recording[i], animal = meta$animal[i], group = meta$group[i], from_total = from_n, to_B = rbinom(1, from_n, p))

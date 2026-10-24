@@ -5,13 +5,14 @@
 - [Principles](#principles)
 - [Data layout: one tidy row per recording](#data-layout-one-tidy-row-per-recording)
 - [Which model for which metric](#which-model-for-which-metric)
-- [Design issues that change the model](#design-issues-that-change-the-model)
 - [keypoint-MoSeq: what is built in, and why to export instead](#keypoint-moseq-what-is-built-in-and-why-to-export-instead)
 - [Python route (statsmodels)](#python-route-statsmodels)
 - [Reporting checklist](#reporting-checklist)
 
 
-All code below is in [scripts/stats_demo.R](../scripts/stats_demo.R), which simulates a 24-animal, 3-group, 2-session design (48 recordings) and runs every model. It is a set of templates tested for running correctly on simulated data. It does not replace choosing the model for your design, and the effects it finds are the ones built into the simulation. For modelling depth see the `gam-mgcv` and `gam-interpretation` skills (time courses) and the planned `mixed-models-glmm` skill.
+This file covers what is specific to tracking data: how the extracted metrics map onto model choices, data layout, and the keypoint-MoSeq-specific analyses (compositional usage, transitions, the limits of the built-in test). **For the generic model-fitting workflow itself — choosing the family, diagnosing with DHARMa, random-effect structure, zero inflation, multiplicity, repeatability, reporting wording — use the `mixed-models-glmm` skill.** It owns that content and has the tested templates; this file used to duplicate them and now hands off instead. For GAM time courses use `gam-mgcv` (fitting) and `gam-interpretation` (plotting/inference).
+
+Code specific to this domain (latency via `coxme`, the time-course GAM, and the keypoint-MoSeq syllable analyses below) is in [scripts/stats_demo.R](../scripts/stats_demo.R), which simulates a 24-animal, 3-group, 2-session design (48 recordings). The Gamma/binomial/beta-binomial/nbinom2/zero-inflation/multiplicity templates for the same simulation design are in `mixed-models-glmm/scripts/glmm_templates.R`.
 
 ## Principles
 
@@ -38,35 +39,23 @@ Metrics come from `scripts/dlc_metrics.*` (`summary.csv`, `bins.csv`) or `script
 
 ## Which model for which metric
 
-| Metric | Distribution and model (R) | Effect reported |
+Which family `mixed-models-glmm` picks for a given response, mapped onto the metric names this skill
+produces (full workflow, diagnostics and pitfalls live there, not here):
+
+| Metric from `dlc_metrics`/kpms summaries | Response type | Effect reported |
 |---|---|---|
-| Distance, mean speed (positive, skewed) | `glmmTMB(distance ~ group*day + sex + (1|animal), family = Gamma(log))` or `lmer(log(distance) ...)` | ratio of geometric means |
-| Share of time in ROI or immobile | counts out of valid frames: `glmmTMB(cbind(n_in, n_valid - n_in) ~ ... + (1|animal), family = binomial)`; if overdispersed, `betabinomial` | odds ratio |
-| Entries, bouts, events | `glmmTMB(count ~ ... + offset(log(duration_s)) + (1|animal), family = nbinom2)` | rate ratio |
-| Latency to first entry | time-to-event, never entered = censored at session length: `coxme(Surv(latency_s, event) ~ group + sex + (1|animal))` or `survival::coxph(... + cluster(animal))` | hazard ratio |
-| Time course (per-minute bins) | GAM: `bam(y ~ group + s(minute) + s(minute, by = group, m = 1) + s(animal, bs = "re") + s(recording, bs = "re"), family = Gamma(log))` | smooth differences, see `gam-interpretation` |
-| Bout durations | `lmer(log(dur_s) ~ group + (1|animal/recording))` | ratio of geometric-mean duration |
-| One transition probability | `glmmTMB(cbind(to_B, from_total - to_B) ~ group + (1|animal), family = binomial)` | odds ratio |
-| Several endpoints | adjust over the pre-specified family (Holm for few, BH for many) | adjusted p |
+| Distance, mean speed | positive continuous | ratio of (geometric) means |
+| Share of time in ROI or immobile | successes out of valid frames | odds ratio |
+| Entries, bouts, events | count with exposure (`duration_s` offset) | rate ratio |
+| Latency to first entry | time-to-event, never-entered = censored: `coxme(Surv(latency_s, event) ~ group + sex + (1|animal))` (not covered in `mixed-models-glmm`; the template is in `stats_demo.R`) | hazard ratio |
+| Time course (per-minute bins) | GAM, see `gam-mgcv`/`gam-interpretation` | smooth differences |
+| Bout durations, nested in animal/recording | positive continuous, nested random effect | ratio of geometric-mean duration |
+| One transition probability | binomial on exits | odds ratio |
 
-Group contrasts with `emmeans`: `pairs(emmeans(m, ~ group), type = "response")` returns ratios with the multiplicity adjustment (Tukey by default). If `group` interacts with `day`, the averaged contrast hides it; emmeans prints a note, so look at `~ group | day`.
-
-### What the simulated runs showed (illustration, not evidence)
-
-- Binomial model on ROI frame counts: DHARMa dispersion test p about 0 and AIC 4915; beta-binomial AIC 763. Frame counts are strongly overdispersed between recordings, so a plain binomial reports confidence that is not warranted. Check this every time you model proportions of frames.
-- With 8 animals per group, a built-in 22% reduction in distance was not detected (ratio about 1.06, p 0.86 after averaging); between-animal variance and few animals limit power. Plan sample size on animals, ideally with a simulation like this one using your pilot variance.
-- Three endpoints (distance, ROI share, entries) adjusted together with Holm: only the ROI share stayed below 0.05 (raw p 0.0008, adjusted 0.0023); distance (0.11) and entries (0.60) did not.
-- Random-effect variances can estimate at zero (`boundary (singular) fit` for the recording-within-animal term in the bout model). That is not an error by itself; simplify the random structure or report it.
-
-## Design issues that change the model
-
-- **Repeated sessions**: random intercept for animal is the minimum. Add a random slope for day only if there are enough sessions per animal to estimate it; with two sessions it is not identifiable. For many ordered sessions consider an autocorrelation term (`ar1()` in glmmTMB) or a GAM in time.
-- **Recordings nested in animals**: `(1 | animal/recording)`; with one recording per animal-day and `day` fixed, `(1 | animal)` is enough.
-- **Between- vs within-animal factors**: group effects are tested against between-animal variance; day effects against within-animal variance. Do not use residual degrees of freedom from frames.
-- **Covariates**: include sex, batch, weight or age when relevant; add `frac_missing_final` as a covariate or run a sensitivity analysis excluding poorly tracked recordings.
-- **Interactions**: test `group:day` first if it is of interest; interpret main effects carefully when it is present.
-- **Missing recordings**: unbalanced data are fine for mixed models, but say why recordings are missing and whether the reason relates to group.
-- **Multiple metrics**: nominate a primary endpoint; adjust the rest; do not scan 30 metrics and report the best.
+Design issues specific to tracking data that change which of the above applies — recordings nested in
+animals, `frac_missing_final` as a covariate or exclusion rule, unbalanced/missing recordings — are noted
+where each metric is defined in `dlc-basic-metrics.md`; the general logic (random intercepts vs slopes,
+between- vs within-animal variance, multiplicity, singular fits, DHARMa) is in `mixed-models-glmm`.
 
 ## keypoint-MoSeq: what is built in, and why to export instead
 
@@ -122,4 +111,4 @@ Adjust p-values over syllables with `statsmodels.stats.multitest.multipletests(p
 - Pipeline: DLC network and shuffle, likelihood threshold, gap rule, smoothing, calibration, immobility parameters, ROI definitions; for kpms the versions, seed, kappa, iterations, latent dimension, syllable threshold.
 - Models: formula, family, random effects, how contrasts were computed, how multiplicity was handled, residual checks and any singular fits.
 - Results: effect sizes with intervals for all pre-specified endpoints (also the null ones), plus raw per-animal data in the figure.
-- Deposit: metadata table, metric tables, scripts and `stats_demo`-style analysis code (see the planned `reproducible-research-data` skill).
+- Deposit: metadata table, metric tables, scripts and `stats_demo`-style analysis code (see the `reproducible-research-data` skill).
