@@ -526,6 +526,30 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   `tar_make()` in a real Slurm job, crew.cluster submission, NFS, Linux/macOS, Python chunk in a targeted report, `tar_map`/`tar_rep`, undeclared-script
   negative case, restore from a P3M snapshot URL. (Committed in c4fd1fd; the template `uv.lock` was untracked until the next commit, see below.)
 
+- 2026-10-24: Debugged a real undertrigger from `tmp-examples/conversation-export-1.json` (a DLC-on-HPC
+  project log, not committed). Turn 1 asked for "an optional orchestrator for the sow and piglet submission
+  scripts... to submit jobs with different training parameters"; `hpc-job-scripts` and `deeplabcut-hpc` did
+  not load even after the assistant read the actual `GDK_DLC_*_submit.sh` files (which would show `#SBATCH`
+  and a DLC training call) — only two turns later, once the user wrote "HPC best practices and DLC API"
+  explicitly, did both plus `hpc-gpu-jobs`/`hpc-cluster-docs` trigger. Web sources read (philschmid.de,
+  agensi.io, selftune.dev, atlan.com, codemyspec.com, dout.dev, bibek-poudel/sathishkraju on Medium, AWS
+  DevOps blog; all agree the description is a semantic trigger, must mirror indirect/contextual user
+  phrasing and not just tool jargon, and most undertriggers trace to the description rather than the body).
+  Fix: widened the "Use when" clauses of `hpc-job-scripts` (added orchestrator/sweep/batch-of-runs phrasing
+  and "a script that already contains #SBATCH/sbatch/srun, even if the request doesn't name Slurm/HPC") and
+  `deeplabcut-hpc` (retrain/resubmit/orchestrator over existing DLC scripts, plus the same file-content
+  signal for `import deeplabcut`/`pytorch_config.yaml`). Documented the general pattern — descriptions miss
+  project/domain jargon, and the assistant does not auto-recheck skills after file reads reveal a match —
+  as a new section in `github-skill-maintenance/references/testing-skills.md`. Deliberately did not add this
+  user's own project words ("sow", "piglet") to the shared description; that doesn't generalise. New overlap
+  from the wording (`deeplabcut-hpc`/`hpc-job-scripts`, score 0.161) recorded as `accepted` in
+  `clash-decisions.tsv` (the two legitimately co-trigger for a DLC job orchestrator). Checked:
+  `lint_skills()` (info-only, both descriptions now ~970 characters, under the 1024 limit),
+  `check_skill_clashes(new=)` for both, `skills-ref validate` for both, `check_skill_links()` clean (24
+  skills). Not tested: the new description wording against fresh conversations (no trigger-query re-run),
+  whether the file-content-signal instruction actually changes assistant behaviour mid-task (this is a
+  behavioural claim added to the description, not something lint can verify). Committed (`fb6eaf9`).
+
 ## Lessons triage state
 - Lessons usage watermark: 2026-10-23T23:23:10
 
