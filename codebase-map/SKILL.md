@@ -116,6 +116,9 @@ literally) — useful for testing, but outside this skill's intended scope.
   fail-open, per-session dedupe state under `~/.posit/`) follows the same pattern as this
   repo's own skill-lessons and skill-trigger-hook hooks — see that skill's own
   skill-trigger-hook.md reference for the general hook design this one reuses.
+- `agents-md-maintenance`: owns general hygiene of the rest of a project's
+  `AGENTS.md`/`DATABOT.md` (bloat, staleness, structure). This skill only ever touches its own
+  narrow pointer section to `.codemap/`; hand off for everything else in the file.
 
 ## Explain the reasoning (teaching rule)
 

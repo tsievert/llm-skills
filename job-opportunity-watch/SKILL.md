@@ -90,6 +90,12 @@ small.
 - Titles that are just category pages or the same vacancy listed on several portals are duplicates:
   count one underlying opportunity once (employer, title, reference number, deadline) and cross-reference.
 
+On a baseline run (the tier-2 queue is around 1,000 titles), consider handing the bulk tier-2 skim to a
+lower-effort subagent: give it the profile's topic words, excluded titles and the tier-2 title list, and
+have it return only the shortlist that could plausibly fit, with a one-line reason each. This is a
+conditional win, not a default — on the small queues of later runs, skimming inline is simpler and the
+judgement calls (central duties vs. isolated keyword hits) are cheap enough to make directly.
+
 ## Step 3: verify and classify each shortlisted opportunity
 
 For each: open the vacancy (follow redirects; search the employer site if the page is generic, moved or

@@ -64,6 +64,7 @@ current/active state (working rules, open decisions, the todo table).
 45. 2026-10-23 — Second `skill-feedback-triage` run
 46. 2026-10-24 — Built `recipe-notes-formatter`
 47. 2026-10-24 — Analysed conversation exports for skill-trigger behaviour; built `skill-trigger-hook.sh` (R1)
+48. 2026-10-24 — Audited all skills for the subagent-delegation-rule candidate; added rule to `job-opportunity-watch`
 
 ## Entries
 
@@ -672,3 +673,38 @@ current/active state (working rules, open decisions, the todo table).
   skill's own body are checked *inside that skill's folder*, so a repo-root script must be named without the `scripts/` prefix there — found while
   writing this), and tested/not-tested notes. `lint_skills()`, `check_skill_links()`, `check_skill_clashes(new=)`, `skills-ref validate` all clean.
   Not tested: the hook firing inside a real conversation turn, `SubagentStop`, Linux/macOS, a second machine.
+
+- 2026-10-24: Ran a test audit of the new `agents-md-maintenance` skill against this repo's own `AGENTS.md`.
+  Findings and fixes: (1) the "Auto-sync protocol" section still described the superseded copy/junction
+  design (copying skill folders into `~/.posit/assistant/skills/`), contradicting the "Implementation
+  notes" section next to it, which documents the actual, current `skills.paths`-points-at-the-clone design
+  — merged the two into one "Skill sync" section describing only the current mechanism, with this entry
+  recording the old design for history; (2) "Open decisions" carried two already-resolved, struck-through
+  bullets (clone-in-place vs. copy; deleting the old `openalex` copy, both done 2026-10-23) — removed from
+  the live file, recorded here; (3) no subagent-delegation rule existed anywhere in `AGENTS.md`, which the
+  skill requires every reviewed file to carry (conditional wording: delegate narrow, context-heavy,
+  low-judgment tasks, not by default) — added a new "Delegating to subagents" section; (4) the "Research
+  folder" section's three ledger bullets restated each ledger's internal section index in detail (~20
+  lines) — trimmed to one line per ledger (path + topic), since each ledger already carries its own index
+  and status column at the top. No other staleness, contradictions, or formatting issues found; the todo
+  table, "About the local user", and "Working rules" sections were judged current and adequately terse.
+
+- 2026-10-24: Audited all existing skills (27 `SKILL.md` files) against the standing "Consider a
+  subagent-delegation rule per skill" check. Delegated the survey to an `explore` subagent (read every
+  `SKILL.md`, report whether a delegation rule already exists and whether the skill's own described
+  workflow contains a narrowly-scoped, low-judgment, high-volume step repeated across many items).
+  Result: most skills either already push their repeated work into bundled scripts/pipelines with no
+  model involved (`codebase-map`, `reproducible-research-data`, `python-reproducible-pipeline`,
+  `r-reproducible-pipeline`, `openalex`), or their repetition is judgment-heavy rather than mechanical
+  (`git-for-research-projects`'s "read each one before acting", `skill-feedback-triage`'s per-issue
+  reproduction, `github-skill-maintenance`'s lint-output triage) — a rule there would be boilerplate.
+  One genuine candidate found: `job-opportunity-watch` Step 2 has the assistant itself bulk-skim roughly
+  1,000 tier-2 job titles on a baseline run before any triage judgement is applied — mechanical, and the
+  titles are exactly the kind of noisy context that doesn't need to live in the main conversation. Added a
+  conditional note there (bulk tier-2 skim to a lower-effort subagent on large baseline queues only;
+  smaller later-run queues stay inline — explicitly not a default). `lint_skills(skill =
+  "job-opportunity-watch")` clean. `agents-md-maintenance` was confirmed as already carrying a related but
+  distinct rule (it checks that *project* `AGENTS.md` files carry a delegation rule, not a per-skill
+  workflow check), so it was not re-flagged. Not done: `check_skill_links()`/`check_skill_clashes()` (no
+  description text changed), a second independent read of the borderline cases
+  (`github-skill-maintenance`, `skill-feedback-triage`, `recipe-notes-formatter`).

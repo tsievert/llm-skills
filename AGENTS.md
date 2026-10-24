@@ -36,22 +36,13 @@ Repository of custom Posit Assistant skills, synced via GitHub
 ## Research folder (`research/`)
 
 `research/` holds working notes gathered before a skill is written. These are not skills (no SKILL.md, not synced as skills).
-Read the relevant file first when starting or revising a skill, and append to it instead of starting a new one.
+Read the relevant file first when starting or revising a skill, and append to it instead of starting a new one. Each ledger
+carries its own section index at the top (including a status column for what's read vs. only a lead) — read that instead of
+duplicating it here.
 
-- `research/pipeline-resources-ledger.md`: shared ledger for `python-reproducible-pipeline`, `r-reproducible-pipeline` and the
-  planned `python-r-interop`. Sections: 1 shared concerns, 2 Python tools, 3 R tools, 4 Quarto, 5 design observations,
-  8-10 rounds 2-4 (Prefect/Dagster/Nextflow docs, crew.cluster, Snakemake rerun triggers, P3M snapshots, `--report`),
-  11 round 5 (R side: targets, tarchetypes, crew, renv; local tests; open items in 11.5). Each row states what was read vs only
-  seen as a lead, so check the status column before relying on a claim. Versions are dated 2026-10-23; re-check with
-  `check_versions()`.
-- `research/data-and-git-ledger.md`: for the planned `reproducible-research-data` and `git-for-research-projects` and the refactor
-  of `data-repository-readme`. Sections: 1 overlap map, 2 sources (read/blocked/search status), 3 local tests and gotchas
-  (gitignore negation, `*.lock` vs `renv.lock`, `check-ignore -v` exit code, autocrlf, LFS vs `git archive`, cffr pitfalls),
-  4 git doc facts, 5 packages, 6 OpenAlex, 7 proposed split and refactor, 8 findings about the user's own setup (Syncthing folder
-  containing seven repositories), 9 open items and questions for the user.
-- `research/recipe-notes-ledger.md` (started 2026-10-24): for the planned `recipe-notes-formatter`. Sections: 1 requirements
-  R1-R11 (user decisions), 2 format candidates, 3 Cooklang facts, 4 Cooklang maintenance (bus factor one), 5 Obsidian recipe
-  plugins, 6 local Obsidian entry points (CLI, Local REST API, MCP servers), 7 open research items, 8 log.
+- `research/pipeline-resources-ledger.md`: `python-reproducible-pipeline`, `r-reproducible-pipeline`, planned `python-r-interop`.
+- `research/data-and-git-ledger.md`: `reproducible-research-data`, `git-for-research-projects`, the `data-repository-readme` refactor.
+- `research/recipe-notes-ledger.md`: `recipe-notes-formatter`.
 - **Always protocol research (standing rule, added 2026-10-24).** Whenever research is done for a skill or decision (web
   searches, page fetches, API checks, local tests), record it in `research/` in the same turn, before answering at length.
   Use one ledger per skill or topic (append to an existing one if the topic matches). Format that is easy to digest: a
@@ -117,47 +108,43 @@ Read the relevant file first when starting or revising a skill, and append to it
   sentence goes in both skills' descriptions. Planned skills (`reproducible-research-data`, `stats-reporting-and-review`,
   `python-r-interop`, `manuscript-writing-quarto`) must define their territory against the table before they are written.
 
-## Auto-sync protocol (status: installed and verified in a live session)
+- **Consider a subagent-delegation rule per skill (added 2026-10-24).** When creating or substantially changing a skill,
+  check whether its own workflow has a narrowly-scoped, low-judgment, high-volume step (e.g. per-file/per-sample checks,
+  a mechanical search or edit repeated across many items, summarizing many logs or outputs) that would benefit from a
+  skill-specific conditional rule to hand that step to a cheap/low-effort subagent, mirroring the repo-wide "Delegating
+  to subagents" rule below but naming the skill's own concrete trigger. This is a judgment call, not a requirement for
+  every skill: most skills have no such step, and adding the rule where it doesn't fit just adds boilerplate. Only add
+  it to a skill's `SKILL.md` when a genuine case exists; otherwise skip silently rather than padding the file.
 
-Goal: skills are installed globally (all projects) and kept current with GitHub.
+## Delegating to subagents
 
-- Install location: `~/.posit/assistant/skills/<skill-name>/SKILL.md` (user level).
-  Project-level skills (`.posit/assistant/skills/`) are NOT used for this.
-- Mechanism: a `SessionStart` hook in `~/.posit/assistant/settings.json`
-  (global file, so it runs regardless of workspace trust).
-- Hook script (`~/.posit/hooks/sync-skills.sh`, to be written):
-  1. Exit early if a timestamp file shows a check within the last 24 h.
-  2. `git fetch origin main`; compare local `HEAD` with `origin/main` (commit hash).
-  3. If different, `git pull --ff-only`, then copy/sync skill folders into
-     `~/.posit/assistant/skills/` (or use a junction if the clone is placed there).
-  4. Print one line to stdout (e.g. `Skills updated: abc123 -> def456`), which is
-     added to the session context. Stay silent on no change or when offline.
-- Hook settings: `timeout` ~20 s; fails open on error. On Windows shell-form
-  commands run under `cmd.exe`, so call `bash <script>` (Git Bash) explicitly.
-- Caveat: newly pulled skills may only be available from the next conversation;
-  mid-session rescan is unverified.
-- Existing user skill `openalex` lives in `~/.posit/assistant/skills/` and is not
-  in this repo yet. Decide whether to move it in before syncing, so a sync never
-  overwrites or deletes it.
+Delegate narrowly-scoped, low-judgment tasks (a mechanical search across many files, a repetitive edit
+pattern, summarizing a large log or output) to a subagent — especially one that can run with lower effort
+or a cheaper/smaller model — when doing it inline would mean loading a lot of noisy context (many files,
+logs, search results) into the main conversation that won't be needed again. Don't delegate by default:
+single-file edits, ambiguous-scope work, or tasks needing the main conversation's accumulated context are
+usually cheaper and more reliable done directly, and fanning out many subagents on one task can burn more
+tokens than it saves if they aren't genuinely lower-cost.
 
-## Implementation notes (from docs, 2026-10-23)
+## Skill sync (installed and verified live, 2026-10-23)
 
-- Posit Assistant supports `skills.paths` in `~/.posit/assistant/settings.json`
-  (https://assistant.posit.co/docs/reference/config-file/). This makes junctions/copies
-  unnecessary: point `skills.paths` at this clone. Later paths win on name conflicts.
-- Setting `skills.paths` REPLACES the defaults, so repeat them: `~/.agents/skills`,
-  `~/.posit/assistant/skills`, `.agents/skills`, `.posit/assistant/skills`, plus this clone
-  (`~/Sync_Home_Work/llm-skills`) last.
-- Script: `scripts/sync-skills.sh` (versioned in this repo). Derives the repo dir from its
-  own location, throttles via `~/.posit/state/llm-skills-last-check`, fails open.
-- Hook entry (installed in global settings on 2026-10-23, together with `skills.paths`):
-  `{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"bash C:/Users/thorb/Sync_Home_Work/llm-skills/scripts/sync-skills.sh","timeout":20}]}]}}`
-- Docs say new skills are available "in your next conversation".
+Goal: skills are installed globally (all projects) and kept current with GitHub. Current mechanism —
+no copying: `skills.paths` in `~/.posit/assistant/settings.json`
+(https://assistant.posit.co/docs/reference/config-file/) points directly at this clone, replacing the
+defaults (so the setting repeats them: `~/.agents/skills`, `~/.posit/assistant/skills`, `.agents/skills`,
+`.posit/assistant/skills`, plus this clone last). A `SessionStart` hook keeps the clone itself current:
+
+- Hook script `scripts/sync-skills.sh` (versioned in this repo): throttles via
+  `~/.posit/state/llm-skills-last-check` (skip if checked within 24 h), `git fetch origin main`, and
+  `git pull --ff-only` if `origin/main` has moved. Fails open (dirty tree or offline: skip and warn,
+  never block the session). Derives the repo dir from its own location.
+- Registered in `~/.posit/assistant/settings.json` (global, so it runs regardless of workspace trust),
+  `timeout` ~20 s. On Windows, shell-form commands run under `cmd.exe`, so the entry calls
+  `bash C:/Users/thorb/Sync_Home_Work/llm-skills/scripts/sync-skills.sh` explicitly (Git Bash).
+- Newly pulled skills are available from the next conversation; a mid-session rescan is unverified.
 
 ## Open decisions
 
-- ~~Clone-in-place vs. copy~~ Resolved: use `skills.paths` (see implementation notes).
-- ~~Delete the old `~/.posit/assistant/skills/openalex`~~ Done 2026-10-23 (repo copy replaces it).
 - Whether sync should delete skills removed from the repo (default: no).
 - Handling local uncommitted edits in the clone (default: skip pull and warn).
 
