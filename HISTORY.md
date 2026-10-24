@@ -743,3 +743,21 @@ current/active state (working rules, open decisions, the todo table).
   fixing the lesson-file format gap itself (a lesson entry that doesn't use the `##`-heading template is
   silently dropped by `read_lessons()` with no warning) — worth a follow-up note to `skill-lessons` or a
   `lesson_problems()` check for files that parse to zero rows, but out of scope for this run.
+
+- 2026-10-24: Fixed the lesson-file format gap found in the triage above. `read_lesson_file()` previously
+  returned `NULL` for a file with no `## skill: title` heading (e.g. the frontmatter-plus-prose
+  `anon_20261024-webfetch-refactor.md`), so it silently vanished from `read_lessons()`'s output with no
+  trace. It now returns one placeholder row (`parsed = FALSE`, `skill`/`type`/`confidence` pulled from
+  whatever frontmatter exists, everything else `NA`) instead, and `lesson_problems()` gained a check on
+  `parsed` as its first, most specific finding. Also fixed two latent gaps noticed while doing this: a title
+  of `NA` was never flagged as "no title" (`!nzchar(NA_character_)` is `FALSE`, not `TRUE` — fixed to
+  `is.na(title) | !nzchar(title)`), and `known_skill` would try `file.exists()` on an `NA` skill path
+  (guarded with `!is.na(skill) & ...`); `lesson_dupes()` now also skips `NA`-skill rows explicitly rather
+  than relying on a logical-NA subset (which would have pulled in spurious all-`NA` rows). Tested with two
+  synthetic fixtures in a scratch inbox copy (one malformed frontmatter-plus-prose file matching the real
+  `anon_20261024-webfetch-refactor.md` shape, one well-formed entry): the malformed file now surfaces three
+  `lesson_problems()` rows (no heading, no symptom, no title) instead of zero rows, the well-formed entry is
+  unaffected, and `lesson_overview()`/`lesson_dupes()` run without error on the mixed set. `lint_skills()`
+  and `skills-ref validate` clean on `skill-feedback-triage`. Not done: a second real-world malformed file
+  to confirm the frontmatter-field fallback (`skill`/`type`/`confidence`) generalises beyond the one shape
+  seen so far; no `skill-lessons`-side change to make the template easier to follow when writing an entry.

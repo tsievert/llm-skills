@@ -12,6 +12,10 @@
 # Requires: yaml (CRAN). Base R otherwise. The inbox lives outside the project folder, and the
 # assistant's R session may not be allowed to read it: copy it into the project first
 # (see SKILL.md), then point `dir` at the copy.
+#
+# A file that doesn't match the `## skill: title` template (e.g. plain frontmatter + prose, no
+# `##` heading) produces one placeholder row with `parsed = FALSE` instead of being dropped
+# silently; `lesson_problems()` flags it so it still surfaces for manual reading.
 
 lesson_fields <- c("type", "symptom", "context", "tried", "resolution", "evidence",
                    "suggested-change", "confidence", "generality")
@@ -24,7 +28,7 @@ read_lessons <- function(dir, repo = NULL) {
   out <- do.call(rbind, rows)
   if (is.null(out)) return(empty_lessons())
   if (!is.null(repo)) {
-    out$known_skill <- file.exists(file.path(repo, out$skill, "SKILL.md"))
+    out$known_skill <- !is.na(out$skill) & file.exists(file.path(repo, out$skill, "SKILL.md"))
   }
   out
 }
@@ -34,7 +38,8 @@ empty_lessons <- function() {
              os = character(), r = character(), skill = character(), title = character(),
              type = character(), symptom = character(), context = character(), tried = character(),
              resolution = character(), evidence = character(), suggested_change = character(),
-             confidence = character(), generality = character(), stringsAsFactors = FALSE)
+             confidence = character(), generality = character(), parsed = logical(),
+             stringsAsFactors = FALSE)
 }
 
 read_lesson_file <- function(path) {
@@ -51,10 +56,22 @@ read_lesson_file <- function(path) {
   }
   body <- x[start:length(x)]
   heads <- grep("^##\\s+[^#]", body)
-  if (!length(heads)) return(NULL)
-  ends <- c(heads[-1] - 1L, length(body))
   fld <- function(l, k) if (is.null(l[[k]])) NA_character_ else as.character(l[[k]])
   env <- meta$environment
+  if (!length(heads)) {
+    # Malformed: no "## skill: title" heading anywhere (e.g. a plain frontmatter + prose file
+    # that didn't follow the skill-lessons template). Keep a placeholder row, sourced from
+    # whatever frontmatter exists, instead of dropping the file with no trace; lesson_problems()
+    # flags `parsed == FALSE` so it still reaches a human.
+    return(data.frame(file = basename(path), project = fld(meta, "project"), date = fld(meta, "date"),
+               session = fld(meta, "session"), os = fld(env, "os"), r = fld(env, "r"),
+               skill = fld(meta, "skill"), title = NA_character_, type = fld(meta, "type"),
+               symptom = NA_character_, context = NA_character_, tried = NA_character_,
+               resolution = NA_character_, evidence = NA_character_, suggested_change = NA_character_,
+               confidence = fld(meta, "confidence"), generality = fld(meta, "generality"),
+               parsed = FALSE, stringsAsFactors = FALSE))
+  }
+  ends <- c(heads[-1] - 1L, length(body))
   rows <- Map(function(s, e) {
     h <- sub("^##\\s+", "", body[s])
     skill <- sub(":.*$", "", h)
@@ -72,7 +89,7 @@ read_lesson_file <- function(path) {
                context = f("context"), tried = f("tried"), resolution = f("resolution"),
                evidence = f("evidence"), suggested_change = f("suggested-change"),
                confidence = f("confidence"), generality = f("generality"),
-               stringsAsFactors = FALSE)
+               parsed = TRUE, stringsAsFactors = FALSE)
   }, heads, ends)
   do.call(rbind, rows)
 }
@@ -126,9 +143,10 @@ lesson_overview <- function(lessons, usage = NULL) {
 }
 
 # Candidate duplicates: same skill, normalised title distance below `max_dist`.
+# Entries with no skill (an unparsed file; see read_lesson_file) are skipped here, not compared.
 lesson_dupes <- function(lessons, max_dist = 0.35) {
   out <- list()
-  for (s in unique(lessons$skill)) {
+  for (s in unique(lessons$skill[!is.na(lessons$skill)])) {
     d <- lessons[lessons$skill == s, , drop = FALSE]
     if (nrow(d) < 2) next
     t <- tolower(gsub("[^a-z0-9 ]", "", tolower(d$title)))
@@ -147,11 +165,14 @@ lesson_problems <- function(lessons) {
                                                                       skill = lessons$skill[cond %in% TRUE],
                                                                       title = lessons$title[cond %in% TRUE],
                                                                       problem = why, stringsAsFactors = FALSE)
-  rbind(bad(!lessons$type %in% types, "type missing or not in the allowed list"),
+  rbind(# checked first: everything else about an unparsed file is a downstream symptom of this
+        if ("parsed" %in% names(lessons))
+          bad(!lessons$parsed, "no \"## skill: title\" heading found; file does not match the skill-lessons template (read manually)"),
+        bad(!lessons$type %in% types, "type missing or not in the allowed list"),
         bad(is.na(lessons$symptom) | !nzchar(lessons$symptom), "no symptom"),
         # use-case entries describe usage, not a claim, so confidence is optional there
         bad(!lessons$confidence %in% c("high", "medium", "low") & !(lessons$type %in% "use-case" & is.na(lessons$confidence)),
             "confidence invalid"),
-        bad(!nzchar(lessons$title), "no title"),
+        bad(is.na(lessons$title) | !nzchar(lessons$title), "no title"),
         if ("known_skill" %in% names(lessons)) bad(!lessons$known_skill, "skill folder not found in the repo"))
 }
