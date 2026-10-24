@@ -88,9 +88,10 @@ and say what it would change.
    [references/testing-skills.md](references/testing-skills.md) and
    `assets/trigger-queries.template.json`.
 6. **Release.** Re-lint, then `git status`, commit with a message that names the skill and
-   the change, push to `origin/main`. Update `AGENTS.md` (todo list and Log: what changed,
-   what was tested, what was not). A pulled skill is used from the next conversation, and
-   the sync hook picks changes up within 24 h per machine.
+   the change, push to `origin/main`. Update `AGENTS.md`'s todo table (status) and add a
+   Log entry to `HISTORY.md` (what changed, what was tested, what was not). A pulled skill
+   is used from the next conversation, and the sync hook picks changes up within 24 h per
+   machine.
 
 ## Pitfalls this repo has hit
 

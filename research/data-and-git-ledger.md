@@ -242,7 +242,7 @@ as examples; fetch failures are handled at trigger time. The README refactor was
 
 Not established: ERDA DOI behaviour; ULiège Dataverse eligibility, size limits, curation, licence default, versioning; whether either archive satisfies a given journal's "permanent public repository" wording; Figshare limits; any live journal page. These are written into `reproducible-research-data/references/repositories.md` as open questions for trigger time.
 
-Local tests: see the Log entry in `AGENTS.md` (check_deposit and stage_deposit on a scratch deposit). Gotchas found: the session guard blocks creating a file named `.Renviron` even in a scratch folder (test with another secret-like name); NTFS cannot create case-only name pairs, so that check is untested; `list.files(all.files = TRUE)` returns the whole `.git` tree, so junk directories are collapsed to one finding and dropped from later checks; reading only the first 1 MB for the UTF-8 test needs the last 3 bytes dropped to avoid a false positive on a split multibyte character.
+Local tests: see the Log entry in `HISTORY.md` (check_deposit and stage_deposit on a scratch deposit). Gotchas found: the session guard blocks creating a file named `.Renviron` even in a scratch folder (test with another secret-like name); NTFS cannot create case-only name pairs, so that check is untested; `list.files(all.files = TRUE)` returns the whole `.git` tree, so junk directories are collapsed to one finding and dropped from later checks; reading only the first 1 MB for the UTF-8 test needs the last 3 bytes dropped to avoid a false positive on a split multibyte character.
 
 ### 11.1 Follow-up: Aarhus has more than ERDA (user correction, same day)
 

@@ -16,7 +16,7 @@ GitHub or R-universe installs need the user's permission).
 | What | Where | Note |
 |---|---|---|
 | Lesson files | `~/.posit/lessons/inbox/*.md` (also on other machines: collect them into one folder) | one file per session, named `<project>_<timestamp>_<session8>.md` |
-| Usage log | `~/.posit/lessons/usage.tsv` | `time, session, project, skill`, written by the hook; append-only, never emptied; a watermark line in `AGENTS.md` marks what earlier runs counted |
+| Usage log | `~/.posit/lessons/usage.tsv` | `time, session, project, skill`, written by the hook; append-only, never emptied; a watermark line in `AGENTS.md` marks what earlier runs counted; per-run narrative entries go to `HISTORY.md` |
 | Format | the `skill-lessons` skill | headings `## <skill>: <title>` then `- field: value` |
 
 The assistant's R session is blocked from paths outside the project, so copy first with
@@ -72,7 +72,7 @@ If the user collected files from other machines or projects, they go into the sa
    inbox, not the copy, keeping parked ones in place. Never truncate or edit `usage.tsv`;
    instead record the watermark with `triage_watermark_set(max(U$time))` (only once the
    user has seen the triage table; skip it if `U` is empty). The next run then counts
-   only newer rows, so months-apart runs do not double-count. Add a Log entry to `AGENTS.md`
+   only newer rows, so months-apart runs do not double-count. Add a Log entry to `HISTORY.md`
    (counts, outcomes, what was not verified) with generic wording only. Commit skill
    edits, never lesson files.
 
