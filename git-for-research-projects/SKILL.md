@@ -97,6 +97,7 @@ very large histories (`history = TRUE` runs `git log --all`).
 - `data-repository-readme`: the README and data dictionary for the deposit; where the originals live goes there.
 - `reproducible-research-data`: the deposit as a whole: which repository and journal rules apply, a checksummed staging copy from the server data, pre-upload checks and the data availability statement.
 - `hpc-job-scripts`: sbatch and shell scripts must keep LF line endings when they are copied to a cluster.
+- `codebase-map`: generates its own `.codemap/` artifacts and adds exactly one line to `.gitignore` for them; general `.gitignore`/repository hygiene beyond that stays here.
 
 ## Explain the reasoning (teaching rule)
 

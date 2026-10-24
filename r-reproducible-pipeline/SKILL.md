@@ -194,6 +194,7 @@ session guard), which the checker reports as INFO.
 - `data-repository-readme`: documenting the code and data deposit that accompanies the pipeline.
 - `reproducible-research-data`: assembling and checking the deposit (which repository, journal timing, clean-clone test of this pipeline).
 - `git-for-research-projects`: `.gitignore` for `_targets/` and the data folder, keeping `renv.lock` tracked, tagging a version.
+- `codebase-map`: a lightweight file inventory and greppable heading ledger for the loose scripts around the pipeline; `_targets.R` itself stays the authoritative dependency graph.
 
 ## Explain the reasoning (teaching rule)
 

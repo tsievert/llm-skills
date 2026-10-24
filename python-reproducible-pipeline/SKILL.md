@@ -172,6 +172,7 @@ ERROR until the `<PLACEHOLDER>` values in its profile are replaced.
 - `reproducible-research-data`: assembling and checking the deposit (which repository, journal timing, clean-clone test of this pipeline).
 - `git-for-research-projects`: `.gitignore` for `.venv/`, `.snakemake/` and the data folder, keeping `uv.lock` tracked, tagging a version.
 - `r-reproducible-pipeline`: the R-centred counterpart (targets, renv, Quarto) and the other side of the "choose the tool" decision.
+- `codebase-map`: a lightweight file inventory and greppable heading ledger for the loose scripts around the pipeline; the `Snakefile` itself stays the authoritative dependency graph.
 
 ## Explain the reasoning (teaching rule)
 

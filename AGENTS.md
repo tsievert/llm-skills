@@ -194,6 +194,12 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
     multi-step workflow tools (Snakemake, or DVC/Prefect/Dagster; compare and pick with the user), config and seeds, notebooks
     or Quarto as the report layer, re-running the whole chain including on HPC (Snakemake Slurm executor plugin). Pairs with
     `python-r-interop` and `hpc-python-code`. If it ships cluster scripts it needs the "Where this skill runs" section.
+- [x] `codebase-map` (built 2026-10-24, see Log; not yet committed; research in `research/codebase-navigation-ledger.md`):
+  per-RStudio-project file inventory (`INVENTORY.md`), greppable heading ledger (`CODEMAP.md`) and dependency classification
+  (`DEPENDS.tsv`, internal/external/package/unresolved), self-triggering on size and self-updating via a `PostToolUse` hook,
+  `.gitignore` and `AGENTS.md`/`DATABOT.md` pointer insertion, `.codemapignore` opt-out. The hook is registered in the real
+  global `settings.json` (user's explicit choice, 2026-10-24); `llm-skills` itself has a `.codemapignore` so this repo's own
+  hand-maintained `AGENTS.md` is never auto-edited (verified live after registration).
 
 ## Log
 
@@ -587,6 +593,36 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   cost of scanning ~24 skill frontmatters per matching tool call at scale; Linux/macOS; a
   second machine; whether the two seeded patterns measurably reduce real misses (needs more
   real sessions to tell either way).
+
+- 2026-10-24: Built `codebase-map` (SKILL.md; `scripts/build_codemap.R`, `scripts/codemap-hook.sh`; references
+  `artifact-format.md`, `language-rules.md`, `triggering-and-updating.md`). Research and full build log in
+  `research/codebase-navigation-ledger.md` sections 1-5e. Design, confirmed against the user's own decisions (R1-R8): scope
+  is RStudio projects only, one `.codemap/` per project (`INVENTORY.md`, `CODEMAP.md`, `DEPENDS.tsv`), base-R-only regex
+  scan chosen over ctags/tree-sitter/`pkgapi` (archived, package-only)/`repomix` (Node-only) after a prototype comparison,
+  dependencies classified `file-internal`/`file-external`/`package`/`unresolved` with real path resolution, self-trigger
+  thresholds (15 files or a 300-line file) gate whether `.codemap/` is created at all, self-update via a `PostToolUse` hook
+  (no file-watcher/timer event exists in Posit Assistant, checked live), idempotent `.gitignore` and `AGENTS.md`/`DATABOT.md`
+  pointer-block insertion (the AGENTS.md pointer was the user's explicit requirement), `.codemapignore` opt-out. **Incident:**
+  testing the hook's project-root walk-up in a scratch folder nested inside this repo caused it to find `llm-skills.Rproj`
+  and for real create `.codemap/`, edit the real `AGENTS.md` and `.gitignore` at the repo root; reverted immediately
+  (`git checkout -- .gitignore AGENTS.md`, `rm -rf .codemap`), no lasting change. This directly motivated the
+  `.codemapignore` opt-out and the decision to **not** register the hook in the live global `settings.json` — that needs
+  the user's explicit go-ahead, unlike the earlier pure-nudge hooks in this repo, because it writes to and edits memory
+  files in other real projects automatically. All further testing moved to an isolated scratch directory outside this repo.
+  Tested (Windows, R 4.6.0): full hook pipeline on a qualifying synthetic project (build, gitignore/AGENTS.md insertion,
+  one-time nudge, 30s throttle), a non-qualifying tiny project (no artifacts), a `.codemapignore`-opted-out project (fully
+  silent), a plain non-`.Rproj` folder (silent), all four dependency `kind`s on hand-built fixtures (`source()`, `here::here()`,
+  Python same-directory and relative imports, a true external-file reference, a package import), idempotency across three
+  builds. Also caught and fixed four bugs during the earlier prototype phase (Windows path-regex escaping, `regexpr()` vs
+  `gregexpr()` undercounting, R's uppercase-extension case-sensitivity trap, leading-decorative-dash heading capture) and
+  one link-checker false positive (don't backtick an external/built-in skill name like `r-package-development` inside a
+  "Related skills" section — matches the pre-existing, previously undocumented `recipe-notes-formatter` convention).
+  `lint_skills()`, `check_skill_links()`, `check_skill_clashes(new=)`, `skills-ref validate` all clean; ownership row added to
+  `skill-boundaries.md`; backlinks added in `r-reproducible-pipeline`, `python-reproducible-pipeline`,
+  `git-for-research-projects`. Not tested: the hook in the live global settings (deliberately withheld), a real conversation
+  turn, Linux/macOS, `DATABOT.md` as the target file (only `AGENTS.md` exercised), a real (non-synthetic) project, threshold
+  tuning, `.qmd`/`.Rmd` embedded-chunk scanning on an actual Quarto file, performance beyond the ~170-file scale already
+  measured.
 
 ## Lessons triage state
 - Lessons usage watermark: 2026-10-24T17:22:20

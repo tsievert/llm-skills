@@ -40,6 +40,7 @@ advice) or the wrong one loads. Duplicated advice inside bodies is the second ri
 | Deposit | `data-repository-readme` | README, data dictionary, repository README pages | `reproducible-research-data` (where and what to deposit), `git-for-research-projects` |
 | Deposit | `git-for-research-projects` | gitignore, secrets, tags, CITATION, manifest of server data | `reproducible-research-data` (the deposit), `data-repository-readme` |
 | Recipes | `recipe-notes-formatter` | turning recipe text, Obsidian notes and links into recipe notes (input to output folder): units, tags learned from the user's notes, pictures, profile file | `obsidian-markdown` and `obsidian-bases` (external kepano skills, optional) for general Obsidian syntax and `.base` files |
+| Navigation | `codebase-map` | per-RStudio-project file inventory, greppable heading ledger and dependency classification (`.codemap/`); self-triggers on size, self-updates via a hook | pipeline skills (the DAG itself when `_targets.R`/`Snakefile` exists), `git-for-research-projects` (general gitignore hygiene), r-package-development (built-in, formal packages) |
 | Literature | `openalex`, `social-research-search`, `job-opportunity-watch` | scholarly search; social posts; job portals | none needed (different objects) |
 | Meta | `github-skill-maintenance`, `skill-lessons`, `skill-feedback-triage` | repo upkeep; write lessons; read lessons | each other (stated in descriptions) |
 
