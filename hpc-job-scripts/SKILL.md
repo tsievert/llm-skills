@@ -55,6 +55,13 @@ guess or proceed on assumptions.
   overhead), and some sites cap or discourage arrays: check the profile.
 - Chain stages with `sbatch --parsable` + `--dependency=afterok:<id>`; use
   `--kill-on-invalid-dep=yes` so failed upstream jobs do not leave pending jobs forever.
+  For a short-lived, login-node orchestrator that submits a whole chain in one go and
+  exits (not a daemon that monitors the run): check that each `sbatch` call itself
+  succeeded before trusting the job ID it printed, and make sure every stage script
+  exits non-zero on failure — `afterok` only reflects the job's exit code, so a caught
+  exception or swallowed subprocess error that still exits 0 makes the chain proceed on
+  a false premise. Details, a tested submission-loop template, and a resume-from-step
+  pattern: [references/chaining-and-orchestrators.md](references/chaining-and-orchestrators.md)
 - Record provenance at start: job ID, host, date, `module list`, Python version,
   git commit, and the exact command/config.
 
@@ -109,6 +116,8 @@ guess or proceed on assumptions.
 | `$SLURM_CPUS_PER_TASK` empty | `--cpus-per-task` not set |
 | Requeued job lost its progress | Script restarts from the top; no checkpoint resume logic |
 | Results corrupted or missing rows in an array | Tasks append to / overwrite a shared file; use per-task files |
+| A chained stage ran even though the previous one failed | The failed stage's script exited 0 anyway (swallowed exception/return code); `afterok` trusted it |
+| A later stage in a chain silently never got submitted | An earlier `sbatch` call itself failed (bad partition/typo) and the orchestrator fed its empty/error output into the next `--dependency` unchecked |
 | Work on node-local disk vanished | Scratch is deleted at job end/cancel; sync out periodically |
 | GPU job: see `hpc-gpu-jobs`; R job: see `hpc-r-code` | Dedicated skills |
 
