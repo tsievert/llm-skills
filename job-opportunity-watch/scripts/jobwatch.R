@@ -236,7 +236,7 @@ jw_save_run <- function(run) {
   if (!is.null(seen)) {
     seen$k <- paste(seen$source_id, seen$href)
     a$is_new <- !(a$k %in% seen$k)
-  } else a$is_new <- TRUE
+  } else a$is_new <- rep(TRUE, nrow(a))  # data.frame$<- doesn't recycle a scalar into 0 rows
   new_rows <- a[a$is_new, c("source_id", "text", "href", "role_hit", "topic_hit", "excluded")]
   if (nrow(new_rows)) new_rows$first_seen <- now
   merged <- if (is.null(seen)) new_rows else rbind(seen[, names(new_rows)], new_rows)

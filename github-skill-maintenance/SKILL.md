@@ -106,9 +106,18 @@ and say what it would change.
   `sed -i 's/\r$//' <file>` in Git Bash. `.gitattributes` only forces `eol=lf` for `.sh`, `.py`,
   `.md` and `.R`; a new file type needs its own rule added there first. CRLF also comes back
   *after* a clean edit (a `write` or `edit` call can reintroduce it even on an already-LF file),
-  so check again at the end of a batch, not only before: run
-  `git ls-files --eol -o -m --exclude-standard <skill>` (covers new and modified files, not just
-  the one you just touched) before lint and commit.
+  and this can bite mid-task, not just at commit time — a later `edit` on the same file can fail
+  with "string not found" purely because the prior `edit`/`write` call put CRLF back. Treat
+  `git ls-files --eol <file>` as a near-default check before *every* edit attempt on a file this
+  session has already touched, not only reactively after a failure; also check again at the end
+  of a batch, not only before: run `git ls-files --eol -o -m --exclude-standard <skill>` (covers
+  new and modified files, not just the one you just touched) before lint and commit. If a
+  multi-line `old_string` still fails to match after confirming the file is LF and a fresh
+  re-read looks byte-identical, retry with a shorter, unique single-line anchor from the same
+  spot rather than repeating the same large string — this has worked even when the root cause of
+  the mismatch was not CRLF and stayed unexplained. A plain-text append to an already-CRLF file
+  can also need an explicit `\r\n` separator, since incremental edits can leave LF-only spans
+  inside an otherwise-CRLF file.
 - **Apostrophe in a single-quoted description.** A bare apostrophe (a possessive such as
   "user's") ends the YAML scalar and the linter reports "YAML does not parse". Avoid
   apostrophes in descriptions or double them (`''`), and run `lint_skills()` after every

@@ -708,3 +708,38 @@ current/active state (working rules, open decisions, the todo table).
   workflow check), so it was not re-flagged. Not done: `check_skill_links()`/`check_skill_clashes()` (no
   description text changed), a second independent read of the borderline cases
   (`github-skill-maintenance`, `skill-feedback-triage`, `recipe-notes-formatter`).
+
+- 2026-10-24: Triage run (`skill-feedback-triage`) over 22 parsed entries across 16 inbox files plus one
+  malformed file the reader silently dropped (`anon_20261024-webfetch-refactor.md` used plain frontmatter +
+  prose, not the `## skill: title` template, so `read_lessons()` found zero `##` headers and produced no
+  row for it; read manually instead). Found, with the user's approval per issue: (1) three items already
+  fixed by earlier work before this run even started — the Plan-mode/subagent skill-trigger drop and the
+  implicit file-content-trigger miss were both already addressed by the skill-trigger and file-signal hooks
+  built 2026-10-24 (confirmed live: the file-signal hook fired, as expected, while this run was reading a
+  lesson file that merely *mentioned* `hpc-job-scripts` by name), and the CRLF-reappears and
+  `metadata`-must-be-flat-string pitfalls were already documented in `github-skill-maintenance/SKILL.md`
+  almost verbatim, as was `data-repository-readme`'s repository-undecided fallback; (2) one reproduced code
+  bug: `job-opportunity-watch`'s `jw_save_run()` crashed with `replacement has 1 row, data has 0` on a first
+  run with zero anchors and no prior `anchors_seen.tsv`, because `a$is_new <- TRUE` doesn't recycle into a
+  0-row data frame in base R's `$<-.data.frame` — fixed with `a$is_new <- rep(TRUE, nrow(a))`, reproduced
+  and re-verified in isolation (full integration test through `jw_save_run()` itself was not run — needs a
+  `jobwatch.dir` state fixture); (3) added a decision rule to `agents-md-maintenance` for reference-doc vs.
+  full-skill promotion (previously judgment-only) and a note to re-read an always-loaded memory file
+  immediately before a full-file overwrite, since another skill's self-triggering hook appended to the same
+  file mid-session in one real run; (4) extended `github-skill-maintenance`'s existing CRLF pitfall note to
+  cover a mid-task edit failure (not just end-of-batch/before-commit), a shorter-anchor retry tip for a
+  multi-line edit that still fails to match after CRLF is ruled out, and an explicit-`\r\n`-on-append
+  caveat; (5) by explicit user instruction, parked a reported GAM results-prose convention (edf bucketed
+  into five wiggliness categories, a reporting structure for simultaneous-CI difference curves, a
+  link-scale/response-scale mixing caveat) as a scope note on the not-yet-built `stats-reporting-and-review`
+  todo row rather than adding it to `gam-interpretation` now. Every file touched (`AGENTS.md`,
+  `agents-md-maintenance/SKILL.md`, `github-skill-maintenance/SKILL.md`,
+  `job-opportunity-watch/scripts/jobwatch.R`) came back CRLF from the editing tools at least once — including
+  right after a prior `sed`-normalisation pass — and was re-normalised before lint; this is the exact
+  recurring behaviour issue (4) above now documents more explicitly. `lint_skills()`, the external
+  `skills-ref validate`, and `check_skill_links()` were clean on all four touched skills after the edits.
+  Archived all 16 processed inbox files (including the manually-read malformed one) to
+  `~/.posit/lessons/inbox/processed/` and advanced the usage watermark to `2026-10-24T22:29:35`. Not done:
+  fixing the lesson-file format gap itself (a lesson entry that doesn't use the `##`-heading template is
+  silently dropped by `read_lessons()` with no warning) — worth a follow-up note to `skill-lessons` or a
+  `lesson_problems()` check for files that parse to zero rows, but out of scope for this run.

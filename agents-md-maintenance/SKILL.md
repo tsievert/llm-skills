@@ -45,6 +45,11 @@ sections below are ways of applying it systematically.
 8. **Propose, don't silently rewrite.** Summarize findings (what's stale, what's duplicated,
    what's miscategorized) and propose the restructuring; let the user confirm before editing,
    the same way other skills in this repo surface findings before changing files.
+9. **Re-read right before a full-file overwrite.** Once the user approves, re-read the file
+   immediately before a full-file `write(overwrite=TRUE)`, not just at the start of the audit —
+   another skill with its own self-triggering hook (e.g. a codebase-map-style pointer section)
+   can append to the same always-loaded file mid-session. Preserve any section owned by another
+   skill verbatim in the rewrite.
 
 ## Restructuring patterns
 
@@ -58,6 +63,12 @@ sections below are ways of applying it systematically.
 - **Promote a procedure to a skill.** If a block has grown into a multi-step workflow with its
   own edge cases, it has outgrown the always-loaded file. Hand off to `create-skill` instead of
   letting it keep growing in place.
+- **Reference doc vs. full skill.** When extracting a grown procedural block, prefer a plain
+  reference doc (read on demand from inside the memory file, or kept in the project) when the
+  procedure is project-specific and not reused across projects or conversations. Prefer
+  promoting it to a full Agent Skill via `create-skill` when it would be reused across projects
+  or benefits from independent discovery/triggering rather than being tied to one project's
+  always-loaded file.
 - **Reference instead of duplicating.** Point at `README.md`, `.gitignore`, or existing docs
   rather than restating their content; duplicated facts drift apart over time.
 - **No single correct length.** Cited rules of thumb for always-loaded files range roughly from

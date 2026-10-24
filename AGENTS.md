@@ -161,7 +161,7 @@ anything) is still open. Before starting a new one: follow the working rules abo
 | `animal-behaviour-tracking-analysis` | partial | DLC metrics + keypoint-MoSeq done; open: validate immobility/freezing thresholds against manual scoring, real-data tests. SimBA/B-SOiD/VAME out of scope |
 | `reproducible-research-data` | done | FAIR data deposits, data dictionaries, renv/uv lockfiles, Quarto manuscripts |
 | `manuscript-figures-ggplot` | done | journal-ready ggplot2 figures (CVD-safe palettes, sizing, export) |
-| `stats-reporting-and-review` | not started | effect sizes/uncertainty, power/sample size, pre-registration, reviewer-response drafting, pseudoreplication/multiple-testing checks |
+| `stats-reporting-and-review` | not started | effect sizes/uncertainty, power/sample size, pre-registration, reviewer-response drafting, pseudoreplication/multiple-testing checks; also a GAM results-prose convention (edf bucketed into near-zero/negligible/weak/moderate/pronounced rather than a raw range, edf framed as wiggliness not effect size, significant time-window + peak response-scale difference for simultaneous-CI difference curves, never mixing link-scale CIs with response-scale estimates, flag uncorrected multiplicity across narrated contrast curves) reported 2026-10-24 from one project's independent convention — decide then whether it lives here or gets folded into `gam-interpretation` |
 | `chemical-ecology-data` | not started | GC-MS (xcms/MSnbase), compound annotation, PERMANOVA/PCA/PLS-DA — narrow use, confirm the user still does pheromone chemistry before building |
 | `github-skill-maintenance` | done | skill lint/test/link/clash workflow |
 | `recipe-notes-formatter` | done, not committed | plain text/Obsidian notes/links → recipe notes; open: trial run on a real batch, Obsidian thumbnail/Bases image property |
@@ -183,7 +183,7 @@ skill, a research round, or a triage run, append an entry there (not here).
 
 ## Lessons triage state
 
-- Lessons usage watermark: 2026-10-24T17:22:20
+- Lessons usage watermark: 2026-10-24T22:29:35
 
 The watermark above is read/written by `skill-feedback-triage/scripts/read_lessons.R`'s
 `triage_watermark()`/`triage_watermark_set()`, which default to `agents = "AGENTS.md"` —
