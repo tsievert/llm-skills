@@ -6,6 +6,8 @@
 library(testthat)
 # test_file() changes the working directory to this file's folder, so find the scripts either way.
 scripts_dir <- if (file.exists("rn_units.R")) "." else "recipe-notes-formatter/scripts"
+pf_script <- if (file.exists("rn_units.R")) "../../web-fetching-r/scripts/polite_fetch.R" else "web-fetching-r/scripts/polite_fetch.R"
+source(pf_script)
 for (f in c("rn_units", "rn_core", "rn_profile", "rn_web")) {
   source(file.path(scripts_dir, paste0(f, ".R")), encoding = "UTF-8")
 }

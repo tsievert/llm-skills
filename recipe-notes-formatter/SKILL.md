@@ -1,7 +1,7 @@
 ---
 name: recipe-notes-formatter
 description: 'Turns recipes from plain text, existing Obsidian Markdown notes and web links into consistent Obsidian recipe notes: numeric servings and time, metric units, tags taken from the tag structure learned from the user''s own notes, and an embedded picture. Works from an input folder to an output folder in an R project (never inside the vault), keeps each recipe in its source language (German, English, Swedish, Finnish), backs up before replacing anything and maintains a recipe profile file. Use when the user wants to convert, clean up, import or format recipes for Obsidian, drops recipe notes or links into input, asks to fix recipe tags, or to convert cups, ounces or Fahrenheit in a recipe. For general Obsidian syntax or Bases files use the obsidian-markdown and obsidian-bases skills if installed.'
-compatibility: Requires R with yaml, httr2, xml2, rvest and jsonlite (optional cld2 for language detection) and internet access for links and picture search. Works on files in the user's R project and never writes into the Obsidian vault. Developed on Windows with Obsidian 1.14.
+compatibility: Requires R with yaml, httr2, xml2, rvest and jsonlite (optional cld2 for language detection) and internet access for links and picture search; the fetch mechanics come from the web-fetching-r skill (load it first). Works on files in the user's R project and never writes into the Obsidian vault. Developed on Windows with Obsidian 1.14.
 ---
 
 # Recipe notes formatter
@@ -25,6 +25,7 @@ are recorded as blocked and are not bypassed.
 ## Step 0: project folders and profile
 
 ```r
+source("<web-fetching-r skill-dir>/scripts/polite_fetch.R")   # fetch mechanics; load that skill first
 sd <- "<skill-dir>/scripts"   # the directory shown when this skill loads
 for (f in c("rn_units", "rn_core", "rn_profile", "rn_web")) source(file.path(sd, paste0(f, ".R")), encoding = "UTF-8")
 rn_project_check()            # input, output, output/images, backup, recipe-profile.yml
@@ -152,6 +153,7 @@ Tell the user to open one output note in Obsidian before converting a batch.
 
 ## Related skills
 
+- `web-fetching-r`: the shared polite-fetch mechanics (`pf_*`) this skill's `rn_web.R` sources.
 - `git-for-research-projects`: `.gitignore` for the project's `input/`, `output/`, `backup/` and profile (personal data, pictures).
 - `r-reproducible-pipeline`: if the conversion project should become a re-runnable `targets` pipeline with `renv`.
 

@@ -41,7 +41,8 @@ advice) or the wrong one loads. Duplicated advice inside bodies is the second ri
 | Deposit | `git-for-research-projects` | gitignore, secrets, tags, CITATION, manifest of server data | `reproducible-research-data` (the deposit), `data-repository-readme` |
 | Recipes | `recipe-notes-formatter` | turning recipe text, Obsidian notes and links into recipe notes (input to output folder): units, tags learned from the user's notes, pictures, profile file | `obsidian-markdown` and `obsidian-bases` (external kepano skills, optional) for general Obsidian syntax and `.base` files |
 | Navigation | `codebase-map` | per-RStudio-project file inventory, greppable heading ledger and dependency classification (`.codemap/`); self-triggers on size, self-updates via a hook | pipeline skills (the DAG itself when `_targets.R`/`Snakefile` exists), `git-for-research-projects` (general gitignore hygiene), r-package-development (built-in, formal packages) |
-| Literature | `openalex`, `social-research-search`, `job-opportunity-watch` | scholarly search; social posts; job portals | none needed (different objects) |
+| Literature | `openalex`, `social-research-search`, `job-opportunity-watch` | scholarly search; social posts; job portals | none needed (different objects); the latter two source `web-fetching-r` for fetch mechanics |
+| Web fetching | `web-fetching-r` | shared polite-fetch mechanics (`pf_*`: user agent, per-host rate limit, retry, bot-wall/JS heuristics) sourced by other skills' scripts; one-off page/table scraping with no recurring state | `job-opportunity-watch` (recurring job portals), `recipe-notes-formatter` (recipe pages), `social-research-search` (Bluesky/Mastodon APIs), `openalex` (academic literature) |
 | Meta | `github-skill-maintenance`, `skill-lessons`, `skill-feedback-triage` | repo upkeep; write lessons; read lessons | each other (stated in descriptions) |
 
 ## Rules for writing a description

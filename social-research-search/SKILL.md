@@ -1,7 +1,7 @@
 ---
 name: social-research-search
 description: Searches public Bluesky posts and Mastodon/fediverse hashtag timelines without any API key, login, or payment, using a bundled R httr2 helper. Use when the user wants to see what researchers or the community are discussing about a package, method, tool, or topic (e.g. mgcv, gratia, rstats, DeepLabCut, Slurm) on Bluesky, Mastodon, or the fediverse, or asks to check social media for questions, pain points, or announcements. Does not cover X/Twitter, which has no free keyless access.
-compatibility: Requires R with the httr2 package and internet access. Read-only; no accounts or API keys.
+compatibility: Requires R with the httr2 package and internet access; the request/retry pipeline comes from the web-fetching-r skill (load it first). Read-only; no accounts or API keys.
 ---
 
 # Social research search (Bluesky + Mastodon, keyless)
@@ -13,6 +13,7 @@ updating a skill. Treat results as anecdotal leads, not evidence.
 ## Run the helper
 
 ```r
+source("<web-fetching-r skill-dir>/scripts/polite_fetch.R")   # fetch mechanics; load that skill first
 source("<skill-dir>/scripts/social_search.R")   # <skill-dir> = folder containing this SKILL.md
 
 bsky_search("mgcv", sort = "latest", since = "2026-01-01", max_posts = 200)
@@ -69,6 +70,7 @@ Show the user the `url` for every post you cite so they can verify it.
 
 ## Related skills
 
+- `web-fetching-r`: the shared request/retry mechanics (`pf_perform()`) this skill's `social_search.R` sources; for general HTML page scraping instead of these two APIs, use that skill directly.
 - `openalex`: literature search; use it for papers and citation data, not social posts.
 - `job-opportunity-watch`: uses this skill for social discovery of positions and keeps a ledger of useful hashtags.
 

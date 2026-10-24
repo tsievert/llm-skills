@@ -1,14 +1,23 @@
 # jobwatch.R -- helpers for the job-opportunity-watch skill.
+# source("<web-fetching-r skill-dir>/scripts/polite_fetch.R") first, then
 # source("<skill-dir>/scripts/jobwatch.R"); set options(jobwatch.dir = "<folder>") first.
 # Model-free steps only: parse the links file, probe pages politely, diff against what was seen
 # before, keep state files, audit coverage, and edit the links file with backup + confirmation.
+# The actual HTTP fetch (user agent, per-host rate limiting, retry, bot-wall/JS heuristics) lives
+# in the web-fetching-r skill's polite_fetch.R (pf_*); this file only adds job-portal-specific
+# anchor extraction and state.
 # Needs: httr2, rvest, xml2, readr, yaml (all CRAN).
 
 suppressPackageStartupMessages({
   library(httr2); library(xml2); library(rvest); library(readr)
 })
 
-jw_ua <- "Mozilla/5.0 (compatible; job-opportunity-watch/0.1; personal research use; low rate)"
+if (!exists("pf_fetch_html", mode = "function")) {
+  stop("jobwatch.R needs the web-fetching-r skill's polite_fetch.R sourced first: ",
+       'source("<web-fetching-r skill-dir>/scripts/polite_fetch.R")')
+}
+
+jw_ua <- pf_user_agent("job-opportunity-watch", "personal research use; low rate")
 jw_dir <- function() getOption("jobwatch.dir", Sys.getenv("JOBWATCH_DIR", "job-watch"))
 jw_path <- function(...) file.path(jw_dir(), ...)
 jw_state <- function(...) file.path(jw_dir(), "state", ...)
@@ -131,16 +140,12 @@ jw_classify_titles <- function(text, profile = NULL) {
 
 jw_probe_one <- function(url, timeout = 25) {
   t0 <- Sys.time()
-  req <- request(url) |>
-    req_user_agent(jw_ua) |>
-    req_timeout(timeout) |>
-    req_retry(max_tries = 2, is_transient = function(r) resp_status(r) %in% c(429, 502, 503, 504)) |>
-    req_error(is_error = function(r) FALSE)
-  resp <- tryCatch(req_perform(req), error = function(e) e)
+  r <- pf_perform(url, jw_ua, timeout = timeout, retry_on = c(429, 502, 503, 504))
   out <- list(status = "error", http = NA_integer_, final_url = NA_character_, bytes = NA_integer_,
               text_chars = NA_integer_, n_scripts = NA_integer_, text_hash = NA_character_,
               note = NA_character_, anchors = NULL)
-  if (inherits(resp, "error")) { out$note <- substr(conditionMessage(resp), 1, 150); return(out) }
+  if (!is.null(r$error)) { out$note <- substr(conditionMessage(r$error), 1, 150); return(out) }
+  resp <- r$response
   out$http <- resp_status(resp); out$final_url <- resp$url
   body <- resp_body_raw(resp); out$bytes <- length(body)
   ctype <- tolower(resp_content_type(resp) %||% "")
@@ -157,27 +162,28 @@ jw_probe_one <- function(url, timeout = 25) {
   xml_remove(xml_find_all(doc, "//script|//style|//noscript"))
   vis <- gsub("\\s+", " ", .clean(xml_text(doc)))
   out$text_chars <- nchar(vis); out$text_hash <- substr(rlang::hash(vis), 1, 12)
-  if (grepl("captcha|just a moment|access denied|verify you are human|enable javascript", tolower(substr(vis, 1, 3000))) &&
-      out$text_chars < 3000) { out$status <- "blocked"; out$note <- "bot wall or JS required"; return(out) }
+  if (pf_blocked_text(vis) && out$text_chars < 3000) {
+    out$status <- "blocked"; out$note <- "bot wall or JS required"; return(out)
+  }
   txt <- trimws(gsub("\\s+", " ", txt))
   abs <- tryCatch(url_absolute(href, out$final_url), error = function(e) href)
   ok <- !is.na(txt) & nchar(txt) >= 12 & nchar(txt) <= 250 & !grepl(.nav_re, tolower(txt)) &
     grepl("^https?://", abs) & !grepl("^(mailto|javascript|tel):", href)
   a <- unique(data.frame(text = txt[ok], href = sub("#.*$", "", abs[ok])))
   out$anchors <- a
-  thin <- nrow(a) < 8 || (out$text_chars < 800 && out$n_scripts >= 5)
+  thin <- pf_js_suspect(out$text_chars, out$n_scripts, nrow(a))
   out$status <- if (thin) "ok_js_suspect" else "ok"
   if (thin) out$note <- "few usable links or little text: listing probably rendered by JS, use webfetch or search instead"
   out$elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
   out
 }
-`%||%` <- function(a, b) if (is.null(a) || length(a) == 0 || is.na(a[1])) b else a
 
 # Probe every unique link once (search-engine URLs are not fetched: their query is returned for the
 # web_search tool). Polite: one request at a time, >= `delay` s between requests to the same host.
 jw_probe <- function(links, delay = 1.5, timeout = 25, profile = NULL, verbose = TRUE) {
   uniq <- links[is.na(links$dup_of), ]
-  last_req <- list(); src <- list(); anc <- list()
+  jw_wait_state <- new.env()  # per-call state, isolated from other skills' pf_wait() calls
+  src <- list(); anc <- list()
   for (i in seq_len(nrow(uniq))) {
     r <- uniq[i, ]
     if (r$type == "search_engine") {
@@ -185,12 +191,10 @@ jw_probe <- function(links, delay = 1.5, timeout = 25, profile = NULL, verbose =
                              text_hash = NA, n_anchors = 0L, note = r$query)
       next
     }
-    w <- last_req[[r$host]]
-    if (!is.null(w)) { gap <- delay - as.numeric(difftime(Sys.time(), w, units = "secs")); if (gap > 0) Sys.sleep(gap) }
+    pf_wait(r$host, delay, state = jw_wait_state)
     p <- tryCatch(jw_probe_one(r$url, timeout), error = function(e)
       list(status = "error", http = NA, final_url = NA, text_hash = NA, anchors = NULL,
            note = substr(conditionMessage(e), 1, 150)))
-    last_req[[r$host]] <- Sys.time()
     na <- if (is.null(p$anchors)) 0L else nrow(p$anchors)
     src[[i]] <- data.frame(id = r$id, n = r$n, status = p$status, http = p$http, final_url = p$final_url,
                            text_hash = p$text_hash, n_anchors = na, note = p$note)
@@ -406,8 +410,7 @@ jw_headless <- function(dir = jw_dir(), delay = 1.5) {
   t <- unlist(strsplit(p, "[^a-z0-9]+")); unique(t[nchar(t) >= 3 & !t %in% c("www", "html", "htm", "php", "aspx")])
 }
 .get_text <- function(url, timeout = 20, max_bytes = 6e6) {
-  resp <- tryCatch(request(url) |> req_user_agent(jw_ua) |> req_timeout(timeout) |>
-                     req_error(is_error = function(r) FALSE) |> req_perform(), error = function(e) NULL)
+  resp <- pf_perform(url, jw_ua, timeout = timeout, max_tries = 1)$response
   if (is.null(resp) || resp_status(resp) >= 400) return(NULL)
   b <- resp_body_raw(resp); if (length(b) > max_bytes) return(NULL)
   if (length(b) > 2 && b[1] == as.raw(0x1f) && b[2] == as.raw(0x8b)) b <- tryCatch(memDecompress(b, "gzip", asChar = FALSE), error = function(e) raw())
@@ -462,8 +465,7 @@ jw_find_replacement <- function(url, max_candidates = 8, verbose = TRUE) {
   d <- utils::head(d, max_candidates * 2)
   # keep only candidates that answer; record the final URL
   ok <- lapply(seq_len(nrow(d)), function(i) {
-    r <- tryCatch(request(d$url[i]) |> req_user_agent(jw_ua) |> req_timeout(15) |>
-                    req_error(is_error = function(r) FALSE) |> req_perform(), error = function(e) NULL)
+    r <- pf_perform(d$url[i], jw_ua, timeout = 15, max_tries = 1)$response
     if (is.null(r)) NULL else data.frame(d[i, ], http = resp_status(r), final_url = r$url)
   })
   out <- do.call(rbind, ok); if (is.null(out)) return(data.frame())

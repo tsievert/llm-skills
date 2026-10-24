@@ -645,6 +645,42 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   items), `check_skill_links()` clean (25 skills), `skills-ref validate` passed for both touched SKILL.md
   files. CRLF hit again on both edited `SKILL.md` files; normalised with `sed -i 's/\r$//'`.
 
+- 2026-10-24: Built `web-fetching-r` (SKILL.md; `scripts/polite_fetch.R`;
+  `references/shared-helper-contract.md`) and refactored the three skills that had each
+  independently hand-rolled the same "polite R HTTP fetch" pattern (confirmed by direct code
+  inspection, see `research/skill-roadmap-ledger.md` round 3): `job-opportunity-watch/scripts/jobwatch.R`,
+  `recipe-notes-formatter/scripts/rn_web.R`, `social-research-search/scripts/social_search.R` now
+  source `polite_fetch.R` and call its `pf_user_agent()`/`pf_wait()`/`pf_perform()`/`pf_fetch_html()`/
+  `pf_blocked_text()`/`pf_js_suspect()` instead of maintaining their own user-agent string, per-host
+  rate limiter and httr2 retry/error-swallow pipeline; each dependent script now `stop()`s with a
+  clear message if sourced before `polite_fetch.R`. `rn_fetch_html()`'s return contract (numeric
+  `$status`, raw `$html` string) was preserved exactly — `pf_fetch_html()` returns a different shape
+  (`status` as "ok"/"http_error"/"error", `http` as the numeric code) so `rn_fetch_html()` maps
+  between them rather than changing callers. `job-opportunity-watch/scripts/run_probe.R` (the
+  headless/Task-Scheduler entry point) locates `web-fetching-r` as a sibling skill folder two levels
+  up and sources it before `jobwatch.R`, since no assistant is present to load it there. Tested
+  (Windows, R 4.6.0): `lint_skills()` (only the three pre-existing description-length info items),
+  `check_skill_links()` (one new one-way link, recorded as `no-backlink` in `link-decisions.tsv`:
+  `openalex` doesn't need a pointer back), `check_skill_clashes(new="web-fetching-r")` clean at 0.15,
+  `uvx skills-ref validate` passed for all four touched/new skills; the full `recipe-notes-formatter`
+  test suite including the live JSON-LD fetch test (116 assertions, 0 failures); offline
+  `jw_classify_titles()`/`jw_read_links()` plus live `jw_probe_one()`/`jw_probe()` against real hosts
+  (confirmed `ok_js_suspect`/`http_error`/`search_engine` classification unchanged, per-host pacing via
+  `pf_wait()` measured at ~1.08s for a 1.0s minimum interval) and `jw_find_replacement()`'s `pf_perform()`
+  call sites; a live `bsky_search()` call through the refactored `social_search.R`; the
+  sourced-before-dependency guard in a fresh `Rscript` subprocess for all three dependent scripts.
+  **Found, not fixed (pre-existing, unrelated to this refactor — reproduced identically via `git
+  stash` on the original code):** `job-opportunity-watch`'s `jw_save_run()` errors
+  (`replacement has 1 row, data has 0`) when a probe run finds zero anchors on the single link
+  checked and no `anchors_seen.tsv` exists yet; logged as a lesson for later triage. Decided not to
+  adopt the CRAN `polite` package (documented in the new reference file): none of the three skills
+  used it already, it doesn't cover the JSON-API case, and swapping the transport under three
+  already-tested skills was judged riskier than extracting the pattern that was actually there.
+  CRLF hit repeatedly on `jobwatch.R` and `social_search.R` mid-edit (the edit tool reintroduced it
+  each time); normalised with `sed -i 's/\r$//'` before each retry, per the existing pitfall. Not
+  tested: a real Slurm-free headless Task Scheduler run end to end (only `Rscript run_probe.R`
+  locally), Linux/macOS, the sibling-folder path assumption against a non-standard install layout.
+
 ## Lessons triage state
 - Lessons usage watermark: 2026-10-24T17:22:20
 

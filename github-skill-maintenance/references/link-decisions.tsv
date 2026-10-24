@@ -21,3 +21,4 @@ git-for-research-projects	hpc-job-scripts	no-backlink	Generic HPC skill with its
 reproducible-research-data	manuscript-figures-ggplot	no-backlink	Figures are one input to a deposit (source data); the figure skill stays free of deposit pointers	2026-10-23
 recipe-notes-formatter	git-for-research-projects	no-backlink	Git skill covers research repositories; a recipe conversion project is a small personal side use and should not get a pointer from it	2026-10-24
 recipe-notes-formatter	r-reproducible-pipeline	no-backlink	The pipeline skill is for analysis workflows; the recipe project is not one by default, the pointer from the recipe skill is an optional upgrade only	2026-10-24
+web-fetching-r	openalex	no-backlink	openalex is the standing literature tool (user memory rule) and uses its own API client, not HTML scraping; it should not collect a pointer from every skill that merely distinguishes itself from it	2026-10-24

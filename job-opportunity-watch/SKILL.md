@@ -1,7 +1,7 @@
 ---
 name: job-opportunity-watch
 description: 'Periodically checks a user-maintained list of job portals and search links for new career opportunities (academic and research jobs, postdocs, fellowship hosts, expert rosters), diffs them against what was seen on earlier runs, verifies and classifies each new candidate against a user profile, and keeps a persistent state so only new or changed items are reported. May propose (and, after confirmation, apply) additions to the links file and profile. Use when the user asks to check, scan, refresh or update job listings, vacancies, postdocs, positions or opportunities, mentions links.txt or a job profile, or asks whether a periodic job check is due.'
-compatibility: Requires R with httr2, rvest, xml2, readr, yaml and internet access; optional social discovery needs the social-research-search skill. Read-only towards job sites (polite, no logins). The user's links file and profile are personal and stay outside the skill repo.
+compatibility: Requires R with httr2, rvest, xml2, readr, yaml and internet access; the fetch mechanics come from the web-fetching-r skill (load it first), and optional social discovery needs the social-research-search skill. Read-only towards job sites (polite, no logins). The user's links file and profile are personal and stay outside the skill repo.
 ---
 
 # Job opportunity watch
@@ -30,8 +30,10 @@ Pages behind a bot wall, login or CAPTCHA are recorded as blocked and are not by
    `assets/links.template.csv` and `assets/job_profile.template.yml`, filled in with the user. A legacy
    `links.txt` still works; offer the one-time `jw_convert_links_txt(confirmed = TRUE)` (the `.txt` stays).
    A profile saved as `.txt` is YAML: suggest renaming it to `job_profile.yml`.
-2. `source("<skill-dir>/scripts/jobwatch.R")`, then `jw_due(every_days = 7)`. If a run is not due, say so
-   and ask whether to run anyway; otherwise continue.
+2. Load the **`web-fetching-r`** skill and `source("<web-fetching-r skill-dir>/scripts/polite_fetch.R")`
+   first -- `jobwatch.R` needs its `pf_*` fetch helpers and will stop with a clear message if they are
+   missing. Then `source("<skill-dir>/scripts/jobwatch.R")`, then `jw_due(every_days = 7)`. If a run is
+   not due, say so and ask whether to run anyway; otherwise continue.
 3. Read the profile with `yaml::read_yaml()` and restate in three or four lines the hard requirements and
    exclusions you will apply (contract, FTE, geography, excluded titles and systems). If something needed
    is unknown, use a clearly labelled provisional assumption and continue; ask only when an answer is
@@ -181,6 +183,8 @@ what is relevant. Findings are as current as the last successful probe.
 
 ## Related skills
 
+- `web-fetching-r`: the shared polite-fetch mechanics (`pf_*`) this skill's `jobwatch.R` sources;
+  for the one-off, non-recurring "pull a table off a page" case instead, use that skill directly.
 - `social-research-search`: social discovery (Step 4b) with the tag ledger.
 - `openalex`: checking a group or PI publication record when judging scientific fit.
 

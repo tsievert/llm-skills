@@ -1,11 +1,19 @@
 # Keyless, read-only search of public Bluesky posts and Mastodon hashtag timelines.
-# Requires: httr2. Usage: source("<skill-dir>/scripts/social_search.R")
+# Requires: httr2. Usage: source("<web-fetching-r skill-dir>/scripts/polite_fetch.R") first, then
+# source("<skill-dir>/scripts/social_search.R")
 #   bsky_search("mgcv", sort = "latest", since = "2026-01-01", max_posts = 100)
 #   masto_tag("rstats", instances = c("mastodon.social", "fosstodon.org"))
 #   social_search("gratia", tags = "rstats")   # both platforms, one data frame
-# Both return a data.frame with the same columns (see COLUMNS below).
+# Both return a data.frame with the same columns (see COLUMNS below). The HTTP request/retry
+# pipeline comes from the web-fetching-r skill's polite_fetch.R (pf_perform()); this file only
+# adds the Bluesky/Mastodon query shapes and response parsing.
 
 library(httr2)
+
+if (!exists("pf_perform", mode = "function")) {
+  stop("social_search.R needs the web-fetching-r skill's polite_fetch.R sourced first: ",
+       'source("<web-fetching-r skill-dir>/scripts/polite_fetch.R")')
+}
 
 # Bluesky: api.bsky.app answers searchPosts without login; public.api.bsky.app returns 403.
 BSKY_HOST <- "https://api.bsky.app"
@@ -26,17 +34,13 @@ COLUMNS <- c("platform", "source", "created_at", "author", "text", "url",
 
 .get_json <- function(url, query = list()) {
   # Returns parsed JSON, or NULL with a warning when the server refuses (401/403/404).
-  req <- request(url) |>
-    req_user_agent(USER_AGENT) |>
-    req_url_query(!!!query) |>
-    req_retry(max_tries = 3, is_transient = \(r) resp_status(r) %in% c(429, 500, 502, 503)) |>
-    req_error(is_error = \(r) FALSE) |>
-    req_timeout(30)
-  resp <- tryCatch(req_perform(req), error = \(e) {
-    warning(sprintf("%s -> %s", url, conditionMessage(e)), call. = FALSE)
-    NULL
-  })
-  if (is.null(resp)) return(NULL)
+  r <- pf_perform(url, USER_AGENT, timeout = 30, max_tries = 3,
+                   retry_on = c(429, 500, 502, 503), query = query)
+  if (!is.null(r$error)) {
+    warning(sprintf("%s -> %s", url, conditionMessage(r$error)), call. = FALSE)
+    return(NULL)
+  }
+  resp <- r$response
   if (resp_status(resp) >= 400) {
     warning(sprintf("%s -> HTTP %s: %s", url, resp_status(resp),
                     substr(gsub("\\s+", " ", resp_body_string(resp)), 1, 120)), call. = FALSE)

@@ -1,8 +1,16 @@
 # rn_web.R -- get a recipe from a web page: JSON-LD first, microdata second, page text last,
 # plus picture candidates and a safe image download.
-# Source with: source("<skill-dir>/scripts/rn_web.R", encoding = "UTF-8")
+# Source with: source("<web-fetching-r skill-dir>/scripts/polite_fetch.R") first, then
+# source("<skill-dir>/scripts/rn_web.R", encoding = "UTF-8")
 # Needs: httr2, xml2, rvest, jsonlite (cld2 optional). Read-only towards sites: one request at a
-# time, identifying user agent, no logins, no bot-wall workarounds.
+# time, identifying user agent, no logins, no bot-wall workarounds. The actual fetch (rate
+# limiting, retry, user agent) is the web-fetching-r skill's polite_fetch.R (pf_*); this file only
+# adds recipe-specific parsing.
+
+if (!exists("pf_fetch_html", mode = "function")) {
+  stop("rn_web.R needs the web-fetching-r skill's polite_fetch.R sourced first: ",
+       'source("<web-fetching-r skill-dir>/scripts/polite_fetch.R")')
+}
 
 `%||%` <- function(a, b) if (is.null(a) || length(a) == 0 || (length(a) == 1 && is.na(a))) b else a
 
@@ -14,38 +22,16 @@ if (!exists(".rn_detect_lang", mode = "function")) {
   }
 }
 
-.rn_state <- new.env()
-.rn_state$last_request <- 0
-RN_USER_AGENT <- "recipe-notes-formatter/1.0 (personal recipe collection; polite, one request at a time)"
+RN_USER_AGENT <- pf_user_agent("recipe-notes-formatter", "personal recipe collection; polite, one request at a time", "1.0")
 RN_MIN_SECONDS <- 1.5   # pause between requests, so a site is never hammered
-
-.rn_polite <- function() {
-  wait <- RN_MIN_SECONDS - (as.numeric(Sys.time()) - .rn_state$last_request)
-  if (wait > 0) Sys.sleep(wait)
-  .rn_state$last_request <- as.numeric(Sys.time())
-}
 
 #' Fetch a page. Never throws on HTTP errors; look at $status and $problem.
 #' @return list(url, status, content_type, html, problem)
 rn_fetch_html <- function(url, timeout = 25) {
-  .rn_polite()
-  resp <- tryCatch(
-    httr2::request(url) |>
-      httr2::req_user_agent(RN_USER_AGENT) |>
-      httr2::req_timeout(timeout) |>
-      httr2::req_retry(max_tries = 2, is_transient = function(r) httr2::resp_status(r) %in% c(429L, 503L)) |>
-      httr2::req_error(is_error = function(r) FALSE) |>
-      httr2::req_perform(),
-    error = function(e) e)
-  if (inherits(resp, "error")) {
-    return(list(url = url, status = NA_integer_, content_type = NA_character_, html = NULL,
-                problem = paste("request failed:", conditionMessage(resp))))
-  }
-  st <- httr2::resp_status(resp)
-  ct <- httr2::resp_content_type(resp)
-  html <- if (st < 400 && grepl("html|xml", ct %||% "")) httr2::resp_body_string(resp, encoding = "UTF-8") else NULL
-  list(url = resp$url, status = st, content_type = ct, html = html,
-       problem = if (is.null(html)) paste0("no HTML (status ", st, ", ", ct %||% "?", ")") else NA_character_)
+  r <- pf_fetch_html(url, RN_USER_AGENT, min_interval = RN_MIN_SECONDS, timeout = timeout,
+                      max_tries = 2, retry_on = c(429L, 503L))
+  list(url = r$url, status = r$http, content_type = r$content_type,
+       html = if (is.na(r$html)) NULL else r$html, problem = r$problem)
 }
 
 # ---- JSON-LD ------------------------------------------------------------------------------
