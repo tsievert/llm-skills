@@ -27,6 +27,16 @@ Read the relevant file first when starting or revising a skill, and append to it
   (gitignore negation, `*.lock` vs `renv.lock`, `check-ignore -v` exit code, autocrlf, LFS vs `git archive`, cffr pitfalls),
   4 git doc facts, 5 packages, 6 OpenAlex, 7 proposed split and refactor, 8 findings about the user's own setup (Syncthing folder
   containing seven repositories), 9 open items and questions for the user.
+- `research/recipe-notes-ledger.md` (started 2026-10-24): for the planned `recipe-notes-formatter`. Sections: 1 requirements
+  R1-R11 (user decisions), 2 format candidates, 3 Cooklang facts, 4 Cooklang maintenance (bus factor one), 5 Obsidian recipe
+  plugins, 6 local Obsidian entry points (CLI, Local REST API, MCP servers), 7 open research items, 8 log.
+- **Always protocol research (standing rule, added 2026-10-24).** Whenever research is done for a skill or decision (web
+  searches, page fetches, API checks, local tests), record it in `research/` in the same turn, before answering at length.
+  Use one ledger per skill or topic (append to an existing one if the topic matches). Format that is easy to digest: a
+  numbered **requirements** table (user decisions with dates), **source tables** with a status column (read, partial,
+  blocked, search, meta, not researched), short **facts** with the source URL, **open research items**, and a dated **log**.
+  Before searching again, read the ledger and do not repeat a search that has a row. Never record tokens or secrets. Mention
+  the ledger path in the reply so the user can find it.
 - Conventions: one dated section per research round; record sources fetched, local test results, bugs/gotchas found, open
   questions. R run from the assistant cannot write to the assistant scratch dir; use the git-ignored `tmp-examples/` for tests
   and delete afterwards.
@@ -152,6 +162,12 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
 - [x] `github-skill-maintenance` (done 2026-10-23, see Log): skill test/lint workflow, review of `sync-skills` hook and `skills.paths`
   config, version notes, periodic check for stale package-version claims in `gam-mgcv`, `gam-interpretation`,
   `deeplabcut-hpc`.
+- [x] `recipe-notes-formatter` (built 2026-10-24, see Log; not yet committed; research in `research/recipe-notes-ledger.md`): input folder
+  to output folder in the user's R project; turns plain text, Obsidian notes and web links into recipe notes. No vault interaction, no
+  translation (de/en/sv/fi stay as written), metric units, picture embedded, learns the tag structure into a profile file and may suggest
+  new tags (user approves). Structured Markdown with YAML (not Cooklang). Samples were copied from the vault into the git-ignored
+  `recipe-samples/`. Still open: trial run on a real batch by the user, Recipe View thumbnail and Bases image property in Obsidian,
+  picture search on real notes, committing and pushing.
 - [ ] `literature-review-workflow`: extend `openalex` with screening log, deduplication, PRISMA-style flow,
   BibTeX export for Quarto. Lower priority (search step already covered).
 - Added 2026-10-23 (user-approved from the reassessment). Each follows the working rules and standing rules (online check
@@ -610,3 +626,5 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   `references/testing-skills.md`; (4) institution-discovery user correction: already fixed earlier, rejected as a new change; (5) openalex duplicate
   records in title search: `park` (file stays in the inbox). Working copies of the two edited files normalised to LF. `lint_skills()` clean (23),
   `skills-ref` valid. Not verified: a second independent report for any issue. Watermark set to 2026-10-23T23:23:10.
+
+- 2026-10-24: Built `recipe-notes-formatter` (not committed yet). Files: SKILL.md; `scripts/rn_units.R`, `rn_core.R`, `rn_profile.R`, `rn_web.R`, `test_rn.R`; references `note-format`, `units`, `extraction-and-images`, `tag-profile`, `sources`; assets `example_note.md` (rendered by the code) and `recipe-profile.example.yml`. Decisions from the user (ledger R17-R22): ticked checkbox means not on the shopping list (verified from the Checklist plugin settings: it shows only unticked `#ingredients` items), numeric servings/time, empty Intro/FINISH dropped, metric replaces non-metric (English tbsp/tsp stay), picture downloaded and credited, profile YAML next to the output, never overwrite (backup first), folders checked and created only with permission, author is the note author, timestamps left to Templater. R rather than Python because the user is making an R project; CRAN check found no recipe package (installed `cld2` for language detection). Tested (R 4.6.0, Windows): 14 testthat blocks (offline 13 pass; the live block passes with RN_LIVE=1): unit conversion table, spoons and ambiguous units, temperatures and lengths, quantity parser, safe names, no-overwrite plus backup, folder check, render then check round trip with negative cases, placeholder tags, profile learning with rollup counts and base drift, JSON-LD (@graph, groups, raw-newline repair, durations, images), tier none, microdata, heading groups, ingredient overlap. Live end to end on the user's koket.se source: JSON-LD read, four heading groups found, picture downloaded (jpeg, 105 KB), note rendered and checked clean; chocochili.net gave tier none with usable page text and og:image. Profile learned from the 12 copied samples: drift found (three base views empty). Findings: the `write` tool produced CRLF in the .R files (normalised to LF); literal \u escapes typed into Markdown stayed literal (fixed); `test_file()` changes the working directory (tests handle both). Checks: `lint_skills()` no findings (24 skills), `check_skill_links()` clean after two no-backlink rows (`git-for-research-projects`, `r-reproducible-pipeline`), `check_skill_clashes(new=)` clean at 0.15, `skills-ref` valid, `check_versions()` nothing for the skill; ownership row added to `skill-boundaries.md`. Not tested: picture search for existing notes on real notes, German and other Swedish/Finnish sites, Recipe View thumbnail with the image before the H1, Bases image property, Templater timestamps for files copied in, Linux/macOS, real batch use, trigger queries.

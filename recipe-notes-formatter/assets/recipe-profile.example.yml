@@ -1,0 +1,39 @@
+# Example of recipe-profile.yml (shortened, invented values). The skill writes the real file after the
+# user agrees; hand edits to `decisions` and the habit keys are kept when the profile is relearned.
+profile_version: 1
+learned_at: 2026-10-24 12:00
+learned_from:
+  folder: input
+  n_notes: 40
+  skipped_non_recipe_files:
+    - Cookbook index.md
+  base_file: Cookbook.base
+author: Your Name
+index_link: '[[Cookbook index]]'
+checkbox_default: ticked        # ticked = not on the shopping list, unticked = to buy
+heading_ingredients: Ingredients
+heading_directions: Directions
+image_width: 300
+spoons: keep                    # keep English tbsp/tsp as written; "ml" converts them
+note_facts:
+  languages: {de: 20, en: 10, fi: 6, sv: 4}
+  ingredient_items_ticked: 380
+  ingredient_items_unticked: 0
+tag_vocabulary:
+  - recipe
+  - recipe/dessert
+  - recipe/soup
+  - recipe/vegetarian
+tag_counts: {recipe: 40, recipe/soup: 9, recipe/dessert: 5, recipe/vegetarian: 22}
+tag_counts_rollup: {recipe: 40, recipe/vegetarian: 25}
+review:
+  base_tags_unused_in_notes:
+    - base_tag: recipe/vegepossible
+      nearest_used_tag: recipe/vegetarianpossible
+      distance: 0.28
+decisions:
+  tag_map:
+    recipe/vegepossible: recipe/vegetarianpossible   # your decision: new notes use the spelling the notes already carry
+  approved_new_tags:
+    - recipe/snack
+pending_new_tags: []

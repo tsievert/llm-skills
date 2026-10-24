@@ -19,3 +19,5 @@ r-reproducible-pipeline	hpc-resource-allocation	no-backlink	Sizing advice is gen
 r-reproducible-pipeline	manuscript-figures-ggplot	no-backlink	Figures are one step of many; the figure skill stays free of pipeline pointers	2026-10-23
 git-for-research-projects	hpc-job-scripts	no-backlink	Generic HPC skill with its own CRLF linter; should not collect a pointer to every skill that mentions line endings	2026-10-23
 reproducible-research-data	manuscript-figures-ggplot	no-backlink	Figures are one input to a deposit (source data); the figure skill stays free of deposit pointers	2026-10-23
+recipe-notes-formatter	git-for-research-projects	no-backlink	Git skill covers research repositories; a recipe conversion project is a small personal side use and should not get a pointer from it	2026-10-24
+recipe-notes-formatter	r-reproducible-pipeline	no-backlink	The pipeline skill is for analysis workflows; the recipe project is not one by default, the pointer from the recipe skill is an optional upgrade only	2026-10-24
