@@ -550,6 +550,44 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   whether the file-content-signal instruction actually changes assistant behaviour mid-task (this is a
   behavioural claim added to the description, not something lint can verify). Committed (`fb6eaf9`).
 
+- 2026-10-24: Built `scripts/skill-file-signal-hook.sh`, the non-blocking R2 counterpart to
+  `skill-trigger-hook.sh` (R1), after a second independent real-session recurrence of the
+  context-clue undertrigger (see `research/skill-trigger-hooks-ledger.md` section 6 for the
+  research round that led to this — six `web_search` calls found the problem is common across
+  the Claude Code/agent-skill ecosystem, a mechanistic explanation in a 2026 arXiv tool-drift
+  paper, and two independent community hooks already doing close to this design as a
+  non-blocking nudge). Design: opt-in `metadata.file_signals` (a single `'|'`-separated regex
+  string) in a skill's own frontmatter, read by one shared `PostToolUse` hook
+  (matchers `skill` and `read|grep|bash`); on a match for a skill not yet loaded this session,
+  emits `hookSpecificOutput.additionalContext` naming it, at most once per (session, skill),
+  never a block. Seeded on `hpc-job-scripts` (`#SBATCH`/`sbatch`/`srun`) and `deeplabcut-hpc`
+  (`import deeplabcut`/`pytorch_config.yaml`/`pose_cfg.yaml`) only — not added to the other 22
+  skills speculatively. Extended `lint_skills()` (file_signals must be a single string,
+  compiles as a regex, warns on low-specificity alternatives) and `check_sync_setup()` (new
+  audit section, including a check that the script never emits `decision:"block"`). Registered
+  in the real `~/.posit/assistant/settings.json` (backed up first to
+  `settings.json.bak-filesignal`). Tested on Windows (Git Bash, GNU bash/grep/sed/awk):
+  `bash -n`; eight scenarios with synthetic piped payloads (nudge on a matching `read`/`grep`
+  result, silence on repeat/already-loaded/unrelated-content/non-matching-tool, missing
+  session_id, malformed stdin) plus an embedded-double-quote content case and direct checks of
+  the `file_signals` extractor against both seeded skills and a skill with none declared;
+  `lint_skills()` clean (24 skills, same two pre-existing `info` items only);
+  `check_skill_links()` clean; `check_sync_setup()` run against the real, updated
+  `settings.json` content (same path-guard workaround as the other hook audits) — all `ok`
+  except the expected `working tree` warning for uncommitted changes; `uvx skills-ref validate`
+  passed for both touched skills. CRLF working-copy drift hit again on four files during this
+  change (`hpc-job-scripts/SKILL.md`, `deeplabcut-hpc/SKILL.md`,
+  `github-skill-maintenance/scripts/lint_skills.R`, `github-skill-maintenance/SKILL.md`) —
+  normalised with `sed -i 's/\r$//'` before editing each time, per the existing pitfall.
+  Documented in `github-skill-maintenance/references/skill-trigger-hook.md` (new "The
+  file-signal hook (R2)" section) and a new SKILL.md workflow-step/tested-notes update.
+  **Not tested:** the hook firing inside a real conversation turn (whether
+  `additionalContext` from a Posit Assistant `PostToolUse` hook actually reaches the model's
+  reasoning the way a cited Claude Code community test demonstrated is unverified here); the
+  cost of scanning ~24 skill frontmatters per matching tool call at scale; Linux/macOS; a
+  second machine; whether the two seeded patterns measurably reduce real misses (needs more
+  real sessions to tell either way).
+
 ## Lessons triage state
 - Lessons usage watermark: 2026-10-23T23:23:10
 

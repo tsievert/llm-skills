@@ -26,16 +26,15 @@ trigger-miss pattern" section for the other one):
   for a skill, but attention moved on. This is checkable — "was a `skill()` call made
   after this instruction" is a fact, not a judgement — so a hook can enforce it
   deterministically.
-- **A context clue is never acted on** (file content implies a skill, no explicit ask):
-  this hook does **not** address that case. "Should a skill have fired" from file content
-  alone is a judgement call a keyword match cannot make reliably (an already-correct,
-  already-reviewed sbatch script doesn't need a skill reloaded just because it contains
-  `#SBATCH`). The mitigation for that case stays in the skill descriptions themselves
-  (name the file-content signal explicitly, per `testing-skills.md`). A non-blocking
-  `PostToolUse` nudge for this case was designed but not built — see
-  `research/skill-trigger-hooks-ledger.md` section 4, item R2 — because the false-positive
-  risk of a keyword table felt worse than the miss it would catch; revisit if the miss
-  recurs.
+- **A context clue is never acted on** (file content implies a skill, no explicit ask): a
+  second script, `skill-file-signal-hook.sh`, gives this a best-effort, **non-blocking**
+  nudge (see "The file-signal hook (R2)" below). It cannot judge whether a skill *should*
+  have fired, only whether a declared text pattern appeared in a tool result — a much
+  narrower, mechanical check than the full relevance judgement, and the worst case is one
+  ignorable extra line of context, never a forced action. See
+  `research/skill-trigger-hooks-ledger.md` section 6 for why the original, shelved R2 design
+  (section 4, item R2) was revised and built after a second independent recurrence of this
+  undertrigger and after finding prior art for the same non-blocking pattern elsewhere.
 
 It also cannot judge whether the skill that was eventually loaded was the *right* one —
 only that *some* `skill()` call happened after the instruction.
@@ -144,6 +143,81 @@ prompt containing embedded `"` quotes (a realistic multi-sentence message) is st
 detected, because the match runs over the whole payload rather than an extracted field; the
 question near-miss from the "known, accepted false positive" section above is correctly
 excluded; empty or non-JSON stdin does not crash the script.
+
+## The file-signal hook (R2)
+
+Script: `scripts/skill-file-signal-hook.sh`, built 2026-10-24 after a second, independent
+real-session recurrence of the context-clue undertrigger (see the `github-skill-maintenance`
+lesson `anon_20261024-audit_manual.md` and ledger section 6). Two events, both `PostToolUse`:
+
+| Matcher | Action |
+|---|---|
+| `skill` | Any skill load marks that skill as loaded for the session (`state/<session>.loaded.<skill>`), so it is never nudged for again. |
+| `read\|grep\|bash` | Scans `tool_response` against every skill's declared `metadata.file_signals` (a single, skill-owned `'|'`-separated regex-alternation string in that skill's own `SKILL.md` frontmatter). On a match for a skill not yet loaded or already nudged this session, emits `hookSpecificOutput.additionalContext` naming it, and marks it nudged (`state/<session>.nudged.<skill>`) so it fires at most once per (session, skill). **Never blocks.** |
+
+`file_signals` is opt-in and deliberately narrow: only add it to a skill with a strong,
+low-ambiguity file signature (seeded on `hpc-job-scripts`:
+`'#SBATCH|\bsbatch\b|\bsrun\b'` and `deeplabcut-hpc`:
+`'import deeplabcut|pytorch_config\.yaml|pose_cfg\.yaml'`, matching the file-content clauses
+already in both descriptions). Do not add it to every skill speculatively — a vague pattern
+produces noise, not signal (`lint_skills()` warns on short, non-word-bounded alternatives).
+The table lives in each skill's own frontmatter, not centrally in the hook script, so it is
+reviewed alongside the skill it serves (the maintenance-burden objection in ledger section 5
+was the reason this was revised rather than hardcoded).
+
+Why non-blocking was judged acceptable here where the original sketch worried about false
+positives: every piece of prior art found (ledger section 6.3 — two independent community
+hooks doing close to the same thing, plus Anthropic's own PostToolUse-linter-nudge pattern)
+only injects `additionalContext`, never blocks, on a content match. The cost of a false
+positive is one ignorable extra sentence of context, at most once per (session, skill) — not
+a wrong action. `check_sync_setup()` has a `file-signal hook never blocks` check that errors
+if the script is ever changed to emit `decision:"block"`, to keep this invariant enforced.
+
+### Settings entry (added alongside the existing `PostToolUse` group)
+
+```json
+"PostToolUse": [
+  {"matcher": "skill", "hooks": [
+    {"type": "command", "command": "bash .../lessons-hook.sh", "timeout": 10},
+    {"type": "command", "command": "bash .../skill-trigger-hook.sh", "timeout": 10},
+    {"type": "command", "command": "bash .../skill-file-signal-hook.sh", "timeout": 10}
+  ]},
+  {"matcher": "read|grep|bash", "hooks": [
+    {"type": "command", "command": "bash .../skill-file-signal-hook.sh", "timeout": 10}
+  ]}
+]
+```
+
+### Files (shares `~/.posit/skill-triggers/state/` with `skill-trigger-hook.sh`, disjoint names)
+
+| Path | Content |
+|---|---|
+| `state/<session>.loaded.<skill>` | exists once that skill has been loaded this session |
+| `state/<session>.nudged.<skill>` | exists once a nudge has fired for that (session, skill) pair |
+| `state/DEBUG` | shared debug switch with `skill-trigger-hook.sh` |
+
+### Tested and not tested (file-signal hook)
+
+Tested on Windows (Git Bash, GNU bash 5.3, GNU grep/sed/awk): `bash -n`; a matching `read`
+result with no skills loaded yet (nudges once); a repeat call in the same session (silent,
+already nudged); a session where the skill was already loaded via a `skill` `PostToolUse`
+call first (silent); unrelated content (silent); a DeepLabCut-matching `grep` result
+(nudges `deeplabcut-hpc`); a non-matching tool (`ls`, silent even with matching text in its
+response); a missing `session_id` (silent, no crash); empty/malformed stdin (no crash, exit
+0); a `tool_response` containing an embedded double quote (still detected — the match runs
+over the raw payload, not an extracted field, same reasoning as `skill-trigger-hook.sh`);
+the `file_signals` extractor directly, against both seeded skills and a skill with none
+declared (empty, correctly). `lint_skills()`'s new `file_signals` regex-compile and
+specificity checks were tested by observation (both seeded skills pass with no new
+findings). `check_sync_setup()`'s new section was run against the real, updated
+`settings.json` content (same path-guard workaround as the other hook audits) — all `ok`.
+**Not tested:** the hook firing inside a real conversation turn (whether
+`hookSpecificOutput.additionalContext` from `PostToolUse` is actually visible to the model
+the way a community Claude Code implementation demonstrated — see ledger section 6.3 — is
+confirmed there, not here); the cost of scanning ~24 `SKILL.md` files per matching tool call
+at scale (unsized, see ledger section 6.6); Linux/macOS; a second machine; whether the two
+seeded `file_signals` patterns actually reduce real-world misses (needs another real
+recurrence, or lack thereof, to tell).
 
 ## Tested and not tested
 

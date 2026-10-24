@@ -71,7 +71,8 @@ and say what it would change.
    when written as `deeplabcut <version>`. Treat it as a candidate list.
 4. **Sync and hook setup.** Read-only audit of settings, the sync hook, the lessons hooks
    (PostToolUse `skill` and Stop), the skill-trigger hook (UserPromptSubmit, PostToolUse
-   `skill`, Stop; see [references/skill-trigger-hook.md](references/skill-trigger-hook.md)),
+   `skill`, Stop) and the file-signal hook (PostToolUse `skill` and `read|grep|bash`; see
+   [references/skill-trigger-hook.md](references/skill-trigger-hook.md) for both),
    the data folders, stamp and git state:
    ```r
    source("github-skill-maintenance/scripts/check_sync_setup.R")
@@ -147,7 +148,16 @@ prompt, a question near-miss, `DEBUG` logging, and malformed/empty stdin) and it
 `check_sync_setup()` audit was run against the real `settings.json` content (read with
 `bash`/`cat` and passed as `cfg`, the same path-guard workaround as above) after the file
 was updated to register it. Not tested: firing inside a real conversation turn, `SubagentStop`.
-See [references/skill-trigger-hook.md](references/skill-trigger-hook.md) for detail.
+The file-signal hook (`skill-file-signal-hook.sh`, added 2026-10-24, the non-blocking R2
+counterpart) was tested with synthetic piped payloads (nudge on a matching `read`/`grep`
+result, silence on a repeat, on an already-loaded skill, on unrelated content, and on a
+non-matching tool; embedded-quote content; missing/malformed stdin) and its own
+`check_sync_setup()` section was run against the real `settings.json` content the same way.
+Its `lint_skills()` check (`metadata.file_signals` compiles as a regex and has reasonably
+specific alternatives) was exercised on the two seeded skills (`hpc-job-scripts`,
+`deeplabcut-hpc`) with no findings. Not tested: firing inside a real conversation turn, the
+cost of scanning every skill's frontmatter at scale. See
+[references/skill-trigger-hook.md](references/skill-trigger-hook.md) for detail.
 
 ## Explain the reasoning (teaching rule)
 

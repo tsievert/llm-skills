@@ -121,7 +121,136 @@ the existing "one script per repeated-event family" pattern in this repo.
 - No test of `SubagentStop`/`SubagentStart` payload shape against a real `launchSubagent`
   call in this project; the docs text above is the only source so far.
 
-## 6. Log
+## 6. Round 2 (2026-10-24): is R2 common elsewhere, and is a non-blocking nudge viable?
+
+Triggered by a second, independent real-session recurrence of R2 (turn 3 of the
+`dlc-pig-method-paper` series: "update paths... references are broken" across `#SBATCH`/DLC
+scripts, logged as a `github-skill-maintenance` lesson,
+`anon_20261024-audit_manual.md`). Five `web_search` calls plus reading of search snippets
+only (no full-page fetches this round; all citations below are to search-result text).
+
+### 7.1 Yes, this is common — not a quirk of this repo
+
+- Multiple open/closed Claude Code GitHub issues describe the same shape: skills or
+  `CLAUDE.md` rules present and loaded, but not acted on mid-task. Issue #18454 ("ignores
+  CLAUDE.md and Skills files during multi-step tasks") has a maintainer-adjacent comment
+  dated Jan 25, 2026 and a user comment: "This happens all the time... Claude will NOT check
+  for available skills but jump straight to the standard tools" (github.com/anthropics/claude-code/issues/18454).
+  A separate commenter on the same issue: "unless a skill is manually invoked... Claude will
+  deny its existence when prompted to use it... it will routinely ignore skill instructions."
+- A troubleshooting guide lists "too many skills" as a cause: "GitHub issue reports describe
+  installs of 137 skills where only 116 load, with the rest silently absent" (lazyskills.sh) —
+  a different mechanism (context-budget truncation) than R1/R2, but confirms skills silently
+  failing to participate is a known community-wide complaint class, not specific to this setup.
+- This is consistent with, not contradicted by, the official guidance: Anthropic's own
+  best-practices page and a third-party summary both say Anthropic monitors this with
+  instrumentation rather than claiming the model reliably self-checks: "Anthropic logs skill
+  usage with a PreToolUse hook... If a skill is not being used, either no one needs it or the
+  description is not triggering correctly" (medium.com/@tahirbalarabe2, "9 Tips for Building
+  Claude Agent Skills"). Official guidance also names description quality as the main lever,
+  and does not claim a model-side automatic re-check of relevance exists.
+
+### 7.2 Mechanistic explanation (academic, not just anecdote)
+
+- PlanBench-XL (arxiv 2606.22388, "Takeaway 9") studied drift in long-horizon tool-use agents
+  and found the bottleneck is reselection, not discovery: <cite index="1-4,1-5,1-6">Before failed-run non-progress calls, the model had already retrieved at least one valid tool that could support progress toward the solution in 78.0% of default cases and 71.1% of block cases... many wrong calls occur even though the model has already seen a solution-relevant alternative. The bottleneck is therefore not only tool discovery, but also deciding which discovered tool should be used next.</cite>
+  It also finds a recency bias: <cite index="1-8,1-9">The failed non-progress calls also show a strong recency pattern in tool selection. In both settings, most non-progress calls use tools from recent retrieval windows</cite>.
+  Applied to R2: the skill list was "seen" once, at session start; by the time file content
+  makes the match obvious, it is no longer in the recent window, and nothing re-surfaces it.
+  This gives a concrete, falsifiable reason a content-triggered nudge should help: it puts the
+  skill name back in the *recent* window right when the signal appears, rather than relying on
+  the model recalling a session-start listing.
+- A software-engineering treatment of Claude Code skills and hooks states the general
+  principle directly: <cite index="44-14,44-15,44-16">If a step must happen every time the triggering event occurs, put it in a hook. A standing instruction in a skill body, however firmly worded, is something the model may read, defer, or skip. The same instruction expressed as a hook runs unconditionally.</cite>
+  (arxiv 2607.25032, "Authoring Agent Skills: A Software-Engineering Approach"). This is the
+  same reasoning that justified R1's `UserPromptSubmit`/`Stop` pipeline, extended here to R2.
+
+### 7.3 Prior art: the exact R2 mechanism already exists in the wild, as a non-blocking nudge
+
+Two independent, currently-open community implementations do essentially the design sketched
+in section 4, item 4 of this ledger:
+
+- `msobroza/coding-agent-playbook` issue #58, "feat(hooks): add the skill-nudge hook": <cite index="40-1,40-3,40-4,40-5,40-6">A new default-tier feedback hook, skill-nudge (post_tool_use on edit and write, priority 30, Claude Code and OpenCode, no body). The first time a session edits a file a skill covers, it names that skill: 'Conventions for this file: skill .', one line per matching skill, at most 200 characters. Each line shows once per skill per session, through the existing dedupe_key and combine machinery.</cite>
+  This is a `PostToolUse` nudge, deduped per (session, skill), non-blocking, file-content keyed
+  — the same shape as the ledger's R2 sketch, already built and apparently in active use.
+- `theitush/giverny` issue #358 describes a related pattern (nudging toward a different skill,
+  not file-content keyed, but the same mechanics): <cite index="39-4,39-5,39-6">The plugin's hook on the Agent tool adds non-blocking additionalContext in a session that is not a manager. Prefer PreToolUse if Claude Code takes context there, so the agent can switch before spawning; otherwise PostToolUse... It fires only on signs of task work</cite>,
+  and reports a successful test: <cite index="39-9,39-10">Verified by the worker: 7 unit tests, plus a real headless claude -p --model haiku run against the branch binary in a scratch env. The Explore call got no context; the general-purpose "Edit hello.txt" call got the nudge, and the model quoted it back.</cite>
+  — i.e. a live confirmation that a `PostToolUse` `additionalContext` nudge is actually read and
+  acted on by the model in a fresh run, not just theoretically delivered.
+- Separately, `dotzlaw.com` frames the general PostToolUse-nudge pattern (for a linter, not
+  skills, but the same mechanism) as the reliability fix for exactly this prompt/hook gap:
+  <cite index="43-7,43-8,43-9,43-10,43-11">With hooks, the setup works differently. A PostToolUse hook fires after every file write. It runs the linter. If there are errors, it injects the error descriptions back into the agent's context as additionalContext. The agent fixes the issues in its next action.</cite>
+
+### 7.4 Re-assessment of the false-positive objection that shelved R2
+
+The original decision (section 4/5 above, 2026-10-24) treated R2 as too risky to build because
+a keyword hit cannot judge "should this skill have fired." Round 2 narrows that objection:
+
+- The objection applies to a **blocking** R2 (forcing the assistant to load a skill it may not
+  need). Nobody in the prior art blocks on this signal; every example found is
+  `additionalContext` only. The cost of a false positive drops from "forced wrong action" to
+  "one ignorable extra line of context, at most once per (session, skill)" — closer in risk
+  profile to the linter-nudge pattern above (well-established, not seen as a false-positive
+  hazard in any source read) than to a hard gate.
+- The **decidability** problem is real but narrower than feared: it is not "should a skill have
+  fired" in general, it is "does this specific text pattern (`#SBATCH`, `import deeplabcut`)
+  appear in a tool result for a skill not yet loaded this session" — a much easier predicate
+  than relevance judgement, and the same one the HPC/DeepLabCut descriptions already assert in
+  words ("even if the request doesn't name Slurm/HPC... check whether the scripts... import
+  deeplabcut"). The hook would mechanise a check the description text already claims the
+  assistant should be making.
+- The **maintenance-burden** objection (section 5) is addressed by moving the keyword table out
+  of the shared hook script and into each opted-in skill's own frontmatter (a `metadata` map,
+  which the spec already reserves for extra fields; see `sync-and-config-facts.md`), so the
+  signal lives and is reviewed next to the skill it serves, not centrally. This mirrors the
+  Claude-Code-specific "skill-scoped hooks" idea named in passing by stephanmiller.com:
+  <cite index="45-1,45-2,45-3">You can define hooks in a skill's frontmatter, and they're only active while that skill is active... The rule lives and dies with the skill instead of polluting every session.</cite>
+  (Posit Assistant hooks are declared centrally in `settings.json`, not in skill frontmatter —
+  confirmed absent from `sync-and-config-facts.md` — so this repo cannot literally do
+  skill-scoped hook registration; the adaptation is a shared hook that *reads* a per-skill
+  declared field, which gets the same locality-of-ownership benefit without needing the
+  platform feature.)
+
+### 7.5 Design, revised from section 4 item 4, not yet built or approved
+
+1. Opt-in per skill: an optional `metadata.file_signals` list in `SKILL.md` frontmatter, each
+   entry a short literal or simple regex string plus nothing else (no free text, to keep this
+   lintable and non-executable). Only added to skills with a strong, low-ambiguity signature —
+   start with `hpc-job-scripts` (`#SBATCH`, `\bsbatch\b`, `\bsrun\b`) and `deeplabcut-hpc`
+   (`import deeplabcut`, `pytorch_config\.yaml`, `pose_cfg\.yaml`) per the existing description
+   clauses; do not add it speculatively to the other 22 skills.
+2. One shared hook, `PostToolUse` matcher `read|grep|bash` (reuses the matcher family already
+   used by `lessons-hook.sh`'s dormant error counter): on each call, read every skill's
+   `file_signals` from the local clone (cheap: 24 small YAML frontmatter reads, or cache them
+   at `SessionStart` into one file next to the throttle stamp), test the tool's `tool_response`
+   against each pattern, and for the first hit on a skill not yet loaded this session (checked
+   the same way the existing hooks check `PostToolUse` `skill` calls), emit `additionalContext`
+   naming the skill — never `decision:"block"`. Dedupe per (session, skill) with a marker file,
+   same convention as the R1 pipeline and the `skill-nudge` prior art in 7.3.
+3. Extend `check_sync_setup()`/`lint_skills()` to validate `file_signals` entries compile as
+   valid regex and are reasonably specific (e.g. warn on a bare word under ~6 characters, which
+   risks matching incidental text) — mirrors the existing description/CRLF checks rather than
+   adding a new, separate tool.
+4. Explicitly out of scope for a first version: no central, assistant-wide "does this file
+   match some skill" classifier; no LLM-based matching (keeps it deterministic, auditable, and
+   fast, consistent with "put deterministic checks in a hook, not a model call"); no automatic
+   mid-task `skill()` invocation (nudging only, per 7.4).
+
+### 7.6 Open items
+
+- Not yet discussed with the user: whether to build this now, given it touches the frontmatter
+  of at least two existing skills and adds a new shared hook. Section 7.5 is a proposal, not an
+  approved design.
+- Unverified: whether Posit Assistant's `PostToolUse` `additionalContext` is actually surfaced
+  back into the *same* turn's reasoning the way the `giverny` test showed for Claude Code (item
+  5 of section 5, "not checked" line) — this round found a live confirmation for Claude Code,
+  not for Posit Assistant specifically.
+- Not sized: cost of reading/caching 24 frontmatter files per matching tool call if done
+  without the `SessionStart` cache step; should be measured before shipping, not assumed cheap.
+- The `check_sync_setup()` extension in step 3 above is sketched, not written or tested.
+
+## 7. Log
 
 - 2026-10-24: Round 1. `web_search` (5 queries: agent-skill description best practices,
   LLM forgets instruction after subagent delegation, lost-in-the-middle instruction
@@ -166,3 +295,14 @@ the existing "one script per repeated-event family" pattern in this repo.
   never hit this). Verified clean: `lint_skills()`, `check_skill_links()`,
   `check_skill_clashes(new=)`, `uvx skills-ref validate`. Not tested: the hook firing inside
   a real conversation turn, `SubagentStop`, Linux/macOS, a second machine.
+- 2026-10-24 (round 2): six `web_search` calls (no full-page fetches) prompted by a second,
+  independent real recurrence of R2 (see section 6 and the `github-skill-maintenance` lesson
+  `anon_20261024-audit_manual.md`). Confirmed the problem is common across the Claude
+  Code/agent-skill ecosystem (open GitHub issues, troubleshooting guides, a 2026 arXiv paper on
+  tool-selection drift) and found two independent prior implementations of close to the exact
+  R2 mechanism this ledger had already sketched and declined to build (`msobroza/coding-agent-playbook`
+  #58 "skill-nudge", `theitush/giverny` #358), both non-blocking `PostToolUse additionalContext`
+  nudges. Narrowed the earlier false-positive objection (section 6.4) and produced a revised,
+  not-yet-built design (section 6.5) that moves the keyword table into opt-in per-skill
+  frontmatter instead of a central hardcoded list. No code written, no hook registered, no
+  local tests. Decision pending with the user.

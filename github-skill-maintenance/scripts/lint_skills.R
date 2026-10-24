@@ -114,6 +114,23 @@ lint_one_skill <- function(dir) {
     if (!ok) add("warn", "frontmatter", "metadata values must be strings (quote numbers, e.g. version: \"1.0\").")
   }
 
+  # --- file_signals (opt-in content trigger for scripts/skill-file-signal-hook.sh; see
+  # research/skill-trigger-hooks-ledger.md section 6) ---
+  fs <- meta$metadata$file_signals
+  if (!is.null(fs)) {
+    if (!is.character(fs) || length(fs) != 1) {
+      add("error", "file_signals", "metadata.file_signals must be a single '|'-separated string, not a YAML list.")
+    } else {
+      compiled <- tryCatch({ grepl(fs, "", perl = FALSE); TRUE }, error = function(e) e)
+      if (inherits(compiled, "error"))
+        add("error", "file_signals", paste("Does not compile as an extended regex:", conditionMessage(compiled)))
+      alts <- strsplit(fs, "\\|")[[1]]
+      short <- alts[nchar(gsub("[^A-Za-z0-9_]", "", alts)) < 4 & !grepl("\\\\b", alts)]
+      if (length(short))
+        add("warn", "file_signals", paste("Alternative(s) with little specificity (risk of matching incidental text):", paste(short, collapse = ", ")))
+    }
+  }
+
   # --- size ---
   n_body <- length(fm$body)
   if (n_body > 500) add("error", "size", sprintf("Body is %d lines (limit 500); move detail to references/.", n_body))

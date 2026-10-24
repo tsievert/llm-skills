@@ -222,6 +222,62 @@ check_sync_setup <- function(repo = NULL, fetch = FALSE,
       }
     }
   }
+  # --- skill-file-signal hook (PostToolUse matchers "skill" and "read|grep|bash"; see
+  # research/skill-trigger-hooks-ledger.md section 6 and
+  # github-skill-maintenance/references/skill-trigger-hook.md) ---
+  signal_hook_entries <- function(event) {
+    out <- list()
+    for (g in cfg$hooks[[event]]) for (h in g$hooks) {
+      if (grepl("skill-file-signal-hook", if (is.null(h$command)) "" else h$command))
+        out[[length(out) + 1]] <- list(cmd = h$command, matcher = if (is.null(g$matcher)) "" else g$matcher,
+                                       timeout = h$timeout,
+                                       extra = setdiff(names(h), c("type", "command", "timeout", "args")))
+    }
+    out
+  }
+  sig_skill <- signal_hook_entries("PostToolUse")
+  add("file-signal PostToolUse hook", if (length(sig_skill)) "ok" else "warn",
+      if (length(sig_skill)) paste(unique(vapply(sig_skill, function(e) e$matcher, "")), collapse = ", ")
+      else "No skill-file-signal-hook command under hooks.PostToolUse: file-content nudges are disabled.")
+  if (length(sig_skill)) {
+    matchers_seen <- unique(vapply(sig_skill, function(e) e$matcher, ""))
+    add("file-signal matcher covers 'skill'", if (any(vapply(matchers_seen, matcher_hits, logical(1), tool = "skill"))) "ok" else "error",
+        "Needs a 'skill' matcher entry so a skill load is recorded as loaded and never nudged for afterward.")
+    add("file-signal matcher covers read/grep/bash", if (any(vapply(matchers_seen, function(m) matcher_hits(m, "read") || matcher_hits(m, "grep") || matcher_hits(m, "bash"), logical(1)))) "ok" else "error",
+        "Needs a 'read|grep|bash' (or similar) matcher entry so file content is actually scanned.")
+    cmds_s <- vapply(sig_skill, function(e) e$cmd, "")
+    scripts_s <- unique(sub("^\\s*bash\\s+", "", cmds_s))
+    if (.Platform$OS.type == "windows")
+      add("file-signal hook uses bash explicitly", if (all(grepl("^\\s*bash\\s", cmds_s))) "ok" else "warn",
+          "Shell-form hooks run under cmd.exe on Windows.")
+    bad_fields_s <- unique(unlist(lapply(sig_skill, function(e) e$extra)))
+    add("file-signal hook handler fields", if (length(bad_fields_s)) "error" else "ok",
+        if (length(bad_fields_s)) paste("Unsupported fields (handler is skipped):", paste(bad_fields_s, collapse = ", ")) else "Only type, command, timeout.")
+    for (script in scripts_s) {
+      if (!file.exists(script)) { add("file-signal hook script exists", "error", script); next }
+      add("file-signal hook script exists", "ok", script)
+      b <- readBin(script, "raw", file.size(script))
+      add("file-signal hook line endings", if (as.raw(13) %in% b) "error" else "ok",
+          if (as.raw(13) %in% b) "CRLF present; bash will fail." else "LF only.")
+      txt <- readLines(script, warn = FALSE)
+      add("file-signal hook exits 0", if (any(grepl("exit [1-9]", txt))) "warn" else "ok",
+          "Fail open: a non-zero exit only logs a warning (this hook never blocks by design).")
+      add("file-signal hook never blocks", if (any(grepl('"decision"\\s*:\\s*"block"', txt))) "error" else "ok",
+          "By design this hook only emits additionalContext; a 'decision:block' would turn an unreliable keyword match into a forced action.")
+      if (.Platform$OS.type == "windows" || nzchar(Sys.which("bash"))) {
+        st <- suppressWarnings(system2("bash", c("-n", shQuote(script)), stdout = FALSE, stderr = FALSE))
+        add("file-signal hook syntax (bash -n)", if (identical(st, 0L)) "ok" else "error", script)
+      }
+    }
+    # Which skills in this clone actually declare a file_signals pattern.
+    skill_dirs <- list.dirs(repo, recursive = FALSE)
+    declared <- Filter(function(p) {
+      f <- file.path(p, "SKILL.md")
+      file.exists(f) && any(grepl("^\\s*file_signals:", readLines(f, warn = FALSE)))
+    }, skill_dirs)
+    add("file-signal declaring skills", "info",
+        if (length(declared)) paste(basename(declared), collapse = ", ") else "None declare metadata.file_signals yet.")
+  }
   tdir <- file.path(home, ".posit/skill-triggers")
   seen_t <- tryCatch({
     list(reminders = if (file.exists(file.path(tdir, "reminders.tsv"))) readLines(file.path(tdir, "reminders.tsv"), warn = FALSE) else NULL,
