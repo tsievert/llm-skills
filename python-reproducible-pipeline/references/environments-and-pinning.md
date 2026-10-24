@@ -1,6 +1,6 @@
 # Environments and pinning
 
-- [uv commands](#uv-commands) | [What to commit](#what-to-commit) | [Date pinning](#date-pinning) | [Single scripts](#single-scripts) | [Alternatives](#alternatives) | [Windows notes](#windows-notes) | [Not verified](#not-verified)
+- [uv commands](#uv-commands) | [What to commit](#what-to-commit) | [Date pinning](#date-pinning) | [Single scripts](#single-scripts) | [Alternatives](#alternatives) | [Windows notes](#windows-notes) | [uv/Python not found by the assistant's shell](#uvpython-not-found-by-the-assistants-shell) | [Not verified](#not-verified)
 
 Read from the uv documentation (project layout, locking and syncing, scripts pages) on
 2026-10-23; the lock behaviour was also tested locally with uv 0.12.5.
@@ -71,6 +71,48 @@ be present even if empty. Good for one-off helpers, not for the whole pipeline.
   use uv-managed interpreters (`uv python install 3.12`).
 - Run commands through `uv run` so the right interpreter is used.
 - Compute nodes are Linux: do not copy a Windows `.venv`; recreate it there from the lock.
+
+## uv/Python not found by the assistant's shell
+
+The assistant's `bash` tool is not the user's RStudio console: it has no R, no `reticulate`,
+and no project environment of its own. It just inherits whatever PATH the child process gets
+from its parent (RStudio, or whatever spawned the IDE). On Windows this causes one specific,
+confusing failure: `uv`/`python` were installed (visible in a fresh terminal, `where uv` works
+there) but the assistant's `bash` calls still report "command not found".
+
+**Cause**: installing a program updates the user's or system's PATH environment variable
+(registry on Windows), but a process that was already running — RStudio, and therefore every
+`bash` child process it spawns — keeps the PATH snapshot it started with. It does not re-read
+the registry. Opening a new standalone terminal picks up the change because that terminal is a
+new process; RStudio does not, until RStudio itself is restarted.
+
+**Diagnose** (ask the assistant to run this, or run it yourself in the same kind of shell):
+
+```bash
+which uv; which python   # or: where uv; where python
+echo "$PATH" | tr ':' '\n' | grep -iE "python|\\.local|appdata"
+```
+
+If `uv`/`python` are missing from `bash` but a separate terminal window sees them, this is the
+stale-PATH case, not a missing install. Fixes, in order of preference:
+
+1. **Restart RStudio** (the simplest fix; the new process re-reads the environment).
+2. If a restart isn't possible right now, call the tool by its full path as a workaround
+   (e.g. `~/.local/bin/uv` on Windows after the official installer, or `python
+   -m venv`/`py -3.12` for a Windows Python launcher) rather than assuming it is simply absent.
+3. Do not try to "fix" this by writing to `~/.bashrc`/`~/.bash_profile`: Git Bash invoked
+   non-interactively (as the `bash` tool does) does not source them, so edits there are silent
+   until a shell that does source them is used — this looked plausible as a cause and was ruled
+   out in testing (see below).
+
+Tested 2026-10-24 (Windows 11, Git Bash via the `bash` tool): in a working session, `uv` and
+`python` resolved via `/c/Users/<user>/.local/bin` and
+`/c/Users/<user>/AppData/Local/Microsoft/WindowsApps`, both inherited from the Windows user
+PATH; there was no `~/.bashrc`/`~/.bash_profile` at all, and the shell was confirmed
+non-interactive, non-login (so profile-sourcing was not the mechanism here). The
+restart-reinherits-PATH explanation is standard Windows process behaviour, not independently
+reproduced against the specific failing project; treat it as the leading hypothesis and confirm
+with the `which`/`where` check above before assuming a restart is needed.
 
 ## Not verified
 

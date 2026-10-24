@@ -18,6 +18,11 @@ python -c "import jax, keypoint_moseq as k; print(k.__version__, jax.__version__
 
 `jax.default_backend()` must print `gpu`. The sbatch template aborts otherwise.
 
+If a local `uv`/`python` install is invisible to the assistant's `bash` calls even though a
+separate terminal sees it, this is usually a stale-PATH issue, not a missing install — see
+"uv/Python not found by the assistant's shell" in `python-reproducible-pipeline`
+(`references/environments-and-pinning.md`).
+
 ### Findings from local testing on Windows (2026-10-23)
 
 - kpms 0.7.x could not be installed on Windows with `uv pip` (it declared the Linux-only `jax-cuda12-pjrt`), so the newest installable was 0.6.6. **Fixed in 0.8.0**, which installed on Windows (Python 3.12, uv, CPU; jax 0.12.0.1, numpy 2.5.4) without problems.

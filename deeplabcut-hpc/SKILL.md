@@ -46,6 +46,7 @@ This skill only adds DLC specifics.
 - Install on a login node or in an interactive job, never inside the batch script. Use a venv/conda env on shared storage (see `hpc-python-code`). Many sites provide containers; Apptainer can pull the DLC Docker images (see `docs/docker.html`, terminal mode).
 - TensorFlow engine: avoid for new work (deprecated). If the user must use it, pin TF to the extra matching their CUDA (`tf-cu11`/`tf-cu12`) and expect dependency conflicts with PyTorch.
 - GPU: NVIDIA with >= 8 GB VRAM is the documented ideal. CPU training is roughly 10x slower, so do not run training on CPU nodes.
+- When prototyping or testing locally with `uv`/a venv (not on the cluster) and the assistant's own `bash` calls can't find a `uv`/`python` that a separate terminal can see, this is usually a stale-PATH issue after install, not a missing install — see "uv/Python not found by the assistant's shell" in `python-reproducible-pipeline`'s environments-and-pinning reference.
 
 ## Workflow split: what runs where
 

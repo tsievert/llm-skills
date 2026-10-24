@@ -624,6 +624,27 @@ Before each: follow the working rules above (check agentskills.io docs, check CR
   tuning, `.qmd`/`.Rmd` embedded-chunk scanning on an actual Quarto file, performance beyond the ~170-file scale already
   measured.
 
+- 2026-10-24: User reported a local `uv`/Python session that worked in this repo but failed to detect
+  Python ("installed but not on PATH in that shell") in another project. Decided against a new skill
+  (too narrow, would overlap `python-reproducible-pipeline`, `hpc-python-code`, `deeplabcut-hpc`, the
+  planned `python-r-interop`): added a canonical section "uv/Python not found by the assistant's shell"
+  to `python-reproducible-pipeline/references/environments-and-pinning.md` instead, with short pointers
+  from `deeplabcut-hpc/SKILL.md` and `animal-behaviour-tracking-analysis/references/hpc-and-troubleshooting.md`
+  (the two skills that actively shell out to `uv`/Python locally for prototyping/testing), plus a backlink
+  in `python-reproducible-pipeline`'s Related skills. Mechanism recorded as a hypothesis, not a confirmed
+  diagnosis of the other project: on Windows, a child process (the `bash` tool, spawned by RStudio) inherits
+  the PATH snapshot of its parent at startup and does not see a PATH change made by installing something
+  afterward; a new standalone terminal would see it, RStudio would not until restarted. Tested live in this
+  session only: in the current working `bash` tool, `uv`/`python` resolved via inherited Windows user PATH
+  entries (`~/.local/bin`, WindowsApps), there was no `~/.bashrc`/`~/.bash_profile` at all, and the shell was
+  confirmed non-interactive/non-login — this ruled out "fix by editing `~/.bashrc`" as a false lead (a
+  non-interactive Git Bash does not source it) but did not reproduce the actual failure from the other
+  project, so the restart-reinherits-PATH explanation is stated as the leading hypothesis pending the user
+  confirming it there. Note for later: the planned `python-r-interop` skill should also link to this section
+  when it is written. Checks: `lint_skills()` clean (only the three pre-existing description-length info
+  items), `check_skill_links()` clean (25 skills), `skills-ref validate` passed for both touched SKILL.md
+  files. CRLF hit again on both edited `SKILL.md` files; normalised with `sed -i 's/\r$//'`.
+
 ## Lessons triage state
 - Lessons usage watermark: 2026-10-24T17:22:20
 

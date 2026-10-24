@@ -168,6 +168,7 @@ ERROR until the `<PLACEHOLDER>` values in its profile are replaced.
 - `hpc-resource-allocation`: sizing `mem_mb` and `runtime` from the benchmark and `sacct` output.
 - `hpc-r-code`: R steps and R environments on a cluster.
 - `animal-behaviour-tracking-analysis`: a typical pipeline to wrap (DeepLabCut output to metrics to statistics).
+- `deeplabcut-hpc`: local `uv`/venv prototyping before a cluster job; also points back here for the "uv/Python not found by the assistant's shell" diagnosis.
 - `data-repository-readme`: documenting the code and data deposit that accompanies the pipeline.
 - `reproducible-research-data`: assembling and checking the deposit (which repository, journal timing, clean-clone test of this pipeline).
 - `git-for-research-projects`: `.gitignore` for `.venv/`, `.snakemake/` and the data folder, keeping `uv.lock` tracked, tagging a version.
