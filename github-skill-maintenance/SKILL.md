@@ -70,7 +70,9 @@ and say what it would change.
    packages that are not installed are skipped on purpose, and `deeplabcut` is only found
    when written as `deeplabcut <version>`. Treat it as a candidate list.
 4. **Sync and hook setup.** Read-only audit of settings, the sync hook, the lessons hooks
-   (PostToolUse `skill` and Stop), the lessons data folder, stamp and git state:
+   (PostToolUse `skill` and Stop), the skill-trigger hook (UserPromptSubmit, PostToolUse
+   `skill`, Stop; see [references/skill-trigger-hook.md](references/skill-trigger-hook.md)),
+   the data folders, stamp and git state:
    ```r
    source("github-skill-maintenance/scripts/check_sync_setup.R")
    check_sync_setup(fetch = TRUE)
@@ -106,6 +108,13 @@ and say what it would change.
   description edit.
 - **Dead links** between skills after a file is moved or was never created. Linter
   check: `links`.
+- **A hook extracting one JSON field with a single-capture `sed` breaks on embedded
+  quotes.** `lessons-hook.sh`'s `jstr()` helper is fine for structural fields
+  (`session_id`, `tool_name`) but silently truncates a free-text field such as a
+  `UserPromptSubmit` `prompt` at the first `\"` inside it. If a hook needs to match a
+  pattern against free text, run the match against the whole raw payload instead of trying
+  to isolate the field first (see `skill-trigger-hook.sh` at the repo root and
+  [references/skill-trigger-hook.md](references/skill-trigger-hook.md)).
 - **`~` in R on Windows** is `Documents`, not the profile directory. The scripts use
   `USERPROFILE`.
 - **Name clash with a built-in** (e.g. `report`, `create-skill`): the user copy silently
@@ -131,6 +140,14 @@ this session. Not tested: Linux or macOS, `bash -n` on non-Windows, the manual t
 protocol end to end, a second machine. The lessons-hook audit was tested with synthetic
 good and bad `cfg` lists (wrong matcher, `async` field, wrong script path, missing hooks)
 and a synthetic lessons folder; it has not seen the real `settings.json` (blocked, see above).
+The skill-trigger hook (`skill-trigger-hook.sh` at the repo root, added 2026-10-24) was tested with
+twelve synthetic piped payloads (no match, explicit match, block-once, silent repeat,
+cleared-by-skill-load, `stop_hook_active` loop guard, missing `session_id`, embedded-quote
+prompt, a question near-miss, `DEBUG` logging, and malformed/empty stdin) and its
+`check_sync_setup()` audit was run against the real `settings.json` content (read with
+`bash`/`cat` and passed as `cfg`, the same path-guard workaround as above) after the file
+was updated to register it. Not tested: firing inside a real conversation turn, `SubagentStop`.
+See [references/skill-trigger-hook.md](references/skill-trigger-hook.md) for detail.
 
 ## Explain the reasoning (teaching rule)
 

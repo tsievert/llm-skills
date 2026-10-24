@@ -168,6 +168,73 @@ check_sync_setup <- function(repo = NULL, fetch = FALSE,
   }
   # Data folder: the assistant's R session may not read outside the project; report that
   # as info and give the shell commands instead of working around the guard.
+  # --- skill-trigger hook (UserPromptSubmit + PostToolUse matcher "skill" + Stop; see
+  # github-skill-maintenance/references/skill-trigger-hook.md) ---
+  trigger_hook_entries <- function(event) {
+    out <- list()
+    for (g in cfg$hooks[[event]]) for (h in g$hooks) {
+      if (grepl("skill-trigger-hook", if (is.null(h$command)) "" else h$command))
+        out[[length(out) + 1]] <- list(cmd = h$command, matcher = if (is.null(g$matcher)) "" else g$matcher,
+                                       timeout = h$timeout,
+                                       extra = setdiff(names(h), c("type", "command", "timeout", "args")))
+    }
+    out
+  }
+  ups <- trigger_hook_entries("UserPromptSubmit")
+  post_t <- trigger_hook_entries("PostToolUse")
+  stop_t <- trigger_hook_entries("Stop")
+  add("skill-trigger UserPromptSubmit hook", if (length(ups)) "ok" else "warn",
+      if (length(ups)) ups[[1]]$cmd else "No skill-trigger-hook command under hooks.UserPromptSubmit: pending skill-trigger instructions are never recorded.")
+  add("skill-trigger PostToolUse hook", if (length(post_t)) "ok" else "warn",
+      if (length(post_t)) post_t[[1]]$cmd else "No skill-trigger-hook command under hooks.PostToolUse: a skill() call never clears the pending marker, so every match would be reminded.")
+  add("skill-trigger Stop hook", if (length(stop_t)) "ok" else "warn",
+      if (length(stop_t)) stop_t[[1]]$cmd else "No skill-trigger-hook command under hooks.Stop: a pending instruction is recorded but never enforced.")
+  if (length(post_t))
+    add("skill-trigger matcher covers 'skill'", if (matcher_hits(post_t[[1]]$matcher, "skill")) "ok" else "error",
+        paste0("matcher = '", post_t[[1]]$matcher, "' (clearing the marker needs the skill tool)."))
+  trig <- c(ups, post_t, stop_t)
+  if (length(trig)) {
+    cmds_t <- vapply(trig, function(e) e$cmd, "")
+    scripts_t <- unique(sub("^\\s*bash\\s+", "", cmds_t))
+    if (length(scripts_t) > 1) add("skill-trigger hooks share one script", "warn", paste(scripts_t, collapse = " | "))
+    if (.Platform$OS.type == "windows")
+      add("skill-trigger hooks use bash explicitly", if (all(grepl("^\\s*bash\\s", cmds_t))) "ok" else "warn",
+          "Shell-form hooks run under cmd.exe on Windows.")
+    bad_fields_t <- unique(unlist(lapply(trig, function(e) e$extra)))
+    add("skill-trigger hook handler fields", if (length(bad_fields_t)) "error" else "ok",
+        if (length(bad_fields_t)) paste("Unsupported fields (handler is skipped):", paste(bad_fields_t, collapse = ", ")) else "Only type, command, timeout.")
+    for (script in scripts_t) {
+      if (!file.exists(script)) { add("skill-trigger hook script exists", "error", script); next }
+      add("skill-trigger hook script exists", "ok", script)
+      b <- readBin(script, "raw", file.size(script))
+      add("skill-trigger hook line endings", if (as.raw(13) %in% b) "error" else "ok",
+          if (as.raw(13) %in% b) "CRLF present; bash will fail." else "LF only.")
+      txt <- readLines(script, warn = FALSE)
+      add("skill-trigger hook exits 0", if (any(grepl("exit [1-9]", txt))) "warn" else "ok",
+          "Fail open: a non-zero exit only logs a warning, but the script should never need one.")
+      add("skill-trigger hook stop-loop guard", if (any(grepl("stop_hook_active", txt))) "ok" else "error",
+          "A Stop hook that blocks must check stop_hook_active or it can loop.")
+      add("skill-trigger hook uses grep -P", if (any(grepl("grep .*-[a-zA-Z]*P", txt))) "info" else "ok",
+          "Uses PCRE lookahead for the question-vs-instruction check; confirm `grep -P` works in the hook's actual shell if trigger detection seems to misfire.")
+      if (.Platform$OS.type == "windows" || nzchar(Sys.which("bash"))) {
+        st <- suppressWarnings(system2("bash", c("-n", shQuote(script)), stdout = FALSE, stderr = FALSE))
+        add("skill-trigger hook syntax (bash -n)", if (identical(st, 0L)) "ok" else "error", script)
+      }
+    }
+  }
+  tdir <- file.path(home, ".posit/skill-triggers")
+  seen_t <- tryCatch({
+    list(reminders = if (file.exists(file.path(tdir, "reminders.tsv"))) readLines(file.path(tdir, "reminders.tsv"), warn = FALSE) else NULL,
+         pending = list.files(file.path(tdir, "state"), pattern = "\\.pending$"))
+  }, error = function(e) e)
+  if (inherits(seen_t, "error")) {
+    add("skill-trigger data", "info", paste("Not readable from this R session (path guard). Run in a shell:",
+        "wc -l ~/.posit/skill-triggers/reminders.tsv; ls ~/.posit/skill-triggers/state/*.pending 2>/dev/null | wc -l"))
+  } else {
+    add("skill-trigger reminders log", "info", sprintf("%d block(s) issued so far; %d session(s) currently pending.",
+        length(seen_t$reminders), length(seen_t$pending)))
+  }
+
   ldir <- file.path(home, ".posit/lessons")
   seen <- tryCatch({
     list(usage = if (file.exists(file.path(ldir, "usage.tsv"))) readLines(file.path(ldir, "usage.tsv"), warn = FALSE) else NULL,
