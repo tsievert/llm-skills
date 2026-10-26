@@ -761,3 +761,30 @@ current/active state (working rules, open decisions, the todo table).
   and `skills-ref validate` clean on `skill-feedback-triage`. Not done: a second real-world malformed file
   to confirm the frontmatter-field fallback (`skill`/`type`/`confidence`) generalises beyond the one shape
   seen so far; no `skill-lessons`-side change to make the template easier to follow when writing an entry.
+
+- 2026-10-26: Triage run over the 4 inbox files written since the last watermark (1
+  `skill-feedback-triage` use-case + "unparsed file" lesson already fixed in-session per the entry above —
+  verified the fix is still in place, no further change needed; 1 `github-skill-maintenance` CRLF
+  edit-tool bug, already covered in depth by the skill's existing Pitfalls section; 2 `deeplabcut-hpc`
+  use-case entries showing real cluster-adjacent use with no friction; 1 `deeplabcut-hpc` outdated-fact
+  entry about a stale in-code citation of an upstream issue number). Found one new validator false
+  positive while running `lesson_problems()`: an entry wrote the literal text `confidence: NA` on a
+  `use-case` entry (confidence is meant to be *omitted*, not written as NA, per `skill-lessons`), and the
+  validator's use-case exemption only recognised a true missing value, not the string "NA", so it flagged
+  "confidence invalid" incorrectly. User chose, per three `AskUser` decisions: (1) fix the validator — added
+  `blank_na()` in `read_lessons.R` so literal `NA`/`n/a`/`none` text is treated as missing for any optional
+  field, not just `confidence`; (2) add a one-line addendum to `github-skill-maintenance`'s CRLF pitfall
+  noting that `grep -c $'\r'` can under-report (grep's own CRLF autodetection masks the count) and
+  `git ls-files --eol` is the reliable check; (3) add a short note to `deeplabcut-hpc`'s upstream-search
+  workflow (step 3, PR search) to check for superseding/merged PRs, not just a cited issue, before trusting
+  an in-code citation for an in-progress upstream feature — accepted on one report since it's a low-cost,
+  clearly general caution, below the usual 2-report bar. All three touched files (`deeplabcut-hpc/SKILL.md`,
+  `github-skill-maintenance/SKILL.md`, `skill-feedback-triage/scripts/read_lessons.R`) came back CRLF from
+  the edit tool and were re-normalised with `sed -i 's/\r$//'` before lint, same recurring pattern as prior
+  rounds. `lint_skills()` on all three: clean except the pre-existing `deeplabcut-hpc` description-length
+  info note (968/1024 chars, unrelated to this change). External `skills-ref validate`: valid on all three.
+  Re-ran `lesson_problems()` after the fix: zero findings (previously one false positive). Archived all 4
+  processed files to `~/.posit/lessons/inbox/processed/` and advanced the usage watermark to
+  `2026-10-26T10:12:11`. Not done: `check_skill_links()`/`check_skill_clashes()` (no new cross-skill links
+  or description changes in this run, so skipped); a second independent report to confirm the
+  upstream-citation caution generalises beyond this one DLC project.

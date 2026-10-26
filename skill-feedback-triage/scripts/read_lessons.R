@@ -56,7 +56,11 @@ read_lesson_file <- function(path) {
   }
   body <- x[start:length(x)]
   heads <- grep("^##\\s+[^#]", body)
-  fld <- function(l, k) if (is.null(l[[k]])) NA_character_ else as.character(l[[k]])
+  # Entries sometimes write the literal text "NA"/"n/a"/"none" for an optional field instead of
+  # omitting the line (e.g. `confidence: NA` on a use-case entry); treat that as really missing
+  # so downstream validation (lesson_problems()) doesn't flag it as an invalid value.
+  blank_na <- function(v) if (is.na(v) || grepl("^(na|n/a|none)$", trimws(v), ignore.case = TRUE)) NA_character_ else v
+  fld <- function(l, k) blank_na(if (is.null(l[[k]])) NA_character_ else as.character(l[[k]]))
   env <- meta$environment
   if (!length(heads)) {
     # Malformed: no "## skill: title" heading anywhere (e.g. a plain frontmatter + prose file
@@ -82,7 +86,7 @@ read_lesson_file <- function(path) {
     kv <- regmatches(blk, regexec("^-\\s+([a-z-]+):\\s*(.*)$", blk))
     kv <- Filter(length, kv)
     vals <- setNames(vapply(kv, `[`, "", 3), vapply(kv, `[`, "", 2))
-    f <- function(k) if (k %in% names(vals)) vals[[k]] else NA_character_
+    f <- function(k) blank_na(if (k %in% names(vals)) vals[[k]] else NA_character_)
     data.frame(file = basename(path), project = fld(meta, "project"), date = fld(meta, "date"),
                session = fld(meta, "session"), os = fld(env, "os"), r = fld(env, "r"),
                skill = trimws(skill), title = title, type = f("type"), symptom = f("symptom"),

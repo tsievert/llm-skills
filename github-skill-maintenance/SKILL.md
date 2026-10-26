@@ -117,7 +117,9 @@ and say what it would change.
   spot rather than repeating the same large string — this has worked even when the root cause of
   the mismatch was not CRLF and stayed unexplained. A plain-text append to an already-CRLF file
   can also need an explicit `\r\n` separator, since incremental edits can leave LF-only spans
-  inside an otherwise-CRLF file.
+  inside an otherwise-CRLF file. Don't check for stray CRLF with `grep -c $'\r'`: grep's own
+  CRLF autodetection can mask the count and report 0 matches on a file that still has CRLF
+  (reported once, 2026-10-24); `git ls-files --eol` is the reliable check, as above.
 - **Apostrophe in a single-quoted description.** A bare apostrophe (a possessive such as
   "user's") ends the YAML scalar and the linter reports "YAML does not parse". Avoid
   apostrophes in descriptions or double them (`''`), and run `lint_skills()` after every

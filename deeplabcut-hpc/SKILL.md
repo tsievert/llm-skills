@@ -115,6 +115,10 @@ DLC moves fast, so an unexpected error is often a known bug, a regression in the
 3. Search pull requests for fixes in progress or merged:
    - `gh search prs --repo DeepLabCut/DeepLabCut "<keyword>" --sort updated`
    - `gh pr view <number> --repo DeepLabCut/DeepLabCut`
+   - If a code comment or config cites a specific issue number as the source for an in-progress
+     upstream feature, don't trust that citation at face value: check for superseding or merged PRs
+     too, not just the originally cited issue. Fast-moving repos often ship a different final design
+     (e.g. a different config shape) than the first proposal (reported once, 2026-10-26).
 4. Check recent commits and releases for relevant changes:
    - `gh api "repos/DeepLabCut/DeepLabCut/commits?per_page=30"`
    - `gh release list --repo DeepLabCut/DeepLabCut`
