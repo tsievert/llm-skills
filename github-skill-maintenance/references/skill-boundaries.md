@@ -45,6 +45,7 @@ advice) or the wrong one loads. Duplicated advice inside bodies is the second ri
 | Literature | `openalex`, `social-research-search`, `job-opportunity-watch` | scholarly search; social posts; job portals | none needed (different objects); the latter two source `web-fetching-r` for fetch mechanics |
 | Web fetching | `web-fetching-r` | shared polite-fetch mechanics (`pf_*`: user agent, per-host rate limit, retry, bot-wall/JS heuristics) sourced by other skills' scripts; one-off page/table scraping with no recurring state | `job-opportunity-watch` (recurring job portals), `recipe-notes-formatter` (recipe pages), `social-research-search` (Bluesky/Mastodon APIs), `openalex` (academic literature) |
 | Meta | `github-skill-maintenance`, `skill-lessons`, `skill-feedback-triage` | repo upkeep; write lessons; read lessons | each other (stated in descriptions) |
+| Manuscript | `manuscript-writing-quarto` | Quarto manuscript structure (journal templates, `quarto-journals`), CRediT statement, flags-only spelling/bibliography/character linting | `manuscript-figures-ggplot` (figure export), `reproducible-research-data` (the deposit), `git-for-research-projects` (Git/CITATION.cff) |
 
 ## Rules for writing a description
 

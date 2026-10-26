@@ -92,6 +92,7 @@ fields, rate limits, the web-search part of institution discovery as an automate
 - `r-reproducible-pipeline`: the targets, renv and Quarto project that the clean-clone test runs.
 - `python-reproducible-pipeline`: the uv and Snakemake counterpart.
 - `manuscript-figures-ggplot`: figure source data that belong in the deposit.
+- `manuscript-writing-quarto`: the Quarto manuscript this deposit accompanies.
 
 ## Explain the reasoning (teaching rule)
 

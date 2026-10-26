@@ -65,6 +65,8 @@ current/active state (working rules, open decisions, the todo table).
 46. 2026-10-24 — Built `recipe-notes-formatter`
 47. 2026-10-24 — Analysed conversation exports for skill-trigger behaviour; built `skill-trigger-hook.sh` (R1)
 48. 2026-10-24 — Audited all skills for the subagent-delegation-rule candidate; added rule to `job-opportunity-watch`
+49. 2026-10-26 — Built `manuscript-writing-quarto`
+50. 2026-10-26 — Added grammar checking (LanguageTool/LanguageToolR) to `manuscript-writing-quarto`
 
 ## Entries
 
@@ -788,3 +790,65 @@ current/active state (working rules, open decisions, the todo table).
   `2026-10-26T10:12:11`. Not done: `check_skill_links()`/`check_skill_clashes()` (no new cross-skill links
   or description changes in this run, so skipped); a second independent report to confirm the
   upstream-citation caution generalises beyond this one DLC project.
+- 2026-10-26: Built `manuscript-writing-quarto` (not yet committed), from the 2026-10-26 research round
+  already in `research/manuscript-writing-quarto-ledger.md`. Scope: Quarto manuscript structure
+  (`project: type: manuscript` plus a `quarto-journals` decision tree for ACM/ACS/AGU/Biophysical
+  Journal/Elsevier/JASA/JSS/PLOS, line-number injection, MECA bundle note), a CRediT author-contribution
+  helper wrapping CRAN `CRediTas` (`scripts/credit.R`: `credit_template()`, `credit_table()`,
+  `credit_statement()` with a LaTeX output path and a per-role grouping option CRediTas itself doesn't
+  ship), and flags-only linting (`scripts/check_manuscript.R`: `spell_check_manuscript()` wrapping
+  `spelling`/`hunspell`, `check_bib_duplicates()` read-only on the `.bib`, `check_non_standard_chars()` for
+  curly quotes/em-dashes), modelled on the `Morrison-Lab/qmt` CI pattern. Installed `CRediTas`, `hunspell`
+  and `spelling` from CRAN (none were present) and tested all three script functions end to end in
+  `tmp-examples/` (git-ignored, deleted after): `credit_template()`/`credit_table()`/`credit_statement()`
+  round-tripped a two-author example to markdown, LaTeX and per-role markdown; `spell_check_manuscript()`
+  confirmed to skip a typo placed inside a code-chunk comment (code chunks are genuinely not checked, not
+  just documented as such); `check_bib_duplicates()` and `check_non_standard_chars()` confirmed on seeded
+  examples. Found and documented a real gotcha while testing: round-tripping the CRediT CSV through base
+  R's `read.csv()` *default* settings (not the package's own `template_read()`, which already uses
+  `check.names = FALSE`) mangles role names like `"Writing - original draft"` into
+  `"Writing...original.draft"`, which then appears verbatim in the generated statement — written up in
+  `references/credit-helper.md` with the exact before/after. Dropped a planned `Related skills` line for
+  `stats-reporting-and-review` (not yet built) per the "don't link unwritten skills" rule. Added backlinks
+  (one-way link findings, judged to be genuine neighbours rather than `no-backlink`) in
+  `git-for-research-projects`, `manuscript-figures-ggplot` and `reproducible-research-data`; fixed
+  pre-existing CRLF in `manuscript-figures-ggplot/SKILL.md`'s working copy that blocked the first edit
+  attempt (`git ls-files --eol` showed `i/lf w/crlf`; normalised with `sed -i 's/\r$//'`). Added the skill to
+  `github-skill-maintenance/references/skill-boundaries.md`'s ownership table. Verified before calling it
+  ready: `lint_skills(skills = "manuscript-writing-quarto")` (0 findings), `check_skill_links()` (0 findings
+  across all 28 skills after the backlink/unknown-skill fixes), `check_skill_clashes(new =
+  "manuscript-writing-quarto")` (0 findings at the 0.15 threshold), and `git ls-files --eol` confirmed LF on
+  every new/changed file. Not done: `skills-ref validate` (not run this round), `check_versions()`, real
+  trigger-query testing, installing an actual `quarto-journals` template end to end, a rendered MECA bundle,
+  or a grammar/link-checking tool (both left as open gaps, not guessed at). Not committed to git yet.
+- 2026-10-26: Added grammar checking to `manuscript-writing-quarto` (`scripts/check_grammar.R`), with the
+  user's explicit permission to install from GitHub. Installed `remotes::install_github("nevrome/LanguageToolR")`
+  (inactive but stable wrapper for the LanguageTool CLI) and ran `LanguageToolR::lato_quick_setup()` to
+  download LanguageTool 6.5 (~240 MB) into a scratch folder under the repo (`tmp-examples-langtool/`,
+  deleted after). Found two real compatibility problems while testing, both undocumented upstream, and
+  fixed them in the wrapper script rather than just noting them:
+  1. On a current JDK (OpenJDK 26/27), `languagetool-commandline.jar` failed outright
+     (`Could not activate rules` / `JAXP00010004`) because a newer JDK's default XML entity-size limit is
+     smaller than LanguageTool 6.5's bundled `grammar.xml`. Fixed by always adding
+     `-Djdk.xml.totalEntitySizeLimit=0` to the java invocation (`lt_executable()`).
+  2. `LanguageToolR::languagetool(input_file = ...)` does not skip code chunks or YAML front matter the way
+     `spelling::spell_check_files()` does — feeding it a raw `.qmd` produced false positives from R code and
+     chunk delimiters. Fixed by extracting prose first with `qmd_prose_lines()`, which calls two of
+     `spelling`'s own internal (unexported, `:::`) helpers (`remove_chunks`, `partition_yaml_front_matter`)
+     rather than re-implementing knitr-pattern detection — tested against `spelling` 2.3.2, flagged in the
+     reference as fragile to a future `spelling` release since unexported functions have no API guarantee.
+  Verified end to end: three seeded grammar/spelling test sentences correctly flagged (subject-verb
+  agreement, duplicated word, misspelling, en-US/en-GB spelling variant), and a seeded `.qmd` with an error
+  inside a code comment correctly produced no false positive once routed through `qmd_prose_lines()`.
+  Updated `references/linting-checklist.md` (new "Grammar" section, revised pre-submission order) and
+  `SKILL.md` (description, workflow step 3, reference/script lists, Tested-and-not-tested, Explain-the-
+  reasoning) to reflect that grammar checking is implemented, not an open gap. Hit a tooling glitch during
+  this edit: the `edit` (old_string/new_string) tool repeatedly reported "string not found" against text
+  that `read` and `grep` both confirmed was present byte-for-byte in `SKILL.md` and
+  `linting-checklist.md` — worked around by overwriting each file whole with `write(..., overwrite = TRUE)`
+  instead of patching. That in turn reintroduced CRLF line endings in both files (the known "CRLF comes back
+  after a write/edit call" pitfall), caught by `file <path>` (not `git ls-files --eol`, since the files
+  were untracked) and fixed with `sed -i 's/\r$//'`. Re-ran the full verification suite after the fix:
+  `lint_skills()`, `check_skill_links()`, `check_skill_clashes()` (all 0 findings), `check_versions()`
+  (only `spelling 2.3.2` is a detectable claim in this skill and it matches installed/latest), and
+  `skills-ref validate` (valid). Not committed yet.

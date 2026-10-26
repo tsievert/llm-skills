@@ -74,7 +74,8 @@ rendered on a cluster, fonts differ (Arial is usually missing); see the font not
   uncertainty; `animal-behaviour-tracking-analysis`: behavioural summaries to plot;
   `data-repository-readme`: data dictionary whose labels can feed `labs(dictionary = )`;
   `social-research-search`: finding what plotting problems people report (see
-  [references/community-notes.md](references/community-notes.md) for what it found on 2026-10-23).
+  [references/community-notes.md](references/community-notes.md) for what it found on 2026-10-23);
+  `manuscript-writing-quarto`: structures the Quarto manuscript these figures go into.
 
 ## Tested and not tested
 
