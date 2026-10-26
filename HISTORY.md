@@ -67,6 +67,8 @@ current/active state (working rules, open decisions, the todo table).
 48. 2026-10-24 — Audited all skills for the subagent-delegation-rule candidate; added rule to `job-opportunity-watch`
 49. 2026-10-26 — Built `manuscript-writing-quarto`
 50. 2026-10-26 — Added grammar checking (LanguageTool/LanguageToolR) to `manuscript-writing-quarto`
+51. 2026-10-26 — Built `stats-reporting-and-review`
+52. 2026-10-26 — `agents-md-maintenance` audit of this repo's own `AGENTS.md`
 
 ## Entries
 
@@ -873,3 +875,15 @@ current/active state (working rules, open decisions, the todo table).
   (the standing literature tool, same pattern as other skills) and `gam-mgcv` (fitting-stage skill; the
   reporting backlink lives on `gam-interpretation` instead) in `link-decisions.tsv`. Updated
   `skill-boundaries.md`'s ownership table and open-items note. Not committed yet.
+- 2026-10-26: `agents-md-maintenance` audit of this repo's own `AGENTS.md`. Cross-checked the todo table
+  against `git status`/`git log -- <folder>` rather than trusting the file's own claims: found `git status`
+  clean and fully pushed to `origin/main`, with commits for `stats-reporting-and-review` (`b5e0a20`),
+  `manuscript-writing-quarto` (`d2d1331`), `recipe-notes-formatter` (`831236e`), and `codebase-map`
+  (`b928d3b`) — so the "not committed" qualifier on all four todo rows was stale and removed. Separately,
+  found the `## Layout` section substantially duplicated `README.md`'s own Layout section (folder structure,
+  `SKILL.md`/`scripts/`/`references/`/`assets/`); trimmed it to the two rules not already in the README
+  (folder name must match frontmatter `name`; use `create-skill` to author) with a pointer to the README for
+  the rest. No contradictions found; "Open decisions" still genuinely open; lessons watermark
+  (`2026-10-26T10:12:11`) matches the latest triage entry above; subagent-delegation rule present and
+  correctly conditional; file length (182 → ~178 lines) within normal range, no further restructuring
+  proposed. Not committed yet.

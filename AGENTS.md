@@ -5,9 +5,8 @@ Repository of custom Posit Assistant skills, synced via GitHub
 
 ## Layout
 
-- One folder per skill at the repo root: `<skill-name>/SKILL.md`
-  (YAML frontmatter with `name` and `description`; optional `scripts/`,
-  `references/`, `assets/`). Follows the Agent Skills spec (https://agentskills.io).
+See `README.md`'s own Layout section for the folder structure. Two rules not stated there:
+
 - Folder name must match the `name` in the frontmatter.
 - Use the `create-skill` skill when authoring a new skill.
 
@@ -149,18 +148,18 @@ anything) is still open. Before starting a new one: follow the working rules abo
 | `animal-behaviour-tracking-analysis` | partial | DLC metrics + keypoint-MoSeq done; open: validate immobility/freezing thresholds against manual scoring, real-data tests. SimBA/B-SOiD/VAME out of scope |
 | `reproducible-research-data` | done | FAIR data deposits, data dictionaries, renv/uv lockfiles, Quarto manuscripts |
 | `manuscript-figures-ggplot` | done | journal-ready ggplot2 figures (CVD-safe palettes, sizing, export) |
-| `stats-reporting-and-review` | done, not committed | Effect sizes/CIs (`effectsize`), power/sample size (`pwr` closed-form, `simr` for GLMMs via `lme4` with the `glmmTMB` refit seam flagged), pre-registration (`prereg` CRAN templates — `preregr` was archived from CRAN 2026-07-28, do not use), multiplicity (`stats::p.adjust`/`emmeans(adjust=)`, no gap), reviewer-response drafting (guidance only, no tool). `report()` output is documented as a scaffold only, never pasted in as finished prose, matching `manuscript-writing-quarto`'s rule; both skills now link to each other. The GAM results-prose convention (edf buckets, simultaneous-CI wording) reported 2026-10-24 was deliberately **not** duplicated here per the research ledger's recommendation — it stays a candidate addition to `gam-interpretation`, not yet made. Lints clean, no clash/link findings, `skills-ref validate` passes. |
+| `stats-reporting-and-review` | done | Effect sizes/CIs (`effectsize`), power/sample size (`pwr` closed-form, `simr` for GLMMs via `lme4` with the `glmmTMB` refit seam flagged), pre-registration (`prereg` CRAN templates — `preregr` was archived from CRAN 2026-07-28, do not use), multiplicity (`stats::p.adjust`/`emmeans(adjust=)`, no gap), reviewer-response drafting (guidance only, no tool). `report()` output is documented as a scaffold only, never pasted in as finished prose, matching `manuscript-writing-quarto`'s rule; both skills now link to each other. The GAM results-prose convention (edf buckets, simultaneous-CI wording) reported 2026-10-24 was deliberately **not** duplicated here per the research ledger's recommendation — it stays a candidate addition to `gam-interpretation`, not yet made. Lints clean, no clash/link findings, `skills-ref validate` passes. |
 | `chemical-ecology-data` | not started | GC-MS (xcms/MSnbase), compound annotation, PERMANOVA/PCA/PLS-DA — narrow use, confirm the user still does pheromone chemistry before building |
 | `github-skill-maintenance` | done | skill lint/test/link/clash workflow |
-| `recipe-notes-formatter` | done, not committed | plain text/Obsidian notes/links → recipe notes; open: trial run on a real batch, Obsidian thumbnail/Bases image property |
+| `recipe-notes-formatter` | done | plain text/Obsidian notes/links → recipe notes; open: trial run on a real batch, Obsidian thumbnail/Bases image property |
 | `literature-review-workflow` | not started, low priority | extend `openalex`: screening log, dedup, PRISMA flow, BibTeX export |
 | `r-reproducible-pipeline` | done | targets + renv + Quarto, HPC via crew.cluster |
-| `manuscript-writing-quarto` | done, not committed | Quarto manuscript structure (`project: type: manuscript` + `quarto-journals` decision tree), CRediT helper wrapping CRAN `CRediTas` (`scripts/credit.R`), flags-only linting: spelling via `spelling`/`hunspell` and bibliography/non-standard-character checks (`scripts/check_manuscript.R`), plus grammar via LanguageTool wrapped through the GitHub package `LanguageToolR` (`scripts/check_grammar.R`, installed with user permission 2026-10-26). Lints clean, no link/clash findings, `skills-ref validate` passes. Open: link checking (noted as a gap in `references/linting-checklist.md`, not built); no end-to-end test of an installed `quarto-journals` template, a rendered MECA bundle, or LanguageTool on non-Windows. |
+| `manuscript-writing-quarto` | done | Quarto manuscript structure (`project: type: manuscript` + `quarto-journals` decision tree), CRediT helper wrapping CRAN `CRediTas` (`scripts/credit.R`), flags-only linting: spelling via `spelling`/`hunspell` and bibliography/non-standard-character checks (`scripts/check_manuscript.R`), plus grammar via LanguageTool wrapped through the GitHub package `LanguageToolR` (`scripts/check_grammar.R`, installed with user permission 2026-10-26). Lints clean, no link/clash findings, `skills-ref validate` passes. Open: link checking (noted as a gap in `references/linting-checklist.md`, not built); no end-to-end test of an installed `quarto-journals` template, a rendered MECA bundle, or LanguageTool on non-Windows. |
 | `python-r-interop` | not started | reticulate/uv, Arrow/parquet exchange, Windows PATH pitfalls (see `python-reproducible-pipeline`'s `environments-and-pinning.md`) |
 | `git-for-research-projects` | done | git conventions, `.gitignore`/`.gitattributes`, release tagging/Zenodo |
 | `grant-and-cv-support` | not started | OpenAlex/ORCID → CV/grant formatting; **caveat:** no automatic prose, every edit user-approved |
 | `python-reproducible-pipeline` | mostly done | uv + Snakemake, HPC via Slurm executor plugin |
-| `codebase-map` | done, not committed | per-project inventory/codemap/depends files, self-updating hook (hook deliberately not registered globally — needs per-project opt-in) |
+| `codebase-map` | done | per-project inventory/codemap/depends files, self-updating hook (hook deliberately not registered globally — needs per-project opt-in) |
 
 ## History
 
