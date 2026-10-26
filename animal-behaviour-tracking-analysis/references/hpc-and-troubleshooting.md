@@ -60,6 +60,23 @@ Environment variables in the template: `MPLBACKEND=Agg` (no display), `PYTHONUNB
 
 Issue numbers come from a GitHub search on 2026-10-23 (titles and gists only; resolutions were not read). Treat them as leads, not confirmed fixes.
 
+## Performance versus memory trade-off
+
+- The only real benchmark is from the paper (Nature Methods, 2024): with a consumer GPU, fitting takes roughly 30-60 min for 5 h of data, and computation time scales roughly linearly with dataset size. GPU model and dataset composition are not specified, and this is not an HPC measurement.
+- Every memory-saving option in the table above costs speed, not just memory: `parallel_message_passing=False` cuts memory about 4-6x but slows fitting by about the same factor; `set_mixed_map_iters(n)` splits the batch into `n` pieces for roughly 1/n memory at roughly n times the time. There is no documented setting that improves both at once.
+- Large datasets can crash at initialization, before fitting even starts: upstream issue #177 ("Kernel crashing for large datasets initialization", **open**, checked 2026-10-26) reports a kernel death inside `jax_moseq`'s `resample_discrete_stateseqs`, reproduced by inflating a working dataset to the problem size. No fix or confirmed workaround exists upstream. If a large job dies silently at startup, treat this issue as the first lead, not generic OOM (which happens later, during fitting, not initialization).
+- This skill has never measured kpms on an actual HPC GPU node or a real-sized dataset (see "Not verified" in `SKILL.md`). The sizing in the job-layout table above (about 3 MB/100 frames, checkpoint-every-25) comes from the docs, not from a run this skill performed. Treat it as a starting guess, not a tested default.
+
+### Ask the user to help close this gap
+
+The next time a real fit runs on the cluster, ask the user to report back the following, and record the answer as a `skill-lessons` entry (see "Capture lessons" in `SKILL.md`) with kpms/jax versions, dataset size, GPU model and the numbers themselves — this specific gap (no real HPC/GPU timing or memory data) is a standing, named trigger for that section, not just the generic "something failed" case:
+
+1. `seff <jobid>` (and `sacct -j <jobid> --format=JobID,Elapsed,MaxRSS,State`) once the job finishes: wall time, CPU efficiency, max RSS.
+2. The `run_summary.json` the fit script writes (now extended, see below) with frame count, iterations/second and GPU device name.
+3. The `.gpu.log` produced by the background `nvidia-smi` poller added to `assets/kpms_fit.sbatch` below, for peak GPU memory and utilisation even if the job is killed mid-run.
+
+`scripts/kpms_headless_fit.py` times the AR-only and full-model fit phases separately and records frame count, phase durations, iterations/second and the JAX device name in `run_summary.json`. `assets/kpms_fit.sbatch` starts a background `nvidia-smi --query-gpu=... -l 60` poll into `logs/%x_%A_%a.gpu.log` for the job's lifetime. Ask the user to paste back both files; use them to replace the docs-only sizing in this file with tested numbers, and log the raw numbers via `skill-lessons` so a future triage round can fold them in.
+
 ## When something fails: search upstream before improvising
 
 1. Get the cluster's `keypoint_moseq`, `jax`, `jaxlib` and `jax_moseq` versions (`pip list | grep -i -E "jax|moseq"`) and the first and last lines of the traceback from the user.

@@ -21,6 +21,12 @@ Definitions (identical in R):
     >= --min-immobile-s ("freezing" only if validated against manual scoring; see the skill reference).
   * ROI occupancy uses the cleaned, smoothed position; frames with missing position count as outside.
   * entry = start of a run of in-ROI frames lasting >= --min-roi-s.
+
+Validation against manual scoring (see references/dlc-basic-metrics.md, "Synthetic validation versus
+real recordings": this script's logic was checked against synthetic data only, never a real recording):
+  --manual-immobile manual.csv  with columns recording,frame,immobile (0/1 or true/false; frame 0-indexed,
+  matching the frame column in frames/<recording>.csv) writes <out>/validation_immobile.csv with
+  per-recording accuracy and Cohen's kappa against the script's own immobility calls.
 Requires: numpy, pandas, scipy (h5 input also needs pytables).
 """
 import argparse
@@ -188,6 +194,36 @@ def process_track(tr, fps, likelihood, max_gap, px_per_cm, smooth_window, move_t
     return frames, summary
 
 
+def cohen_kappa(manual, pred):
+    """Chance-corrected agreement between two boolean arrays of equal length (no new dependency on sklearn)."""
+    manual = np.asarray(manual, dtype=bool)
+    pred = np.asarray(pred, dtype=bool)
+    po = float((manual == pred).mean())
+    pa1, pb1 = float(manual.mean()), float(pred.mean())
+    pe = pa1 * pb1 + (1 - pa1) * (1 - pb1)
+    if pe == 1:
+        return 1.0 if po == 1 else np.nan
+    return (po - pe) / (1 - pe)
+
+
+def validate_immobile(frames, manual):
+    """frames: this script's per-frame table (needs frame, immobile). manual: DataFrame(frame, immobile)
+    for the SAME recording. Returns a one-row summary dict, or None if there are no overlapping frames."""
+    manual = manual.copy()
+    manual["immobile"] = manual["immobile"].astype(bool)
+    merged = frames[["frame", "immobile"]].merge(manual[["frame", "immobile"]], on="frame", suffixes=("_pred", "_manual"))
+    if merged.empty:
+        return None
+    m, p = merged["immobile_manual"], merged["immobile_pred"]
+    return {
+        "n_compared": len(merged),
+        "accuracy": float((m == p).mean()),
+        "cohens_kappa": cohen_kappa(m, p),
+        "tp": int((m & p).sum()), "fp": int((~m & p).sum()),
+        "fn": int((m & ~p).sum()), "tn": int((~m & ~p).sum()),
+    }
+
+
 def bin_metrics(frames, fps, bin_s, rois):
     b = (frames.time_s // bin_s).astype(int)
     g = frames.assign(bin=b, step=frames.speed / fps).groupby("bin")
@@ -217,15 +253,19 @@ def main():
     ap.add_argument("--roi", help="JSON with ROI definitions in video pixels")
     ap.add_argument("--min-roi-s", type=float, default=0.0, help="Minimum visit length to count an entry (suppresses edge flicker)")
     ap.add_argument("--bin-s", type=float, default=0.0, help="Also write time-binned metrics (seconds per bin)")
+    ap.add_argument("--manual-immobile",
+                     help="CSV with columns recording,frame,immobile for Cohen's kappa validation against manual "
+                          "scoring (see references/dlc-basic-metrics.md); writes <out>/validation_immobile.csv")
     ap.add_argument("--out", default="dlc_metrics")
     a = ap.parse_args()
     if a.smooth_window and (a.smooth_window < 3 or a.smooth_window % 2 == 0):
         raise SystemExit("--smooth-window must be odd and >= 3")
     rois = json.loads(Path(a.roi).read_text()) if a.roi else {}
+    manual = pd.read_csv(a.manual_immobile) if a.manual_immobile else None
 
     out = Path(a.out)
     (out / "frames").mkdir(parents=True, exist_ok=True)
-    rows, bins = [], []
+    rows, bins, validations = [], [], []
     for path in a.inputs:
         for ind, tr in read_dlc(path, a.bodypart).items():
             frames, s = process_track(tr, a.fps, a.likelihood, a.max_gap_frames, a.px_per_cm, a.smooth_window,
@@ -235,9 +275,19 @@ def main():
             frames.to_csv(out / "frames" / f"{rec}.csv", index=False)
             if a.bin_s > 0:
                 bins.append(bin_metrics(frames, a.fps, a.bin_s, rois).assign(recording=rec))
+            if manual is not None:
+                v = validate_immobile(frames, manual[manual.recording == rec])
+                if v is not None:
+                    validations.append({"recording": rec, **v})
     pd.DataFrame(rows).to_csv(out / "summary.csv", index=False)
     if bins:
         pd.concat(bins).to_csv(out / "bins.csv", index=False)
+    if manual is not None:
+        if validations:
+            pd.DataFrame(validations).to_csv(out / "validation_immobile.csv", index=False)
+            print(f"wrote {out / 'validation_immobile.csv'} ({len(validations)} recording(s) matched manual scoring)")
+        else:
+            print("--manual-immobile given but no recording names matched; check the 'recording' column")
     print(f"{len(rows)} tracks -> {out}")
 
 

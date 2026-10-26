@@ -10,6 +10,7 @@
 - [Existing tools (documentation read 2026-10-23; trajr, animovement and movement were installed and run)](#existing-tools-documentation-read-2026-10-23-trajr-animovement-and-movement-were-installed-and-run)
 - [animovement in R (installed and tested 2026-10-23)](#animovement-in-r-installed-and-tested-2026-10-23)
 - [movement in Python (installed and tested 2026-10-23)](#movement-in-python-installed-and-tested-2026-10-23)
+- [Synthetic validation versus real recordings](#synthetic-validation-versus-real-recordings)
 - [Caveats](#caveats)
 
 
@@ -182,6 +183,25 @@ Differences are explained by definitions: movement computes speed with central d
 What it offers beyond the scripts: xarray data model, many loaders (SLEAP, anipose, NWB), more kinematics (acceleration, turning angle, straightness, pairwise distances), ROI collections with distance and angle to regions, `compute_region_occupancy`, a napari GUI. What it lacks for these tasks: circular ROIs (polygons only, approximate a circle with many vertices), immobility bouts, entries/latency summaries, time-binned summary tables. Its APIs change between releases, so pin the version. `compute_region_occupancy` was not run.
 
 **Choosing**: use `movement` for Python projects that need broader analysis or several tracking formats; use the `dlc_metrics` scripts when you need entries, latency, immobility bouts and bin tables with fixed, documented definitions. Both can be combined (movement for cleaning, scripts for summaries), but keep one speed definition per analysis.
+
+## Synthetic validation versus real recordings
+
+Everything above is **internal-consistency** evidence, not accuracy evidence: the scripts agree with each other to 1e-8 and with `trajr`/`animovement`/`movement` on the same synthetic tracks, but synthetic tracks have no real camera geometry, no real tracking jitter pattern, and no ground-truth behaviour. This skill has never run the scripts (or compared them) on a real recording, so the choices that matter most on real data — likelihood threshold, smoothing window, immobility threshold and minimum bout length — are untested defaults, not validated ones. This mirrors the kpms gap in `hpc-and-troubleshooting.md`: synthetic/toy testing gives confidence the arithmetic is right, not that the real-world numbers are.
+
+The biggest named risk is calling an immobility bout "freezing" without checking it against manual scoring (flagged already in "Metric notes" above). Both scripts can now do that check directly instead of leaving it as an exercise:
+
+- Python: `--manual-immobile manual.csv` (columns `recording,frame,immobile`, `frame` 0-indexed to match the `frames/<recording>.csv` output) writes `<out>/validation_immobile.csv` with per-recording `n_compared`, `accuracy`, `cohens_kappa`, `tp`, `fp`, `fn`, `tn`.
+- R: `validate_immobile(frames, manual)` in `scripts/dlc_metrics.R`, where `manual` is a two-column `data.frame(frame, immobile)` for that one recording, returns `n_compared`, `accuracy`, `cohens_kappa` and the confusion `table()`.
+
+### Ask the user to help close this gap
+
+The next time these scripts run on a real recording, ask the user to:
+
+1. Hand-score immobility (or whatever behaviour the threshold is meant to approximate) on a subset of frames or a short clip, in the `recording,frame,immobile` format above, and run `--manual-immobile`/`validate_immobile()` against it. Kappa below about 0.6 (conventional "moderate" cutoff) means the threshold, minimum bout length or body part needs revisiting before reporting "freezing".
+2. Re-measure a known real-world distance in the video (arena wall, object-to-object) by hand and compare it to the script's `px_per_cm`-scaled output, to catch calibration or lens-distortion errors the synthetic tests cannot see.
+3. Report the camera setup (angle, crop, resolution, whether the animal can climb or rear out of plane) so the "flat floor, perpendicular camera" assumption in the caveats below can be checked rather than assumed.
+
+Record the resulting kappa/accuracy numbers, the chosen thresholds, and anything that looked wrong (ROI overlay mismatch, calibration drift, identity swaps) as a `skill-lessons` entry (see "Capture lessons" in `SKILL.md`) — **this specific gap (no real-recording validation yet) is a standing, named trigger for that section**, not just the generic "something failed" case. Anonymise species/paradigm details per the usual lessons rules; the numbers themselves (kappa, thresholds, which assumption broke) are what's useful here, not the dataset.
 
 ## Caveats
 

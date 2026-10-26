@@ -13,6 +13,11 @@
 #
 # ROI coordinates are VIDEO PIXELS (origin top-left, y grows downwards). dlc_read() reads CSV only; for .h5 use
 # aniread::read_deeplabcut() (needs Bioconductor rhdf5) plus dlc_from_anipoint() below, or the Python script.
+#
+# Validation against manual scoring (see references/dlc-basic-metrics.md, "Synthetic validation versus real
+# recordings": this script's logic was checked against synthetic data only, never a real recording):
+#   v <- validate_immobile(res$frames, manual)   # manual = data.frame(frame, immobile) for ONE recording
+#   v$accuracy; v$cohens_kappa; v$confusion
 
 dlc_read <- function(path, bodypart) {
   hdr <- strsplit(readLines(path, n = 4), ",", fixed = TRUE)
@@ -124,6 +129,28 @@ dlc_metrics <- function(tr, fps, likelihood = 0.9, max_gap = 5, px_per_cm = NULL
     summ[[paste0(nm, "_latency_s")]] <- if (length(starts)) (starts[1] - 1) / fps else NA_real_
   }
   list(summary = summ, frames = frames)
+}
+
+cohen_kappa <- function(manual, pred) {
+  manual <- as.logical(manual); pred <- as.logical(pred)
+  po <- mean(manual == pred)
+  pa1 <- mean(manual); pb1 <- mean(pred)
+  pe <- pa1 * pb1 + (1 - pa1) * (1 - pb1)
+  if (pe == 1) return(if (po == 1) 1 else NA_real_)
+  (po - pe) / (1 - pe)
+}
+
+# frames: this script's per-frame table (needs frame, immobile). manual: data.frame(frame, immobile) for the
+# SAME recording (pre-filter a multi-recording table to one recording before calling). Errors if there is no
+# frame overlap, since that usually means a frame-indexing or recording-matching mistake, not zero agreement.
+validate_immobile <- function(frames, manual) {
+  m <- merge(frames[c("frame", "immobile")], manual[c("frame", "immobile")],
+             by = "frame", suffixes = c("_pred", "_manual"))
+  if (!nrow(m)) stop("no overlapping frames between frames and manual scoring; check frame indexing/recording")
+  manual_l <- as.logical(m$immobile_manual); pred_l <- as.logical(m$immobile_pred)
+  list(n_compared = nrow(m), accuracy = mean(manual_l == pred_l),
+       cohens_kappa = cohen_kappa(manual_l, pred_l),
+       confusion = table(manual = manual_l, predicted = pred_l))
 }
 
 dlc_bins <- function(frames, fps, bin_s, roi_names = character()) {

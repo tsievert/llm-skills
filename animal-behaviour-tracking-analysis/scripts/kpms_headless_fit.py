@@ -18,6 +18,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 # No display on compute nodes; must be set before matplotlib is imported.
@@ -54,6 +55,13 @@ def parse_args():
 
 def log(msg):
     print(msg, flush=True)
+
+
+def log_phase_timing(phase, n_iters, seconds):
+    if n_iters <= 0 or seconds is None:
+        log(f"{phase} phase: 0 iterations")
+        return
+    log(f"{phase} phase: {n_iters} iterations in {seconds:.1f} s ({n_iters / seconds:.3f} iter/s)")
 
 
 def main():
@@ -98,6 +106,10 @@ def main():
         coordinates, confidences, project_dir, overwrite=False, **config()
     )
     data, metadata = kpms.format_data(coordinates, confidences, **config())
+    # Performance data point for the skill (see references/hpc-and-troubleshooting.md):
+    # this skill has no tested real-world HPC/GPU timing yet, so every fit records its own.
+    n_frames = int(data["mask"].sum())
+    log(f"n_frames={n_frames} (valid, post-outlier-removal, across {len(coordinates)} recordings)")
     # noise_calibration is interactive and is skipped here. If fits produce NaNs,
     # calibrate once on a workstation and copy slope/intercept from config.yml.
 
@@ -135,20 +147,34 @@ def main():
     else:
         model = kpms.init_model(data, pca=pca, seed=jax.random.PRNGKey(a.seed), **config())
 
+    # Fit-phase timing, for references/hpc-and-troubleshooting.md "Performance versus
+    # memory trade-off": this skill has no tested real HPC/GPU numbers yet, so every
+    # fit records its own (see run_summary.json below).
+    ar_fit_seconds = None
+    full_fit_seconds = None
+    ar_iters_run = max(0, a.ar_iters - min(done_iter, a.ar_iters))
+    full_iters_run = max(0, total_iters - max(done_iter, a.ar_iters))
+
     if done_iter < a.ar_iters:
         model = kpms.update_hypparams(model, kappa=a.kappa_ar)
+        t0 = time.perf_counter()
         model = kpms.fit_model(
             model, data, metadata, project_dir, a.model_name,
             ar_only=True, start_iter=done_iter, num_iters=a.ar_iters, save_every_n_iters=a.save_every,
         )[0]
+        ar_fit_seconds = time.perf_counter() - t0
+        log_phase_timing("AR-HMM", ar_iters_run, ar_fit_seconds)
         model, data, metadata, done_iter = kpms.load_checkpoint(project_dir, a.model_name, iteration=a.ar_iters)
 
     if done_iter < total_iters:
         model = kpms.update_hypparams(model, kappa=a.kappa_full)
+        t0 = time.perf_counter()
         model = kpms.fit_model(
             model, data, metadata, project_dir, a.model_name,
             ar_only=False, start_iter=done_iter, num_iters=total_iters, save_every_n_iters=a.save_every,
         )[0]
+        full_fit_seconds = time.perf_counter() - t0
+        log_phase_timing("full-model", full_iters_run, full_fit_seconds)
 
     # --- outputs ------------------------------------------------------------
     # Reindexing changes only the checkpoint, so it must precede extract_results.
@@ -169,6 +195,16 @@ def main():
         "kappa_ar": a.kappa_ar,
         "kappa_full": a.kappa_full,
         "seed": a.seed,
+        # Performance data for references/hpc-and-troubleshooting.md: this skill has no tested
+        # real HPC/GPU numbers yet. If this ran on a cluster, paste this file back so the
+        # docs-only sizing there can be replaced with something measured.
+        "n_frames": n_frames,
+        "jax_backend": jax.default_backend(),
+        "jax_device": getattr(jax.devices()[0], "device_kind", str(jax.devices()[0])),
+        "ar_iters_run": ar_iters_run,
+        "ar_fit_seconds": ar_fit_seconds,
+        "full_iters_run": full_iters_run,
+        "full_fit_seconds": full_fit_seconds,
     }
     (Path(project_dir) / a.model_name / "run_summary.json").write_text(json.dumps(summary, indent=2))
     log(json.dumps(summary))

@@ -36,6 +36,17 @@ print("jax", jax.__version__, "backend:", jax.default_backend(), "devices:", jax
 sys.exit(0 if jax.default_backend() == "gpu" else 1)
 PY
 
+# Background GPU memory/utilisation poll for the job's lifetime. This skill has no tested
+# real HPC/GPU numbers yet (see "Performance versus memory trade-off" in
+# references/hpc-and-troubleshooting.md); ask the user to paste this file and run_summary.json
+# back after a real fit so the docs-only sizing there can be replaced with measured numbers.
+GPU_LOG="logs/${SLURM_JOB_NAME:-kpms-fit}_${SLURM_ARRAY_JOB_ID:-${SLURM_JOB_ID:-0}}_${SLURM_ARRAY_TASK_ID:-0}.gpu.log"
+mkdir -p "$(dirname "$GPU_LOG")"
+nvidia-smi --query-gpu=timestamp,name,memory.used,memory.total,utilization.gpu \
+  --format=csv -l 60 > "$GPU_LOG" 2>&1 &
+GPU_LOG_PID=$!
+trap 'kill "$GPU_LOG_PID" 2>/dev/null' EXIT
+
 # Array tasks share PROJECT. Prepare it once BEFORE submitting the array (login/interactive node, or a
 # separate job): python kpms_headless_fit.py <same args> --model-name x --prepare-only. Tasks then
 # add their own model folder (config and PCA are reused; cheap preprocessing is repeated per task).
@@ -48,3 +59,7 @@ python kpms_headless_fit.py \
   --model-name "$MODEL" --seed "$SEED"
 
 echo "end=$(date)"
+# After this job finishes: run `seff ${SLURM_JOB_ID:-<jobid>}` (and `sacct -j <jobid>
+# --format=JobID,Elapsed,MaxRSS,State`), then paste that output, this $GPU_LOG, and
+# <project>/<model>/run_summary.json back so the HPC sizing in
+# references/hpc-and-troubleshooting.md can be replaced with real numbers.
