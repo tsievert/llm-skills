@@ -45,7 +45,8 @@ advice) or the wrong one loads. Duplicated advice inside bodies is the second ri
 | Literature | `openalex`, `social-research-search`, `job-opportunity-watch` | scholarly search; social posts; job portals | none needed (different objects); the latter two source `web-fetching-r` for fetch mechanics |
 | Web fetching | `web-fetching-r` | shared polite-fetch mechanics (`pf_*`: user agent, per-host rate limit, retry, bot-wall/JS heuristics) sourced by other skills' scripts; one-off page/table scraping with no recurring state | `job-opportunity-watch` (recurring job portals), `recipe-notes-formatter` (recipe pages), `social-research-search` (Bluesky/Mastodon APIs), `openalex` (academic literature) |
 | Meta | `github-skill-maintenance`, `skill-lessons`, `skill-feedback-triage` | repo upkeep; write lessons; read lessons | each other (stated in descriptions) |
-| Manuscript | `manuscript-writing-quarto` | Quarto manuscript structure (journal templates, `quarto-journals`), CRediT statement, flags-only spelling/bibliography/character linting | `manuscript-figures-ggplot` (figure export), `reproducible-research-data` (the deposit), `git-for-research-projects` (Git/CITATION.cff) |
+| Manuscript | `manuscript-writing-quarto` | Quarto manuscript structure (journal templates, `quarto-journals`), CRediT statement, flags-only spelling/bibliography/character linting | `manuscript-figures-ggplot` (figure export), `reproducible-research-data` (the deposit), `git-for-research-projects` (Git/CITATION.cff), `stats-reporting-and-review` (the numbers it reports) |
+| Reporting | `stats-reporting-and-review` | Cross-model-type effect sizes/CIs, power/sample size, pre-registration, multiplicity correction, reviewer-response drafting | `mixed-models-glmm` and `gam-mgcv`/`gam-interpretation` (fitting/diagnosis/smooth wording), `manuscript-writing-quarto` (the document itself; `report()` output is a scaffold, never final prose) |
 
 ## Rules for writing a description
 
@@ -85,7 +86,7 @@ advice) or the wrong one loads. Duplicated advice inside bodies is the second ri
   and `mixed-models-glmm` share GLMM templates (both derive from one tested script); decide later whether one
   should link instead of copy.
 - The two `tool-choice.md` files in the pipeline skills overlap by design (each gives its side of the same decision).
-- `reproducible-research-data` (added 2026-10-23) sits between `data-repository-readme`, `git-for-research-projects` and the pipeline skills; its description names all three. Planned `stats-reporting-and-review`, `python-r-interop` and `manuscript-writing-quarto` must still define their territory against this table.
+- `reproducible-research-data` (added 2026-10-23) sits between `data-repository-readme`, `git-for-research-projects` and the pipeline skills; its description names all three. `stats-reporting-and-review` and `manuscript-writing-quarto` have since defined their territory against this table (both added, see rows above). Planned `python-r-interop` must still do the same.
 - Trigger test 2026-10-23 (proxy): 15 realistic queries in `assets/trigger-queries-clash-areas.json`, three subagent runs with
   shuffled order that saw only names and descriptions (22 skills plus 9 built-in ones). The expected skill was chosen in 45 of 45
   selections and no wrong skill replaced it. Side effects: `hpc-cluster-docs` was co-loaded in nearly every HPC query (by design,

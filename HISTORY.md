@@ -852,3 +852,24 @@ current/active state (working rules, open decisions, the todo table).
   `lint_skills()`, `check_skill_links()`, `check_skill_clashes()` (all 0 findings), `check_versions()`
   (only `spelling 2.3.2` is a detectable claim in this skill and it matches installed/latest), and
   `skills-ref validate` (valid). Not committed yet.
+- 2026-10-26: Built `stats-reporting-and-review` (not committed) from the 2026-10-26 research round in
+  `research/stats-reporting-and-review-ledger.md`. Scope: effect sizes/CIs (`effectsize`, tested with
+  `cohens_d()`/`eta_squared()` on an `lm`/`aov` pair, 1.0.3), the `report()` auto-narrative treated strictly
+  as a numbers scaffold never pasted in as finished prose (same boundary as `manuscript-writing-quarto`'s
+  "no autonomous prose" rule, written into both skills' bodies and cross-linked), power/sample size (`pwr`
+  1.3.0, tested `pwr.t.test()`; `simr` for GLMMs documented but not run locally, with the `lme4`-vs-`glmmTMB`
+  refit seam flagged explicitly), pre-registration, and multiplicity (`stats::p.adjust`/`emmeans(adjust=)`,
+  no new tool needed). One correction to the ledger's candidate shape: `preregr` turned out to have been
+  **archived from CRAN on 2026-07-28** ("issues were not corrected despite reminders") — switched the
+  pre-registration recommendation to `prereg` (CRAN, actively maintained, OK checks as of 2026-09-06; R
+  Markdown templates for COS/AsPredicted/van't Veer/Brandt/PRP-QUANT/fMRI, PDF output via pandoc+TeX, not
+  tested end to end here). Deliberately did **not** duplicate the GAM results-prose convention (edf buckets,
+  simultaneous-CI wording) from the ledger's R2 item here, per the ledger's own recommendation that it is
+  GAM-specific wording belonging in `gam-interpretation`, not a cross-model-type principle — left as an
+  unmade candidate addition there. Verification: `lint_skills()` (0 findings), `check_skill_clashes(new =
+  "stats-reporting-and-review")` (0 findings at 0.15 threshold against 29 skills), `skills-ref validate` (valid).
+  `check_skill_links()` found five one-way mentions; added backlinks to `mixed-models-glmm`, `gam-interpretation`,
+  and `manuscript-writing-quarto` (plausible follow-on use), and recorded `no-backlink` decisions for `openalex`
+  (the standing literature tool, same pattern as other skills) and `gam-mgcv` (fitting-stage skill; the
+  reporting backlink lives on `gam-interpretation` instead) in `link-decisions.tsv`. Updated
+  `skill-boundaries.md`'s ownership table and open-items note. Not committed yet.

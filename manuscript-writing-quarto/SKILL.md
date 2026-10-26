@@ -87,6 +87,7 @@ mentioned as an alternative.
 - `manuscript-figures-ggplot`: journal-ready figure sizing, palettes and export for the same manuscript.
 - `reproducible-research-data`: the data/code deposit that accompanies the paper.
 - `git-for-research-projects`: Git hygiene, tags and CITATION.cff for the manuscript repository.
+- `stats-reporting-and-review`: effect sizes, power analysis, pre-registration and multiplicity numbers reported in the manuscript; its `report()` output is a scaffold only, never pasted in as finished prose.
 
 ## Explain the reasoning (teaching rule)
 

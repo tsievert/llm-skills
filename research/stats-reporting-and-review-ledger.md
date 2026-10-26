@@ -177,3 +177,15 @@ the user's request. Read this before searching again.
   SKILL.md files to check for duplication. Key cross-skill finding: `report()`'s auto-generated prose
   directly conflicts with `manuscript-writing-quarto`'s "no autonomous prose" caveat and needs an explicit,
   shared boundary statement when both skills are drafted. No local tests, no skill files written.
+- 2026-10-26: Round 2 — built the skill. Live re-check of `preregr`'s CRAN status (open item from round 1)
+  found it was **archived from CRAN on 2026-07-28**; switched the pre-registration recommendation to
+  `prereg` (crsh/prereg, CRAN, OK checks as of 2026-09-06 — R Markdown templates, PDF via pandoc+TeX, COS/
+  AsPredicted/van't Veer/Brandt/PRP-QUANT/fMRI forms). Installed and tested `effectsize` 1.0.3 (`cohens_d()`,
+  `eta_squared()`), `report` 0.6.4 (`report()` on an `lm`), and `pwr` 1.3.0 (`pwr.t.test()`) locally against a
+  simulated two-group example — all worked as documented on `lm`/`aov` objects; `glmmTMB`/`gam` behaviour and
+  `simr` remain untested (noted as open gaps in the skill itself, not silently assumed). Decided to leave the
+  GAM results-prose convention (R2) out of this skill, per the round-1 recommendation, rather than deciding it
+  here — recorded as a still-open candidate addition to `gam-interpretation` in `AGENTS.md`'s todo table.
+  Skill built at `stats-reporting-and-review/SKILL.md` plus five reference files (effect-sizes, power-analysis,
+  preregistration, multiplicity, reviewer-response); verification (`lint_skills()`, `check_skill_clashes()`,
+  `check_skill_links()`, `skills-ref validate`) all passed, detail in `HISTORY.md`. Not committed yet.

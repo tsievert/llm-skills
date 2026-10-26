@@ -22,3 +22,5 @@ reproducible-research-data	manuscript-figures-ggplot	no-backlink	Figures are one
 recipe-notes-formatter	git-for-research-projects	no-backlink	Git skill covers research repositories; a recipe conversion project is a small personal side use and should not get a pointer from it	2026-10-24
 recipe-notes-formatter	r-reproducible-pipeline	no-backlink	The pipeline skill is for analysis workflows; the recipe project is not one by default, the pointer from the recipe skill is an optional upgrade only	2026-10-24
 web-fetching-r	openalex	no-backlink	openalex is the standing literature tool (user memory rule) and uses its own API client, not HTML scraping; it should not collect a pointer from every skill that merely distinguishes itself from it	2026-10-24
+stats-reporting-and-review	openalex	no-backlink	openalex is the standing literature tool (user memory rule), not a per-skill pointer	2026-10-26
+stats-reporting-and-review	gam-mgcv	no-backlink	gam-mgcv is the fitting-stage skill; reporting/effect-size/power concerns surface at the interpretation stage, where gam-interpretation already carries the backlink	2026-10-26

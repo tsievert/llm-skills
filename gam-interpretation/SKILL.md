@@ -76,6 +76,7 @@ If the user asks "is the relationship non-linear?", "is there a threshold?", or 
 - `gam-mgcv`: fitting and checking the model before interpreting it.
 - `mixed-models-glmm`: when the effect of interest is parametric (no smooth terms).
 - `manuscript-figures-ggplot`: turning the plots into journal-ready figures (size, fonts, colour-blind-safe palettes, export).
+- `stats-reporting-and-review`: effect sizes/CIs for a GAM's parametric terms, power analysis, and multiplicity correction across narrated contrast curves — not smooth-term wording, which stays here.
 
 ## Explain the reasoning (teaching rule)
 
