@@ -13,25 +13,11 @@ Repository of custom Posit Assistant skills, synced via GitHub
 
 ## About the local user
 
-- Name: Thorbjörn Sievert (git `user.name`; email `thorbjoern.sievert@gmx.net`, git `user.email`).
-- GitHub: https://github.com/tsievert (this repo: https://github.com/tsievert/llm-skills).
-- OpenAlex author profile: https://openalex.org/A5050945345 (API: https://api.openalex.org/authors/A5050945345).
-  Found 2026-10-23 as the single hit for "Thorbjörn Sievert": 20 works, 235 citations, last known institution
-  University of Jyväskylä. Profile not manually verified; the ORCID below came from OpenAlex itself.
-- ORCID: https://orcid.org/0000-0002-4242-3779
-- Machine: Windows 11, RStudio, R 4.6.0 with Rtools45, Git Bash. Home sync folder: `C:\Users\thorb\Sync_Home_Work`.
-- Standing preferences (see user memory): use OpenAlex, not web search, for literature tasks; prefer
-  `openalexR`/`httr2` or the `openalex` MCP server.
-- Research field (from OpenAlex works list, 2026-10-23; 15 works 2015-2021, not manually verified): behavioural
-  ecology of small mammals, mainly bank voles (predation risk, predator odour, alarm pheromones, transgenerational
-  and in utero effects), plus chemical senses (predator odour components in mice) and small-rodent population
-  cycles (Oecologia review, ~159 citations). Venues: Oecologia, Ecosphere, Behavioral Ecology and Sociobiology,
-  Frontiers in Ecology and Evolution, Integrative Zoology, Chemical Senses. Publishes datasets on Figshare
-  ("Data for: ..." entries). Earlier affiliation KTH (Sweden), later Jyväskylä (Finland). Data likely: behavioural
-  trials, repeated measures/mixed models, chemical (pheromone) analysis, field trapping/population time series.
-- Useful context for future tasks: works with GAMs (mgcv, gratia), HPC/Slurm clusters, DeepLabCut, R and Python.
-  Check the OpenAlex profile for their publications to infer field conventions or to find their own papers
-  (e.g. for self-citation checks or "my work on X" requests).
+Personal/identifying details (name, email, ORCID, GitHub handle, machine path, research field) live in
+`AGENTS.local.md` at the repo root, which is gitignored and **not present in the public repo**. If that file
+exists on this machine, read it for this context. If it doesn't (e.g. a fresh clone, or on someone else's
+machine), treat this context as simply unavailable rather than guessing or inventing it — do not ask the user
+to re-paste it unless the task actually needs it.
 
 ## Research folder (`research/`)
 

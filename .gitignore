@@ -42,3 +42,7 @@ desktop.ini
 tmp-examples/
 job-watch/
 recipe-samples/
+
+# Private, machine-local identity/context (name, email, ORCID, machine paths);
+# see the pointer in AGENTS.md
+AGENTS.local.md

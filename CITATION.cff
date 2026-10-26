@@ -1,0 +1,26 @@
+# ------------------------------------------------
+# CITATION.cff file created with {cffr} R package
+# See also: https://docs.ropensci.org/cffr/
+# ------------------------------------------------
+ 
+cff-version: 1.2.0
+message: If you use these skills, please cite them as below.
+type: software
+license: MIT
+title: 'llm-skills: Custom Agent Skills for Posit Assistant'
+version: 0.1.0
+authors:
+- family-names: Sievert
+  given-names: Thorbjoern
+  email: thorbjoern.sievert@gmx.net
+  orcid: https://orcid.org/0000-0002-4242-3779
+repository-code: https://github.com/tsievert/llm-skills
+url: https://github.com/tsievert/llm-skills
+date-released: '2026-10-26'
+keywords:
+- posit-assistant
+- agent-skills
+- reproducible-research
+- R
+- Python
+
