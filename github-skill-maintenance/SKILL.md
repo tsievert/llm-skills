@@ -119,7 +119,15 @@ and say what it would change.
   can also need an explicit `\r\n` separator, since incremental edits can leave LF-only spans
   inside an otherwise-CRLF file. Don't check for stray CRLF with `grep -c $'\r'`: grep's own
   CRLF autodetection can mask the count and report 0 matches on a file that still has CRLF
-  (reported once, 2026-10-24); `git ls-files --eol` is the reliable check, as above.
+  (reported once, 2026-10-24); `git ls-files --eol` is the reliable check, as above. For a file
+  not yet tracked by git (new, uncommitted), `git ls-files --eol` prints nothing at all rather
+  than flagging a problem, which can look like "nothing to check" when the file is actually
+  CRLF — use `file <path>` instead for untracked files (reported 2026-10-26). If a multi-line
+  `edit` keeps reporting "string not found" against text a fresh `read`/`grep` confirms is
+  present byte-for-byte, and CRLF is ruled out, falling back to `write(..., overwrite = TRUE)`
+  with the full file content is a reliable escape hatch — but that `write` call itself commonly
+  reintroduces CRLF on a file that was LF before it, so always re-check line endings (`file
+  <path>` if untracked) immediately after, not just before, the next edit (reported 2026-10-26).
 - **Apostrophe in a single-quoted description.** A bare apostrophe (a possessive such as
   "user's") ends the YAML scalar and the linter reports "YAML does not parse". Avoid
   apostrophes in descriptions or double them (`''`), and run `lint_skills()` after every

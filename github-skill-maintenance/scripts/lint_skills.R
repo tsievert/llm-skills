@@ -128,6 +128,12 @@ lint_one_skill <- function(dir) {
       short <- alts[nchar(gsub("[^A-Za-z0-9_]", "", alts)) < 4 & !grepl("\\\\b", alts)]
       if (length(short))
         add("warn", "file_signals", paste("Alternative(s) with little specificity (risk of matching incidental text):", paste(short, collapse = ", ")))
+      # grepl() has no option-parsing step, so a pattern starting with '-' compiles fine here
+      # but the consuming hook calls grep, which parses a leading '-' as an option unless the
+      # call uses an end-of-options marker (reported 2026-10-26; see skill-file-signal-hook.sh).
+      dashy <- alts[grepl("^-", alts)]
+      if (length(dashy))
+        add("warn", "file_signals", paste("Alternative(s) starting with '-' can be parsed as a grep option by a consuming script unless it uses '--':", paste(dashy, collapse = ", ")))
     }
   }
 

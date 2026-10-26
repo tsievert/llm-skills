@@ -939,3 +939,28 @@ current/active state (working rules, open decisions, the todo table).
   table, and the `grep --` bug: `research/skill-trigger-hooks-ledger.md` section 9 and
   `github-skill-maintenance/references/skill-trigger-hook.md`'s updated file-signal table. Not
   tested: any of the six signals firing inside a real conversation turn. Not committed yet.
+- 2026-10-26: First `skill-feedback-triage` run. Read 6 lesson files (4 use-case, 2 with
+  multiple `bug`/`missing-guidance` entries) and the usage log since the prior watermark
+  (2026-10-26T10:12:11); no `lesson_problems()` issues, one duplicate-title pair (both
+  legitimate, different sessions). Grouped into 4 issues, shown to the user as a triage table
+  before any edit. Outcomes, all approved: (1) `github-skill-maintenance` — extended the CRLF
+  pitfall section with the untracked-file gap (`git ls-files --eol` prints nothing for a new,
+  uncommitted file, so `file <path>` is the reliable check there) and made explicit that
+  `write(overwrite = TRUE)` is a valid fallback for a false "string not found" but itself
+  commonly reintroduces CRLF, so re-check after, not just before, the next edit; (2) added a
+  `lint_skills()` rule flagging a `file_signals` alternative starting with `-` (the exact class
+  of bug the prior round's `grep --` fix addressed, invisible to the regex-compile check because
+  `grepl()` has no option-parsing step); (3) the file-signal escalation issue was already fixed
+  in its own session (synthetic tests only) — no further action, left as an open item that a
+  real-session recurrence is still needed to confirm escalation steers to the *right* skill; (4)
+  `deeplabcut-hpc` — added a one-line warning in the "Multiple shuffles/projects" pitfall to
+  start shuffle numbering at 1, matching DLC's own API defaults, after a report of a custom
+  orchestrator defaulting to 0. While applying fix (1) and (2), hit the CRLF-reintroduction
+  pitfall itself on all three edited files (`lint_skills.R`, both `SKILL.md`s) immediately after
+  `write`/`edit` calls — fixed with `file <path>` + `sed -i 's/\r$//'` each time, which is
+  additional live confirmation of lesson (1) rather than a new finding. `lint_skills()` re-run
+  clean on both changed skills (one pre-existing, unrelated `description`-length `info` notice on
+  `deeplabcut-hpc`, unchanged); no clash/link checks needed (no description or scope changes); no
+  package versions were added, so `check_versions()` was not run. Archived the 6 processed lesson
+  files to `~/.posit/lessons/inbox/processed/` and advanced the watermark in `AGENTS.md` to
+  2026-10-26T14:59:55 (last usage-log row seen). Not committed yet.
