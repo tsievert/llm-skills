@@ -72,6 +72,67 @@ Copy the whole project folder (config.yaml, `dlc-models*`, `training-datasets`, 
 10. **Video I/O.** Decoding is CPU-bound; request enough CPUs for analysis jobs. Stage large videos to node-local scratch when the shared filesystem is slow (see `hpc-job-scripts/references/arrays-and-scratch.md`).
 11. **Model downloads.** Pretrained backbones and SuperAnimal weights are downloaded on first use, which fails on compute nodes without internet. Run one short training or model-creation step on a login node (or pre-download weights) before submitting, and point the cache to shared storage if the home quota is small.
 
+## Tuning `pytorch_config.yaml`: optimizer, scheduler, augmentation
+
+`pytorch_config.yaml` is DLC's own abstraction over PyTorch, not raw PyTorch code. It exposes
+a curated subset of `torch.optim`, `torch.optim.lr_scheduler` and the `albumentations` library.
+Re-verify the exact keys against `docs/pytorch/pytorch_config.html` for the installed version
+before editing — the defaults below are as documented on 2026-10-26 and have drifted from the
+code before (see the gap on `rotation`/`translation` symmetry below).
+
+**Optimizer** (`runner.optimizer`): `type` accepts any class from `torch.optim` (the docs show
+`SGD`, `AdamW`); `params` passes through as kwargs (`lr`, `momentum`, etc.). The docs advise
+against changing the optimizer type unless experienced.
+
+**Scheduler** (`runner.scheduler`, optional): `type` accepts any `torch.optim.lr_scheduler`
+class. The documented default is `LRListScheduler` (DLC-specific: `lr_list`, `milestones`).
+`StepLR` (`step_size`, `gamma`), `SequentialLR` (nested `schedulers` + `milestones`) and
+`ChainedScheduler` are also named as usable. Set `runner.load_scheduler_state_dict: false`
+when editing the scheduler and resuming from a snapshot, or the old schedule state silently
+overrides the new config.
+
+**Augmentation** (`data.train` / `data.inference`): backed by `albumentations`, not `torchvision.transforms`
+or `imgaug` — confirmed in the DLC user guide ("PyTorch Engine: Albumentations is used for
+data augmentation"). Documented keys: `affine` (`p`, `rotation`, `scaling`, `translation`),
+`covering` (coarse dropout), `crop_sampling` (`height`, `width`, `max_shift`, `method`:
+`uniform`/`keypoints`/`density`/`hybrid`), `gaussian_noise`, `motion_blur`, `hflip` (`p`,
+`symmetries` for symmetric keypoint pairs), `hist_eq`, `resize`, and `auto_padding`. The
+`collate` block (`ResizeFromDataSizeCollate`/`ResizeFromListCollate`) controls batch-level
+rescaling (`max_shift`, `max_size`, `min_scale`, `max_scale`, `multiple_of`, `to_square`).
+
+**Where DLC's abstraction stops short of what the underlying libraries offer** (check these
+before writing a feature request, since the gap may have closed):
+
+- **Augmentation library coverage.** DLC exposes a fixed list of named augmentations, not
+  arbitrary `albumentations` transforms (no direct access to e.g. `ColorJitter`, `RandomRain`,
+  `ElasticTransform`, blur/weather families — see https://albumentations.ai/docs/ for the full
+  set). `gh search issues --repo DeepLabCut/DeepLabCut "albumentations"` and
+  `gh search prs --repo DeepLabCut/DeepLabCut "albumentations"` turn up
+  https://github.com/DeepLabCut/DeepLabCut/pull/3148, an **open, unmerged** PR (checked
+  2026-10-26) adding a `transform` list that passes any `albumentations` class through by name.
+  If the user needs an augmentation outside the documented list, point them at that PR (and its
+  linked issue) rather than inventing a workaround, and re-check its merge status — this is a
+  natural feature request to upvote/comment on, not re-file.
+- **Config/code drift.** https://github.com/DeepLabCut/DeepLabCut/issues/2753 documents a real
+  case where the docs' `fliplr` key didn't match the code's `hflip`, and `rotation` is applied
+  symmetrically (`(-rotation, rotation)`) while `translation` is not — a clamping asymmetry not
+  mentioned in the docs. Treat config keys in older doc snapshots or tutorials with suspicion;
+  confirm against `deeplabcut.pose_estimation_pytorch.data.transforms.build_transforms` in the
+  installed version if an augmentation behaves unexpectedly.
+- **No raw PyTorch access.** Things you'd control in a hand-written PyTorch training loop —
+  gradient clipping, mixed precision (`torch.cuda.amp`), gradient accumulation, weight averaging
+  (EMA), `torch.compile`, or a custom loss/backbone — aren't exposed as `pytorch_config.yaml`
+  keys at all (see https://docs.pytorch.org/docs/stable/optim.html and
+  https://docs.pytorch.org/docs/stable/notes/amp_examples.html for what the raw API offers). If
+  the user needs one of these, it means writing or patching DLC's training code directly, not a
+  config change — confirm that's really what they want before going down that path, since it
+  forks them off DLC's maintained training loop.
+
+When a documented option and the live behavior disagree, or a desired option genuinely isn't
+exposed, follow "When something fails: search upstream before improvising" below before
+concluding it's missing — confirm via issues/PRs, then report to the user with links so they can
+decide whether to file or upvote a feature request upstream.
+
 ## Job script skeleton (training, one GPU)
 
 Adapt to the site (partition, GPU syntax, env activation) after loading `hpc-cluster-docs` and `hpc-gpu-jobs`, and lint with `hpc-job-scripts/scripts/check_sbatch.sh`.
