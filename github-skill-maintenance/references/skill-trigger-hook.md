@@ -17,6 +17,18 @@ message explicitly asked the assistant to "trigger the appropriate skills" immed
 before switching into Plan mode and delegating to a subagent; no skill was ever loaded in
 the four turns that followed, and the instruction was never revisited.
 
+**2026-10-26 update:** a real session (`dlc-pig-method-paper`, an HPC/DeepLabCut
+conversation, analysed from a `conversation-export.json` dropped at the repo root) gave the
+first real-conversation-turn confirmation that both hooks below actually fire and are
+visible to the model (closing an item both "Tested and not tested" sections had marked
+untested) — and showed the file-signal nudge (R2) fired twice, for two different skills,
+and was ignored both times, while the explicit-instruction block (R1) correctly forced a
+`skill()` call but could not stop the wrong skill being loaded (a documented limit, see "What
+it does and does not fix"). This added an escalation path: a second, still-ignored
+file-signal nudge for the same skill now feeds into R1's `Stop` block instead of repeating
+the same ignorable line — see "Escalation: a repeated, ignored nudge forces one block"
+below. See `research/skill-trigger-hooks-ledger.md` section 8 for the full analysis.
+
 ## What it does and does not fix
 
 Two different undertrigger modes exist (see `references/testing-skills.md`'s "Common
@@ -153,17 +165,65 @@ lesson `anon_20261024-audit_manual.md` and ledger section 6). Two events, both `
 | Matcher | Action |
 |---|---|
 | `skill` | Any skill load marks that skill as loaded for the session (`state/<session>.loaded.<skill>`), so it is never nudged for again. |
-| `read\|grep\|bash` | Scans `tool_response` against every skill's declared `metadata.file_signals` (a single, skill-owned `'|'`-separated regex-alternation string in that skill's own `SKILL.md` frontmatter). On a match for a skill not yet loaded or already nudged this session, emits `hookSpecificOutput.additionalContext` naming it, and marks it nudged (`state/<session>.nudged.<skill>`) so it fires at most once per (session, skill). **Never blocks.** |
+| `read\|grep\|bash` | Scans `tool_response` against every skill's declared `metadata.file_signals` (a single, skill-owned `'|'`-separated regex-alternation string in that skill's own `SKILL.md` frontmatter). On the *first* match for a skill not yet loaded this session, emits `hookSpecificOutput.additionalContext` naming it, and marks it nudged (`state/<session>.nudged.<skill>`). On a *second* match for the same still-unloaded skill, writes an escalation marker instead (see below) rather than repeating the same line. **Never blocks itself.** |
+
+### Escalation: a repeated, ignored nudge forces one block
+
+Added 2026-10-26 after the `dlc-pig-method-paper` session (see the update note at the top of
+this file) showed a single non-blocking nudge is not sufficient in practice: both
+`hpc-job-scripts` and `deeplabcut-hpc` were nudged once each, visibly (the nudge text appeared
+in the transcript as a `hook-feedback` block), and neither was acted on.
+
+On a second match for a skill already nudged once and still not loaded, `skill-file-signal-hook.sh`
+writes `state/<session>.pending.fs.<skill>` instead of emitting a second `additionalContext`
+line. `skill-trigger-hook.sh`'s `Stop` handler (R1) now checks for these markers alongside its
+own explicit-instruction `pending` marker, and blocks once if either is present — the two
+sources share the single per-session "reminded" budget, so this does not add a second,
+independent nag. The block `reason` names the specific skill(s) when it knows them from a
+`pending.fs.<skill>` marker (unlike the explicit-instruction case, which stays a fixed generic
+string — see "Why the phrase match scans the whole payload" above for why extracting free text
+is avoided; a skill *name* from a marker filename has no such risk, since it is this repo's own
+controlled vocabulary of skill folder names, not arbitrary user text).
+
+`skill-file-signal-hook.sh` itself still never emits `decision:"block"` — the escalation marker
+is just a file; only `skill-trigger-hook.sh` blocks, now triggered by either source. The
+`check_sync_setup()` `file-signal hook never blocks` check still guards this invariant on the
+unchanged script. This keeps the two scripts' failure costs matched to their reliability: R2's
+own non-blocking nudge is still cheap and can be wrong without consequence, while the one block
+it can now trigger reuses R1's already-accepted bounded cost (at most one forced turn, once per
+session).
 
 `file_signals` is opt-in and deliberately narrow: only add it to a skill with a strong,
-low-ambiguity file signature (seeded on `hpc-job-scripts`:
-`'#SBATCH|\bsbatch\b|\bsrun\b'` and `deeplabcut-hpc`:
-`'import deeplabcut|pytorch_config\.yaml|pose_cfg\.yaml'`, matching the file-content clauses
-already in both descriptions). Do not add it to every skill speculatively — a vague pattern
-produces noise, not signal (`lint_skills()` warns on short, non-word-bounded alternatives).
-The table lives in each skill's own frontmatter, not centrally in the hook script, so it is
-reviewed alongside the skill it serves (the maintenance-burden objection in ledger section 5
-was the reason this was revised rather than hardcoded).
+low-ambiguity file signature, matching a file-content clause already in that skill's own
+description. Do not add it to every skill speculatively — a vague pattern produces noise, not
+signal (`lint_skills()` warns on short, non-word-bounded alternatives). The table lives in each
+skill's own frontmatter, not centrally in the hook script, so it is reviewed alongside the skill
+it serves (the maintenance-burden objection in ledger section 5 was the reason this was revised
+rather than hardcoded). Declared on six skills as of 2026-10-26 (seeded on `hpc-job-scripts` and
+`deeplabcut-hpc` round 1/2; widened round 4 after the escalation mechanism above made a repeated
+nudge actionable — see `research/skill-trigger-hooks-ledger.md` section 9 for the full rationale
+per skill):
+
+| Skill | `file_signals` |
+|---|---|
+| `hpc-job-scripts` | `'#SBATCH\|\bsbatch\b\|\bsrun\b'` |
+| `deeplabcut-hpc` | `'import deeplabcut\|pytorch_config\.yaml\|pose_cfg\.yaml'` |
+| `hpc-gpu-jobs` | `'--gres=gpu\|--gpus[=:]\|\bCUDA_VISIBLE_DEVICES\b\|\btorchrun\b'` |
+| `hpc-resource-allocation` | `'OUT_OF_MEMORY\|\boom-kill\b\|\bsacct\b\|\bseff\b'` |
+| `hpc-python-code` | `'\bSIGUSR1\b\|signal\.signal\(signal\.SIGTERM'` |
+| `hpc-r-code` | `'parallelly::availableCores\|future\.batchtools\|\bR_LIBS_USER\b'` |
+
+`hpc-cluster-docs` deliberately has none: it is a "run this first" skill about identifying a
+cluster, not keyed to a distinguishing content pattern the way the others are.
+
+**`grep -E -- "$pat"` pitfall, found round 4:** a pattern whose first alternative starts with
+`-` (here, `--gres=gpu`) makes `grep` parse it as an option instead of a pattern, failing with
+"unknown option". `lint_skills()`'s regex-compile check uses R's `grepl()`, a different engine
+with no option-parsing step, so it does not catch this. Fixed with the `--` end-of-options
+marker in the hook script's `grep -qE -- "$pat"` call; any `file_signals` value is now safe
+regardless of what it starts with. If a future shared script adds its own `grep` call against a
+`file_signals` value, it needs the same `--` guard — not yet enforced by the linter (see ledger
+section 9.4, open item).
 
 Why non-blocking was judged acceptable here where the original sketch worried about false
 positives: every piece of prior art found (ledger section 6.3 — two independent community
@@ -194,6 +254,7 @@ if the script is ever changed to emit `decision:"block"`, to keep this invariant
 |---|---|
 | `state/<session>.loaded.<skill>` | exists once that skill has been loaded this session |
 | `state/<session>.nudged.<skill>` | exists once a nudge has fired for that (session, skill) pair |
+| `state/<session>.pending.fs.<skill>` | written on a *second*, still-ignored match for that skill; read and cleared by `skill-trigger-hook.sh`'s `Stop` handler, not by this script |
 | `state/DEBUG` | shared debug switch with `skill-trigger-hook.sh` |
 
 ### Tested and not tested (file-signal hook)
@@ -211,13 +272,25 @@ declared (empty, correctly). `lint_skills()`'s new `file_signals` regex-compile 
 specificity checks were tested by observation (both seeded skills pass with no new
 findings). `check_sync_setup()`'s new section was run against the real, updated
 `settings.json` content (same path-guard workaround as the other hook audits) — all `ok`.
-**Not tested:** the hook firing inside a real conversation turn (whether
-`hookSpecificOutput.additionalContext` from `PostToolUse` is actually visible to the model
-the way a community Claude Code implementation demonstrated — see ledger section 6.3 — is
-confirmed there, not here); the cost of scanning ~24 `SKILL.md` files per matching tool call
-at scale (unsized, see ledger section 6.6); Linux/macOS; a second machine; whether the two
-seeded `file_signals` patterns actually reduce real-world misses (needs another real
-recurrence, or lack thereof, to tell).
+**2026-10-26 update:** the `dlc-pig-method-paper` session gave the real-conversation-turn
+confirmation this entry had marked untested — `additionalContext` from `PostToolUse` *was*
+visible to the model (it appeared as a `hook-feedback` block addressed to it) — but visibility
+did not translate into action: the nudge fired once each for `hpc-job-scripts` and
+`deeplabcut-hpc` and both were ignored, which is what motivated the escalation path above.
+The escalation itself (second match → `pending.fs.<skill>` marker → one named `Stop` block) was
+tested with synthetic piped payloads, mirroring the existing recipe: a first match nudges and
+marks `nudged`; a second match for the same still-unloaded skill writes `pending.fs.<skill>`
+instead of a second `additionalContext`; a `skill` load between the first and second match
+clears the path (no escalation, confirming `loaded.<skill>` is still checked first); two
+different skills each escalating in the same session produce one `Stop` block naming both,
+not two; combined with an explicit-instruction `pending` marker, one block fires with a reason
+that mentions both sources; `bash -n` and `check_sync_setup()` both still pass, including the
+unchanged `file-signal hook never blocks` guard. **Still not tested:** the escalation firing
+inside a real conversation turn (only the original nudge was confirmed live, not yet a second,
+ignored one); the cost of scanning ~24 `SKILL.md` files per matching tool call at scale
+(unsized, see ledger section 6.6); Linux/macOS; a second machine; whether this closes the gap
+for skills beyond the two seeded `file_signals` patterns (needs a broader rollout decision, not
+made here).
 
 ## Tested and not tested
 
@@ -226,10 +299,24 @@ bash 5.3): all twelve scenarios in the test recipe above, `bash -n`, and
 `check_sync_setup(cfg = <the real settings.json text>)` against the live settings file (the
 assistant's own R session cannot read that path directly — same session guard documented
 for the lessons hooks — so the content was read with `bash`/`cat` and passed as `cfg`).
+**2026-10-26 update:** the `dlc-pig-method-paper` session confirmed the R1 `Stop` block fires
+and is visible in a real conversation turn: the user's explicit "Trigger your deeplabcut skill
+to record that as a lesson" set the pending marker, and the next turn did call `skill()` (so
+`Stop` never had to block — the marker was already cleared), but it loaded `skill-lessons`, not
+`deeplabcut-hpc`. This is exactly the documented limit ("was some `skill()` call made", not "was
+it the right one") rather than a new bug; it is recorded here as the first real confirmation of
+that limit, not a fix. The escalation feature added 2026-10-26 (see the R2 section above) was
+tested only with synthetic payloads, including a scenario combining an explicit `pending` marker
+with an escalated `pending.fs.<skill>` marker in the same session (one block, reason names both).
 **Not tested:** the hook firing inside a real conversation turn (this file was written and
-tested entirely with synthetic piped payloads, the same limitation `lessons-hook.sh` has);
-whether the sandboxed bash used for these tests has identical `grep`/`sed` behaviour to the
-real Git Bash the hook runs under on this machine (both are "GNU grep", but confirm with
-`grep --version` if detection seems off); `SubagentStop` (a pending instruction that is only
-addressed, or not, inside a subagent's own completion is not covered by this design — see
-"What it does and does not fix" above); Linux or macOS; a second machine.
+tested entirely with synthetic piped payloads, the same limitation `lessons-hook.sh` has) beyond
+the one confirmation above; whether the sandboxed bash used for these tests has identical
+`grep`/`sed` behaviour to the real Git Bash the hook runs under on this machine (both are "GNU
+grep", but confirm with `grep --version` if detection seems off); `SubagentStop` (a pending
+instruction that is only addressed, or not, inside a subagent's own completion is not covered by
+this design — see "What it does and does not fix" above); Linux or macOS; a second machine;
+whether naming the skill in the escalated block's reason actually steers the assistant to the
+*right* skill where the explicit-instruction case's generic reason did not (plausible, since the
+model loaded `skill-lessons` for an explicit request that named `deeplabcut-hpc` in free text
+but the escalation path draws the name from a controlled marker file, not free text — but this
+is a hypothesis, not yet observed).

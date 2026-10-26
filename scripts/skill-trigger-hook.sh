@@ -17,6 +17,18 @@
 #       applies. The reminder is logged to reminders.tsv. stop_hook_active prevents a loop,
 #       and the one-reminder-per-session flag prevents nagging after the first block.
 #
+#     - Also checks for escalation markers ("$sid.pending.fs.<skill>") written by
+#       skill-file-signal-hook.sh when that hook's own non-blocking nudge for a skill has
+#       fired twice in one session without a skill() load. This bridges a real recurrence
+#       (2026-10-26, dlc-pig-method-paper conversation; see the lesson logged the same day
+#       and research/skill-trigger-hooks-ledger.md section 8): a file-signal nudge is
+#       visible in the transcript but was ignored twice in a row for two different skills.
+#       skill-file-signal-hook.sh itself still never blocks (that invariant is unchanged and
+#       still checked by check_sync_setup()); this script is the only one that emits
+#       decision:"block", now triggered by either source. The reason names the specific
+#       skill(s) when known from an escalation marker, unlike the explicit-instruction case
+#       (still a fixed generic string, see "Why the phrase match..." above).
+#
 # This only checks "was some skill() call made after the instruction", not "was it the
 # right skill" or "did the assistant actually act on it" — a deliberate limit, see the
 # reference doc's "Known limits" section.
@@ -72,14 +84,34 @@ case "$event" in
     ;;
   Stop)
     case "$payload" in *'"stop_hook_active":true'*|*'"stop_hook_active": true'*) exit 0 ;; esac
-    [ -f "$STATE/$sid.pending" ] || exit 0
+
+    explicit=0
+    [ -f "$STATE/$sid.pending" ] && explicit=1
+
+    fs_cands=""
+    for f in "$STATE/$sid.pending.fs."*; do
+      [ -e "$f" ] || continue
+      cand="${f#"$STATE/$sid.pending.fs."}"
+      fs_cands="$fs_cands $cand"
+    done
+    fs_cands="${fs_cands# }"
+
+    { [ "$explicit" -eq 1 ] || [ -n "$fs_cands" ]; } || exit 0
     [ -f "$STATE/$sid.reminded" ] && exit 0
     touch "$STATE/$sid.reminded"
     rm -f "$STATE/$sid.pending"
+    for f in "$STATE/$sid.pending.fs."*; do rm -f "$f" 2>/dev/null; done
     printf '%s\t%s\t%s\n' "$(date +%Y-%m-%dT%H:%M:%S)" "$sid" "$project" >> "$REMINDERS"
     # Housekeeping: drop per-session state older than 30 days.
     find "$STATE" -maxdepth 1 -type f -mtime +30 -delete 2>/dev/null
-    reason="Skill-trigger check (automatic hook): an earlier message in this session asked you to trigger/use/load a skill, and no skill() call has been made since. Before finishing, either load the matching skill now, or say in one sentence why none applies. This check fires at most once per session."
+
+    if [ -n "$fs_cands" ] && [ "$explicit" -eq 1 ]; then
+      reason="Skill-trigger check (automatic hook): an earlier message in this session asked you to trigger/use/load a skill, and file content read since then also repeatedly matched the declared file signal of:$fs_cands. No skill() call has been made since. Before finishing, either load the matching skill(s) now, or say in one sentence why none applies. This check fires at most once per session."
+    elif [ -n "$fs_cands" ]; then
+      reason="Skill-trigger check (automatic hook): file content read earlier in this session repeatedly matched the declared file signal of:$fs_cands, and it has not been loaded. Before finishing, either load it now, or say in one sentence why it does not apply. This check fires at most once per session."
+    else
+      reason="Skill-trigger check (automatic hook): an earlier message in this session asked you to trigger/use/load a skill, and no skill() call has been made since. Before finishing, either load the matching skill now, or say in one sentence why none applies. This check fires at most once per session."
+    fi
     printf '{"decision":"block","reason":"%s"}\n' "$reason"
     ;;
 esac

@@ -306,3 +306,163 @@ a keyword hit cannot judge "should this skill have fired." Round 2 narrows that 
   not-yet-built design (section 6.5) that moves the keyword table into opt-in per-skill
   frontmatter instead of a central hardcoded list. No code written, no hook registered, no
   local tests. Decision pending with the user.
+
+## 8. Round 3 (2026-10-26): real-session confirmation, and an escalation path
+
+A third conversation export (`conversation-export.json`, dropped at the repo root, an
+HPC/DeepLabCut session, `dlc-pig-method-paper`) was analysed at the user's request ("Analyze
+why [skills] never triggered... suggest changes"). Both R1 and R2 were by this point built and
+registered (see the log above), so unlike rounds 1 and 2 this was the first chance to observe
+them firing in an actual session rather than synthetic payloads.
+
+### 8.1 What the transcript showed
+
+- Both file-signal nudges (R2) fired as designed and were visible in the transcript as
+  `hook-feedback` blocks: once for `hpc-job-scripts` (after a `read` of a file containing
+  `#SBATCH`) and once for `deeplabcut-hpc` (after a `bash` call touching DLC training-script
+  content). **Neither was acted on** — the assistant's next turn moved straight to the next
+  tool call with no reasoning trace engaging the hook content at all. This closes the
+  "not tested: the hook firing inside a real conversation turn... confirmed [for Claude Code],
+  not here" item from both R1 and R2's "Tested and not tested" sections (`additionalContext`
+  *is* delivered and visible in Posit Assistant, matching the Claude Code prior art in section
+  7.3) — and shows visibility alone is not sufficient, consistent with the PlanBench-XL
+  reselection-bottleneck/recency-bias explanation already in section 6.2: by the time a second,
+  unrelated tool call happens, the nudge is out of the "recent window" the same way the
+  skill-list-at-session-start problem was.
+- R1 also fired correctly, in the other direction: the user's turn 40 instruction ("Trigger
+  your deeplabcut skill to record that as a lesson") set the pending marker, and the very next
+  assistant turn did call `skill()` — but loaded `skill-lessons`, not `deeplabcut-hpc`. No
+  `Stop` block was needed (the marker was cleared before `Stop` ran), so this is not a failure
+  of the enforcement itself; it is the first live instance of the documented, accepted limit
+  ("checks *some* `skill()` call happened, not whether it was the right one" — section "What it
+  does and does not fix" in the reference doc). Arguably the right call in isolation (the
+  instruction's actual intent, recording a lesson, routes through `skill-lessons`), but it means
+  `deeplabcut-hpc` itself was never loaded in a session that was saturated with DLC-specific
+  content (shuffle-indexing conventions, training orchestrator scripts, dataloader-worker
+  tuning) that is squarely that skill's stated territory.
+- Separately from the hooks: the very first user message in the session was a pasted terminal
+  permission-denied error from a different host, and the assistant's first reply correctly
+  noted it had no access to that host — but also, in the same reply, implicitly framed the
+  whole topic as "not this workspace's concern" before the task turned out to be exactly that
+  workspace's `input/` HPC scripts a few turns later. Not a hook finding (no tool call had
+  happened yet to fire a file-signal match), but a plausible contributing anchor: nothing in the
+  hook design addresses priming from an early, since-superseded framing.
+
+### 8.2 Change made
+
+Given R1's `Stop`-block mechanism already has an accepted, bounded cost (one forced turn, once
+per session) and R2's repeated, *ignored* nudge is now a directly observed failure (not a
+hypothetical), added an escalation path rather than reopening the non-blocking-vs-blocking
+debate from round 2: a **second**, still-unaddressed file-signal nudge for the same skill in the
+same session now writes a marker that feeds into R1's existing `Stop` block, naming the specific
+skill(s), instead of repeating the same ignorable `additionalContext` line a second time.
+`skill-file-signal-hook.sh` itself still never emits `decision:"block"` (unchanged invariant,
+still guarded by `check_sync_setup()`); only `skill-trigger-hook.sh` blocks, now triggered by
+either an explicit instruction or an escalated nudge, sharing the one-block-per-session budget.
+Full design and all tested/not-tested detail:
+`github-skill-maintenance/references/skill-trigger-hook.md` (the "2026-10-26 update" notes and
+new "Escalation: a repeated, ignored nudge forces one block" section). Tested with synthetic
+piped payloads only (first-match nudge, second-match escalation, a `skill` load clearing the
+path between matches, two skills escalating together producing one combined block, an explicit
+instruction plus an escalated nudge together producing one combined block, `bash -n`,
+`check_sync_setup()`); not tested inside a real conversation turn. `lint_skills()` and
+`check_skill_links()` re-run clean after the doc edits (pre-existing `description`-length `info`
+notices on three unrelated skills, unchanged).
+
+### 8.3 Deliberately not done this round
+
+- Did not extend `file_signals` to more skills, and did not build a general content-based
+  classifier — out of scope per section 7.5 item 4, unchanged.
+- Did not try to fix R1's "wrong skill loaded" limit (e.g. parsing the requested skill name out
+  of the user's free-text instruction) — the reference doc's own reasoning against extracting
+  free text with a single-capture `sed` (embedded quotes) applies here too, and a wrong guess
+  injected into a `Stop` block's `reason` would be a user-text extraction, not a controlled
+  marker filename the way the R2 escalation's skill name is. Left as an open item below.
+- Did not address the "early framing anchors the rest of the session" observation from 8.1 — no
+  hook can observe or correct for a model's own earlier phrasing; it would need a prompt-level
+  or description-level fix (e.g. the HPC/DeepLabCut skills already carry "even if the request
+  doesn't name Slurm/HPC... check whether..." language for exactly this reason, which apparently
+  was not enough here either). Recorded as an open item, not actioned.
+
+### 8.4 Open items
+
+- Whether the named-skill escalation block actually gets the *right* skill loaded (as opposed to
+  just *a* `skill()` call) is unobserved — round 3 only exercised the unescalated R1 path for
+  that question. Needs another real recurrence to tell.
+- R1's "wrong skill loaded" limit (8.1, second bullet) is still open; no design proposed yet
+  beyond the constraint noted in 8.3.
+- ~~Whether to widen `file_signals` beyond the two seeded skills remains undecided~~ — resolved in
+  round 4 below (2026-10-26, same day): the user asked to widen it now that the escalation
+  mechanism exists.
+
+## 9. Round 4 (2026-10-26, same day as round 3): widened `file_signals` to four more HPC skills
+
+User request: extend `file_signals` to `hpc-gpu-jobs`, `hpc-resource-allocation`,
+`hpc-python-code` and `hpc-r-code`, reasoning that the original hold-off (section 7.5 item 1,
+"only hpc-job-scripts and deeplabcut-hpc... do not add it speculatively to the other skills")
+was conditioned on the escalation mechanism (section 8) not existing yet.
+
+### 9.1 Signals chosen
+
+Each pattern reuses tokens the skill's own description or body already names as its subject
+matter — not new invented keywords — mirroring how the two seeded skills' signals were chosen:
+
+| Skill | `file_signals` | Rationale |
+|---|---|---|
+| `hpc-gpu-jobs` | `--gres=gpu\|--gpus[=:]\|\bCUDA_VISIBLE_DEVICES\b\|\btorchrun\b` | Slurm GPU request syntax, the GPU-visibility env var, and the PyTorch multi-GPU launcher the skill's description names directly. |
+| `hpc-resource-allocation` | `OUT_OF_MEMORY\|\boom-kill\b\|\bsacct\b\|\bseff\b` | The Slurm job-state string, the kernel OOM-killer log line, and the two accounting commands (`sacct`/`seff`) the skill's description centres its "measure-then-size" workflow on. |
+| `hpc-python-code` | `\bSIGUSR1\b\|signal\.signal\(signal\.SIGTERM` | The signal-handling pattern the skill specifically teaches (SIGUSR1/SIGTERM handling), distinct from the generic job-script content `hpc-job-scripts` already covers. |
+| `hpc-r-code` | `parallelly::availableCores\|future\.batchtools\|\bR_LIBS_USER\b` | R/HPC-specific tokens the skill's description names (`parallelly::availableCores` instead of `detectCores`, `future.batchtools`, `R_LIBS_USER`), unambiguous to R code specifically. |
+
+`hpc-cluster-docs` was deliberately **not** given a signal: it is a "run this first, before any
+job script" skill about identifying which cluster/scheduler is in use, not keyed to a
+distinguishing content pattern in a script — the same reasoning that excluded it from the
+original seed list (section 7.5 item 1's "strong, low-ambiguity file signature" requirement).
+Nothing in its description points at a specific string the way `#SBATCH` or `import deeplabcut`
+do; adding a vague signal here would be exactly the "noise, not signal" case the design warns
+against.
+
+### 9.2 A real bug found by testing before shipping
+
+Manually piping the new `hpc-gpu-jobs` signal through the hook (mirroring the existing test
+recipe) failed immediately: `grep -qE "$pat"` treated the leading `--gres=gpu` alternative as a
+`grep` *option* ("unknown option -- gres=gpu|..."), not a pattern, because the variable's value
+starts with `--`. This was not caught by `lint_skills()` (which validates the pattern compiles as
+an R regex via `grepl()`, a different regex engine with no option-parsing step) or by the
+synthetic-payload tests in round 3 (none of the two seeded patterns started with `-`). Fixed by
+adding the `--` end-of-options marker to the `grep` invocation in
+`scripts/skill-file-signal-hook.sh` (`grep -qE -- "$pat"`), which is a one-line, order-independent
+fix with no behaviour change for patterns that don't start with `-`. This is a second instance
+(after the CRLF-reintroduction pitfall, hit again several times while editing this round) of a
+class this ledger had not previously named: a check that validates a pattern as *a regex* does
+not validate it as *safe `grep` command-line input* — the two are different contracts. Recorded
+as a candidate `lint_skills()` extension below (9.4), not yet built.
+
+### 9.3 Testing
+
+Re-ran, after the `grep --` fix, the full chain for each of the four new signals plus
+regression coverage: each pattern individually nudges its own skill and only its own skill (one
+`torchrun` test, one `--gres=gpu` test matching both `hpc-gpu-jobs` and, correctly, also
+`hpc-job-scripts` since the line also contains `#SBATCH` — an intentional overlap, not a bug,
+since both skills are genuinely relevant to a GPU `sbatch` script); an unrelated `ggplot2` line
+produces no nudge; a skill already marked loaded is correctly excluded while an unrelated
+still-unloaded skill in the same session still nudges; the round-3 escalation path (second match
+→ `pending.fs.<skill>` → named `Stop` block) still works with the fixed `grep` call and with two
+of the newly-added skills (`hpc-gpu-jobs` + `hpc-job-scripts` together). `lint_skills()`,
+`check_skill_links()`, and `check_sync_setup(cfg = <real settings.json>)` all re-run clean (no
+new findings; the pre-existing three `description`-length `info` notices unchanged, and
+`check_sync_setup()`'s "file-signal declaring skills" row now lists all six skills). **Not
+tested:** any of the six signals firing inside a real conversation turn; whether six declared
+skills (versus the original two) changes the cost of scanning frontmatter per matching tool call
+in a way worth measuring (still unsized, per section 7.6/8.4).
+
+### 9.4 Open items
+
+- Candidate `lint_skills()` extension, not built this round: flag a `file_signals` alternative
+  that starts with `-` (the exact pattern that caused 9.2), since the fix in the hook script
+  covers execution but a future author could still write a leading-`-` alternative in a different
+  shared script that calls `grep` without the same `--` guard; a linter check would catch it at
+  author time instead of relying on every call site remembering the guard.
+- Whether to widen `file_signals` further (`hpc-cluster-docs` with a different kind of signal,
+  e.g. matching on an absence rather than a presence, or the `python-reproducible-pipeline` /
+  `r-reproducible-pipeline` skills) is undiscussed and not proposed here.

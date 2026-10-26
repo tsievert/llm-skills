@@ -69,6 +69,7 @@ current/active state (working rules, open decisions, the todo table).
 50. 2026-10-26 — Added grammar checking (LanguageTool/LanguageToolR) to `manuscript-writing-quarto`
 51. 2026-10-26 — Built `stats-reporting-and-review`
 52. 2026-10-26 — `agents-md-maintenance` audit of this repo's own `AGENTS.md`
+53. 2026-10-26 — Real-session trigger analysis (round 3): escalation path added to the file-signal hook
 
 ## Entries
 
@@ -887,3 +888,54 @@ current/active state (working rules, open decisions, the todo table).
   (`2026-10-26T10:12:11`) matches the latest triage entry above; subagent-delegation rule present and
   correctly conditional; file length (182 → ~178 lines) within normal range, no further restructuring
   proposed. Not committed yet.
+- 2026-10-26: Analysed a third dropped-in conversation export (`conversation-export.json`, repo root, an
+  HPC/DeepLabCut session, `dlc-pig-method-paper`) at the user's request, to see why neither `hpc-job-scripts`
+  nor `deeplabcut-hpc` ever loaded despite heavy relevant content (SLURM `sbatch` scripts, DLC training
+  orchestrators, shuffle-indexing conventions, dataloader-worker tuning). Unlike the two prior rounds
+  (`research/skill-trigger-hooks-ledger.md` sections 1-7), both enforcement hooks (`skill-trigger-hook.sh`
+  R1, `skill-file-signal-hook.sh` R2) were already built and registered this time, so this was the first
+  chance to see them fire in a real session rather than synthetic payloads. Found: R2's file-signal nudge
+  fired twice, visibly (as `hook-feedback` blocks in the transcript, once each for `hpc-job-scripts` and
+  `deeplabcut-hpc`), and was ignored both times -- closing the "not tested: real conversation turn" item
+  for both hooks, but showing visibility alone does not cause action. R1 also fired correctly on an explicit
+  instruction ("Trigger your deeplabcut skill...") and did force a `skill()` call, but the wrong skill loaded
+  (`skill-lessons` instead of `deeplabcut-hpc`) -- the first live instance of a previously-documented, accepted
+  limit, not a new bug. Added an escalation: a second, still-ignored file-signal nudge for the same skill now
+  writes a marker consumed by `skill-trigger-hook.sh`'s `Stop` handler, producing one `Stop` block that names
+  the specific skill(s), instead of a second ignorable nudge; `skill-file-signal-hook.sh` itself still never
+  emits `decision:"block"` (unchanged invariant). Hit the repo's known CRLF-reintroduction pitfall several
+  times across the two scripts and the reference doc during editing (`git ls-files --eol`, `sed -i 's/\r$//'`
+  before each edit attempt, per the documented pitfall). Tested with synthetic piped payloads only, mirroring
+  the existing test recipes: first-match nudge, second-match escalation, a `skill` load clearing the path
+  between matches (no escalation), two different skills escalating together (one combined block), an explicit
+  instruction plus an escalated nudge together (one combined block naming both), `bash -n`, and
+  `check_sync_setup(cfg = <real settings.json>)` (all relevant rows `ok`, including the unchanged
+  `file-signal hook never blocks` guard). Not tested: the escalation path firing inside a real conversation
+  turn, or whether a named-skill `Stop` block actually steers the assistant to the *right* skill (R1's
+  wrong-skill limit is unresolved and left as an open item). `lint_skills()` and `check_skill_links()` re-run
+  clean (pre-existing, unrelated `description`-length `info` notices on three skills unchanged). Full writeup:
+  `research/skill-trigger-hooks-ledger.md` section 8. Logged a `github-skill-maintenance` lesson
+  (`llm-skills_20261026-150212_manual.md`). Not committed yet.
+- 2026-10-26: Extended `metadata.file_signals` from the two seeded skills to four more
+  (`hpc-gpu-jobs`: `--gres=gpu|--gpus[=:]|CUDA_VISIBLE_DEVICES|torchrun`; `hpc-resource-allocation`:
+  `OUT_OF_MEMORY|oom-kill|sacct|seff`; `hpc-python-code`: `SIGUSR1|signal.signal(signal.SIGTERM`;
+  `hpc-r-code`: `parallelly::availableCores|future.batchtools|R_LIBS_USER`), at the user's request
+  now that round 3's escalation mechanism makes a repeated nudge actionable. Deliberately skipped
+  `hpc-cluster-docs` (a "run this first" skill with no distinguishing content pattern). Testing
+  before shipping caught a real bug the regex-compile lint check could not see: `grep -qE "$pat"`
+  treated the `hpc-gpu-jobs` pattern's leading `--gres=gpu` alternative as a `grep` option, not a
+  pattern, failing with "unknown option" — fixed with `grep -qE -- "$pat"` in
+  `scripts/skill-file-signal-hook.sh` (a different regex engine, R's `grepl()`, is what
+  `lint_skills()` uses, so it never saw this). Re-tested all six signals individually (each nudges
+  only its own skill, with one intentional overlap: a GPU `#SBATCH --gres=gpu` line correctly
+  nudges both `hpc-gpu-jobs` and `hpc-job-scripts`), unrelated content (silent), an already-loaded
+  skill (silent) alongside a still-unloaded one in the same session (still nudges), and the round-3
+  escalation path with the fixed `grep` call. Hit the repo's CRLF-reintroduction pitfall several
+  more times across the four `SKILL.md` files and the reference doc; fixed each with
+  `git ls-files --eol` + `sed -i 's/\r$//'` before re-editing, per the documented pitfall.
+  `lint_skills()`, `check_skill_links()`, and `check_sync_setup(cfg = <real settings.json>)` all
+  re-run clean (same three pre-existing `description`-length `info` notices, unchanged; the
+  "file-signal declaring skills" row now lists all six). Full rationale, the per-skill signal
+  table, and the `grep --` bug: `research/skill-trigger-hooks-ledger.md` section 9 and
+  `github-skill-maintenance/references/skill-trigger-hook.md`'s updated file-signal table. Not
+  tested: any of the six signals firing inside a real conversation turn. Not committed yet.

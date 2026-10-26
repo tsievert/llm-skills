@@ -1,6 +1,8 @@
 ---
 name: hpc-r-code
 description: Writes and reviews R scripts and Slurm job scripts for running R on HPC clusters. Covers Rscript batch jobs, R modules and package libraries (R_LIBS_USER, renv, compiled packages), parallelly::availableCores instead of detectCores, mclapply/foreach/future/BiocParallel worker counts, BLAS threads, reproducible parallel RNG, job arrays with task IDs, atomic checkpoints, logging, graphics devices in batch, and submitting jobs from R with future.batchtools. Use when the user wants to run an R script on a cluster, or reports R jobs that are overloaded or cannot find packages on HPC. For a targets pipeline use r-reproducible-pipeline; for sizing memory or time requests or OUT_OF_MEMORY kills use hpc-resource-allocation.
+metadata:
+  file_signals: 'parallelly::availableCores|future\.batchtools|\bR_LIBS_USER\b'
 ---
 
 # R on HPC
