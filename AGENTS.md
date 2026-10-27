@@ -180,11 +180,6 @@ lives in [`HISTORY.md`](HISTORY.md), kept out of this file so it isn't reloaded 
 every conversation's context. Read it on demand rather than up front. When finishing a
 skill, a research round, or a triage run, append an entry there (not here).
 
-## Active work stream
-
-Resume the `job-opportunity-watch` staged-pipeline refactor from [`HANDOFF-job-watch-refactor.md`](HANDOFF-job-watch-refactor.md)
-(delete or archive it when the work stream ends).
-
 ## Lessons triage state
 
 - Lessons usage watermark: 2026-10-26T14:59:55
