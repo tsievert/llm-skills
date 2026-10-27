@@ -89,7 +89,8 @@ jw_read_links <- function(path = jw_links_path()) {
   d$dup_of[first != d$n] <- first[first != d$n]
   is_search <- grepl("(^|\\.)(google|bing|duckduckgo|startpage)\\.[a-z.]+$", d$host) &
     grepl("/search", d$url)
-  d$type <- ifelse(is_search, "search_engine", "portal")
+  is_sitemap <- !is_search & grepl("(\\.xml(\\.gz)?|sitemap[^/]*)([?#].*)?$", d$url, ignore.case = TRUE)
+  d$type <- ifelse(is_search, "search_engine", ifelse(is_sitemap, "sitemap", "portal"))
   d$query <- NA_character_
   for (i in which(is_search)) {
     q <- sub(".*[?&]q=([^&]*).*", "\\1", d$url[i])
@@ -138,7 +139,37 @@ jw_classify_titles <- function(text, profile = NULL) {
   )
 }
 
-jw_probe_one <- function(url, timeout = 25) {
+# Sitemap XML as a source (type = "sitemap", or any XML body that is a urlset/sitemapindex). A sitemap lists
+# every page of a site, so only vacancy-looking URLs are kept as anchors (cap `max_anchors`); the link text is
+# built from the URL slug ("postdoc-vole-ecology/123" -> "postdoc vole ecology"). An index is followed one
+# level (job/career-looking children first, at most 8 requests via .sitemap_locs).
+.sitemap_text <- function(body) {
+  if (length(body) > 2 && body[1] == as.raw(0x1f) && body[2] == as.raw(0x8b))
+    body <- tryCatch(memDecompress(body, "gzip", asChar = FALSE), error = function(e) raw())
+  .clean(rawToChar(body))
+}
+.slug_text <- function(u) {
+  s <- utils::URLdecode(sub("[?#].*$", "", u)); s <- sub("/+$", "", s)
+  s <- sub("^.*/", "", sub("/\\d+$", "", s))
+  trimws(gsub("[-_+]+|\\.(html?|php|aspx?)$", " ", sub("\\.(html?|php|aspx?)$", "", s)))
+}
+# A whole-site sitemap is mostly articles, authors and menus, so the URL filter is stricter than the anchor
+# check: a job word must be a whole path segment or word of the slug.
+.sitemap_job_re <- paste0("(^|[/_.-])(vacanc[a-z]*|jobs?|careers?|positions?|openings?|stellen[a-z]*|ausschreibung[a-z]*|",
+  "vacatures?|ledig[a-z]*|rekry[a-z]*|tyopaik[a-z]*|avoimet|emploi|offres?|postdocs?|postdoctoral|lecturer|",
+  "fellowships?|hiring|recruit[a-z]*|tjanst[a-z]*)($|[/_.-])")
+.sitemap_anchors <- function(locs, max_anchors = 2000) {
+  locs <- locs[!is.na(locs)]
+  locs <- ifelse(grepl("^https?://", locs), locs, ifelse(grepl("^[a-z0-9.-]+\\.[a-z]{2,}(/|$)", locs, ignore.case = TRUE), paste0("https://", locs), locs))
+  locs <- unique(locs[grepl("^https?://", locs)])
+  locs <- locs[!duplicated(sub("/\\d+/?$", "", locs))]          # same posting under several numeric ids
+  txt <- vapply(locs, .slug_text, "", USE.NAMES = FALSE)
+  keep <- grepl(.sitemap_job_re, tolower(sub("^https?://[^/]+", "", utils::URLdecode(locs))), perl = TRUE) & nchar(txt) >= 12
+  a <- data.frame(text = txt[keep], href = locs[keep])
+  list(anchors = utils::head(a, max_anchors), n_urls = length(locs))
+}
+
+jw_probe_one <- function(url, timeout = 25, type = "portal") {
   t0 <- Sys.time()
   r <- pf_perform(url, jw_ua, timeout = timeout, retry_on = c(429, 502, 503, 504))
   out <- list(status = "error", http = NA_integer_, final_url = NA_character_, bytes = NA_integer_,
@@ -153,7 +184,24 @@ jw_probe_one <- function(url, timeout = 25) {
     out$status <- if (out$http %in% c(401, 403, 429)) "blocked" else "http_error"
     return(out)
   }
-  if (!grepl("html|xml", ctype)) { out$status <- "non_html"; out$note <- ctype; return(out) }
+  if (!grepl("html|xml|gzip|octet-stream", ctype) && type != "sitemap") { out$status <- "non_html"; out$note <- ctype; return(out) }
+  head_txt <- if (grepl("xml|gzip|octet-stream", ctype) || type == "sitemap") .sitemap_text(body) else ""
+  if (grepl("<(urlset|sitemapindex)\\b", substr(head_txt, 1, 2000))) {
+    doc <- tryCatch(read_xml(head_txt), error = function(e) NULL)
+    if (is.null(doc)) { out$note <- "unparseable sitemap"; return(out) }
+    locs <- xml_text(xml_find_all(doc, "//*[local-name()='loc']"))
+    if (xml_name(doc) == "sitemapindex") {
+      ord <- locs[order(!grepl("job|career|vacanc|stell", tolower(locs)))]
+      locs <- unlist(lapply(ord, .sitemap_locs, depth = 1, budget = new.env()))
+    }
+    sm <- .sitemap_anchors(locs)
+    out$anchors <- sm$anchors; out$status <- "ok"
+    out$note <- sprintf("sitemap: %d URLs, %d vacancy-like%s", sm$n_urls, nrow(sm$anchors),
+                        if (nrow(sm$anchors) >= 2000) " (capped at 2000: first listed kept)" else "")
+    out$elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+    return(out)
+  }
+  if (type == "sitemap") { out$note <- "type sitemap but the body is not sitemap XML"; return(out) }
   doc <- tryCatch(resp_body_html(resp), error = function(e) NULL)
   if (is.null(doc)) { out$note <- "unparseable html"; return(out) }
   out$n_scripts <- length(xml_find_all(doc, "//script"))
@@ -192,7 +240,7 @@ jw_probe <- function(links, delay = 1.5, timeout = 25, profile = NULL, verbose =
       next
     }
     pf_wait(r$host, delay, state = jw_wait_state)
-    p <- tryCatch(jw_probe_one(r$url, timeout), error = function(e)
+    p <- tryCatch(jw_probe_one(r$url, timeout, type = r$type), error = function(e)
       list(status = "error", http = NA, final_url = NA, text_hash = NA, anchors = NULL,
            note = substr(conditionMessage(e), 1, 150)))
     na <- if (is.null(p$anchors)) 0L else nrow(p$anchors)
@@ -205,6 +253,15 @@ jw_probe <- function(links, delay = 1.5, timeout = 25, profile = NULL, verbose =
   anchors <- if (length(anc)) do.call(rbind, anc) else
     data.frame(source_id = character(), text = character(), href = character())
   if (nrow(anchors)) anchors <- cbind(anchors, jw_classify_titles(anchors$text, profile))
+  # Vacancy-likeness after every probe (needs jw_checks.R from scripts/pipeline; skipped when not sourced):
+  # a page that was read but yields no vacancy-like link is a menu, not a listing.
+  if (exists("jw_anchor_job_like", mode = "function")) {
+    anchors$job_like <- if (nrow(anchors)) jw_anchor_job_like(anchors$text, anchors$href, anchors$role_hit, anchors$topic_hit) else logical()
+    nj <- vapply(sources$id, function(i) sum(anchors$job_like[anchors$source_id == i]), 0)
+    sources$n_job_like <- as.integer(nj); sources$flag <- jw_source_flag(sources$status, nj)
+    if (verbose) for (i in which(sources$flag %in% c("nav_only", "weak")))
+      message("  ", sources$flag[i], ": ", substr(uniq$url[match(sources$id[i], uniq$id)], 1, 80))
+  }
   list(sources = sources, anchors = anchors, links = links)
 }
 
