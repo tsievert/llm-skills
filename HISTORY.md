@@ -1040,3 +1040,32 @@ links()`/`check_skill_clashes()` (no new skills or cross-links added). Watermark
 method-paper` x2, an empty `llm-skills_20261026-152616_4194ec0d.md`) remain in the inbox for a future run; the
 processed file was *not* moved to `inbox/processed/` because its one parked entry (`staged-assistant-workflow`)
 is still open and the convention is to keep a file with an open item visible for the next triage pass.
+
+Ran `skill-feedback-triage` a second time, over the 7 `job-search_*` files and 2 `dlc-pig-method-paper` files
+left in the inbox (44 entries total; 24 failed validation on `type`, the same pattern the prior round's
+`skill-lessons` fix targets -- real-world confirmation of that fix's need). Key finding: the `job-search_*`
+files are the very material that fed the 2026-10-27 job-opportunity-watch refactor, so each entry was checked
+against the current skill before proposing anything, not assumed to be new. Result: 36 of 37
+`job-opportunity-watch`/`social-research-search` entries were already resolved (confirmed present in
+`references/`/`scripts/pipeline/` by grep, or already recorded as a deliberately deferred gap in the skill's
+own `SKILL.md`) or were informational `use-case` entries -- no action, archived. One genuine small gap: the
+deadline-cue word list and month names in `jw_checks.R` covered English/German/Finnish/Swedish but not
+French/Dutch; added `date limite`/`candidater avant`/`cl\u00f4ture des candidatures` and
+`sluitingsdatum`/`uiterste datum`/`solliciteren voor` as cues plus the missing month names (`janvier`...,
+`maart`/`mrt`/`augustus`), noted in `portal-quirks.md`, and spot-checked with three synthetic strings (French,
+Dutch, English) before running the full pipeline suite (132 tests, still 0 failures). The 2
+`dlc-pig-method-paper` files held 2 real gaps for `deeplabcut-hpc`, not yet covered: a feature-support check
+returning `False` needs interpreting (not-yet-merged vs. merged-to-a-non-default-branch, plus the installed
+version string's dev/commit suffix as a cheap provenance signal) -- added to "When something fails"; and no
+guidance to prioritize the model-architecture (`net_type`) axis over secondary tuning knobs when broadening a
+training sweep -- added as a new short section. Found and fixed along the way: CRLF had crept back into every
+file this round touched (`job-opportunity-watch/scripts/pipeline/jw_checks.R`, its `references/portal-quirks.md`,
+`deeplabcut-hpc/SKILL.md`) -- same recurring pitfall as the prior round. Verified: `lint_skills()` on both
+edited skills (only pre-existing info findings), `uvx --from skills-ref agentskills validate` on both (valid),
+the full `job-opportunity-watch` pipeline test suite (132 tests, 0 failures) after the `jw_checks.R` change.
+Not run: `check_versions()` (no version claims added), `check_skill_links()`/`check_skill_clashes()` (no new
+skills or cross-links). Archived all 9 processed files to `inbox/processed/`; watermark left unchanged
+(`read_usage()` found 0 new rows since the last run). The 3 remaining untriaged files
+(`llm-skills_20261026-152616_4194ec0d.md` -- empty/no entries, `llm-skills_20261027-170000_job-watch-refactor.md`
+-- the one parked entry from the prior round, `llm-skills_20261027-190156_7da426be.md` -- not yet reviewed)
+are still open for a future run.

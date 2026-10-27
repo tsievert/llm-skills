@@ -133,6 +133,19 @@ exposed, follow "When something fails: search upstream before improvising" below
 concluding it's missing — confirm via issues/PRs, then report to the user with links so they can
 decide whether to file or upvote a feature request upstream.
 
+## Designing a multi-candidate training sweep: which axis to vary first
+
+When asked to broaden an orchestrator/sweep (several `train_network` jobs with varying settings)
+beyond its first candidates, **exhaust the model architecture (`net_type`) axis before reusing
+secondary tuning knobs** (dataloader settings, augmentation on/off, etc.) just to inflate candidate
+count — if the project's own prior benchmark data or the official architecture docs list untested
+`net_type` options, those are higher-value candidates than a second variant of a knob already
+covered. Reported once (2026-10-26): the assistant twice defaulted to re-using an already-exhausted
+tuning knob to add sweep breadth before checking whether untested architectures were available, and
+the user had to correct the prioritization twice. Check both sources before proposing a sweep:
+the project's benchmark results (if one exists) and the current architectures doc page, then order
+candidates architecture-first, deferring secondary-knob variants to a later round.
+
 ## Job script skeleton (training, one GPU)
 
 Adapt to the site (partition, GPU syntax, env activation) after loading `hpc-cluster-docs` and `hpc-gpu-jobs`, and lint with `hpc-job-scripts/scripts/check_sbatch.sh`.
@@ -187,6 +200,16 @@ DLC moves fast, so an unexpected error is often a known bug, a regression in the
 5. Check the forum for usage and cluster questions: https://forum.image.sc/tag/deeplabcut
 6. Compare dates with the installed version. If a fix is merged but unreleased, offer these options and let the user choose: pin an older release, install the pre-release (`pip install --pre deeplabcut`), or install from `main` (`pip install git+https://github.com/DeepLabCut/DeepLabCut.git`). Installing from `main` is less stable.
 7. Report what you found with links, and say plainly whether an issue is confirmed, only similar, or not found. Do not present a workaround from an unrelated or unresolved issue as established. If nothing matches, say so before trying your own diagnosis.
+
+**A feature-support check that returns `False` needs interpretation, not just the result.** A
+snippet that introspects the installed package for a named config field (e.g. checking a
+`pytorch_config.yaml` key exists) can correctly report `False` for two different reasons: the
+change hasn't merged anywhere yet, or it merged to a **non-default branch** the user's install
+doesn't track — a plain "unsupported" result doesn't distinguish these (reported once, 2026-10-26).
+When reporting a `False` result, check which branch the fix merged into (step 3/4 above), not just
+whether a PR merged at all, and say so explicitly. The installed version string is a cheap second
+signal: a clean release tag (no dev/commit suffix) despite the user describing a from-source-control
+install can itself indicate the install didn't pick up recent `main` commits.
 
 ## Not verified
 

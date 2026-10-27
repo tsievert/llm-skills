@@ -19,6 +19,9 @@ new links and 1 to 2 queue items. So the diff works; a few failures are transien
 - Role and topic words are English plus parts of German, Swedish, Danish, Norwegian, Finnish, Estonian,
   Dutch and French. Missing languages mean missed items; extend `.role_re` and `.topic_re` in
   `scripts/jobwatch.R` when a language is under-represented in the portals.
+- The deadline-cue list and month names in `jw_checks.R`'s `.jw_cue`/`.jw_mon` cover English, German,
+  Finnish, Swedish, French and Dutch; a page in another language reads as `no_deadline_found` even
+  with a visible deadline. Extend both when a new language's portals show up often as `no_deadline_found`.
 - Generic titles ("Researcher", "Postdoc") hide the topic; the queue shows them in tier 2.
 - Nav links and page-furniture are filtered by a stoplist of short phrases; some will leak through.
 - Some aggregators list unrelated regions (for example US faculty-job PDFs on a general ecology board):

@@ -114,7 +114,14 @@ jw_prefilter <- function(items, terms) {
   dezember = 12, "m\u00e4r" = 3, mrz = 3, okt = 10, dez = 12,
   januari = 1, februari = 2, mars = 3, maj = 5, augusti = 8,
   tammikuuta = 1, helmikuuta = 2, maaliskuuta = 3, huhtikuuta = 4, toukokuuta = 5, "kes\u00e4kuuta" = 6,
-  "hein\u00e4kuuta" = 7, elokuuta = 8, syyskuuta = 9, lokakuuta = 10, marraskuuta = 11, joulukuuta = 12)
+  "hein\u00e4kuuta" = 7, elokuuta = 8, syyskuuta = 9, lokakuuta = 10, marraskuuta = 11, joulukuuta = 12,
+  # French: "mars"/"mai"/"juin"/"juillet"/"octobre"/"novembre" already covered above or share an
+  # English/Swedish spelling; only the distinct forms are added here.
+  janvier = 1, "f\u00e9vrier" = 2, "f\u00e9vr" = 2, avril = 4, juillet = 7, "ao\u00fbt" = 8, aout = 8,
+  septembre = 9, octobre = 10, novembre = 11, "d\u00e9cembre" = 12, "d\u00e9c" = 12, janv = 1,
+  # Dutch: "januari"/"februari"/"mei"/"juni"/"juli"/"september"/"oktober"/"november"/"december"
+  # already covered above (identical to Swedish/German spellings); "maart"/"mrt"/"augustus" differ.
+  maart = 3, mrt = 3, augustus = 8)
 
 # All dates in a string with their positions: 15 November 2026, 15. Nov. 2026, November 15, 2026,
 # 15.11.2026 (day first), 2026-11-15. Numeric forms are read day-first, as in the countries searched.
@@ -144,7 +151,8 @@ jw_prefilter <- function(items, terms) {
 # "befristet" is deliberately not a cue (it contains "frist" and returned contract end dates).
 .jw_cue <- paste0("(?i)(deadline|closing date|closes|apply (by|before|until)|applications? (must|should|are due|until|by|close)|",
   "application due|bewerbungsfrist|bewerbungsschluss|bewerbung(en)? (bis|sp\u00e4testens)|\\bfrist\\b|",
-  "hakuaika|haku p\u00e4\u00e4ttyy|viimeinen hakup\u00e4iv\u00e4|ans\u00f6kningstid|sista ans\u00f6kningsdag|ans\u00f6k senast)")
+  "hakuaika|haku p\u00e4\u00e4ttyy|viimeinen hakup\u00e4iv\u00e4|ans\u00f6kningstid|sista ans\u00f6kningsdag|ans\u00f6k senast|",
+  "date limite|candidater avant|cl\u00f4ture des candidatures|sluitingsdatum|uiterste datum|solliciteren voor)")
 
 # For each cue take the FIRST date that follows it (window characters). deadline = earliest date that lies in
 # the future, else the latest past one. Returns list(deadline, verdict, dates, flag).
