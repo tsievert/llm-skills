@@ -167,6 +167,7 @@ ERROR until the `<PLACEHOLDER>` values in its profile are replaced.
 - `hpc-python-code`: the Python code inside each step (logging, seeds, atomic writes, CPU counts).
 - `hpc-resource-allocation`: sizing `mem_mb` and `runtime` from the benchmark and `sacct` output.
 - `hpc-r-code`: R steps and R environments on a cluster.
+- `staged-assistant-workflow`: when a step needs assistant judgment and can't run headless as part of the Snakemake DAG, split the workflow into stage conversations with file hand-offs instead.
 - `animal-behaviour-tracking-analysis`: a typical pipeline to wrap (DeepLabCut output to metrics to statistics).
 - `deeplabcut-hpc`: local `uv`/venv prototyping before a cluster job; also points back here for the "uv/Python not found by the assistant's shell" diagnosis.
 - `data-repository-readme`: documenting the code and data deposit that accompanies the pipeline.

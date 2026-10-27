@@ -195,6 +195,7 @@ session guard), which the checker reports as INFO.
 ## Related skills
 
 - `python-reproducible-pipeline`: Snakemake and uv for Python-centred or mixed workflows; the other side of the "choose the tool" decision.
+- `staged-assistant-workflow`: when a stage needs assistant judgment and can't run headless as part of the `targets` DAG, split the workflow into stage conversations with file hand-offs instead.
 - `hpc-cluster-docs`: identify the cluster and its documentation before filling the Slurm controller or job script.
 - `hpc-r-code`: R scripts and package libraries on a cluster (parallel workers, RNG, checkpoints).
 - `hpc-job-scripts`: sbatch scripts, log directories and the linter used on the template job script.

@@ -47,6 +47,7 @@ advice) or the wrong one loads. Duplicated advice inside bodies is the second ri
 | Meta | `github-skill-maintenance`, `skill-lessons`, `skill-feedback-triage` | repo upkeep; write lessons; read lessons | each other (stated in descriptions) |
 | Manuscript | `manuscript-writing-quarto` | Quarto manuscript structure (journal templates, `quarto-journals`), CRediT statement, flags-only spelling/bibliography/character linting | `manuscript-figures-ggplot` (figure export), `reproducible-research-data` (the deposit), `git-for-research-projects` (Git/CITATION.cff), `stats-reporting-and-review` (the numbers it reports) |
 | Reporting | `stats-reporting-and-review` | Cross-model-type effect sizes/CIs, power/sample size, pre-registration, multiplicity correction, reviewer-response drafting | `mixed-models-glmm` and `gam-mgcv`/`gam-interpretation` (fitting/diagnosis/smooth wording), `manuscript-writing-quarto` (the document itself; `report()` output is a scaffold, never final prose) |
+| Workflow pattern | `staged-assistant-workflow` | Splitting a long or recurring assistant task into named stages (one input/output file each), a status function, completeness gates, resumable batches — for workflows where at least one stage needs assistant judgment and can't run headless | `r-reproducible-pipeline`/`python-reproducible-pipeline` (all-headless DAGs), `agents-md-maintenance` (a single non-recurring work stream's hand-off note), `skill-lessons` (close-out logging) |
 
 ## Rules for writing a description
 

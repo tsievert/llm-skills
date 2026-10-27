@@ -93,7 +93,10 @@ missed, rather than re-deriving the whole triage from scratch.
    script or snippet, and state what was and was not tested. Do not call anything ready
    while errors remain.
 7. **Archive.** Move processed files with bash (`mv ... inbox/processed/`) in the real
-   inbox, not the copy, keeping parked ones in place. Never truncate or edit `usage.tsv`;
+   inbox, not the copy, keeping parked ones in place. A file with a mix of resolved and
+   parked entries stays in the inbox whole (do not split it) until every entry in it has a
+   disposition other than `park` — the parked entry is what future runs need to see, and
+   splitting the file risks losing the resolved entries' context. Never truncate or edit `usage.tsv`;
    instead record the watermark with `triage_watermark_set(max(U$time))` (only once the
    user has seen the triage table; skip it if `U` is empty). The next run then counts
    only newer rows, so months-apart runs do not double-count. Add a Log entry to `HISTORY.md`

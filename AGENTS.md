@@ -172,6 +172,7 @@ anything) is still open. Before starting a new one: follow the working rules abo
 | `grant-and-cv-support` | not started | OpenAlex/ORCID → CV/grant formatting; **caveat:** no automatic prose, every edit user-approved |
 | `python-reproducible-pipeline` | mostly done | uv + Snakemake, HPC via Slurm executor plugin |
 | `codebase-map` | done | per-project inventory/codemap/depends files, self-updating hook (hook deliberately not registered globally — needs per-project opt-in) |
+| `staged-assistant-workflow` | done, unproven | stage table/status-function/file-hand-off/gate pattern for recurring or long assistant-judgment workflows that can't run headless as a `targets`/Snakemake DAG; built from one real workflow (`job-opportunity-watch`'s refactor) on a `new-skill-suggestion` with only one report — promoted early at the user's explicit request rather than waiting for a second case. Open: everything, since it has not yet been applied to a second workflow. |
 
 ## History
 

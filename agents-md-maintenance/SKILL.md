@@ -123,6 +123,8 @@ concrete file pointers; anything resolved or no longer true.
   create-skill directly, so the new skill is only built after a `skill-feedback-triage` review.
 - create-skill (a built-in skill, not part of this repo): the eventual destination once a
   new-skill suggestion is reviewed and approved — not something this skill calls directly.
+- `staged-assistant-workflow`: when a work stream is recurring (not just long), with named
+  stages, gates, and a status function, rather than a single hand-off note.
 - `codebase-map`: owns inserting and maintaining the one specific pointer section it adds to a
   project's `AGENTS.md`/`DATABOT.md` (pointing at `.codemap/`). Leave that section alone; this
   skill covers everything else in the file.

@@ -59,6 +59,9 @@ and say what it would change.
    (PyPI `skills-ref`, the reference validator; its README calls it a demonstration
    library). The bare command `uvx skills-ref` fails on Windows; use `--from`. It accepts
    a skill the linter rejects (it does not see the truncated-description problem below).
+   Run it from the repo root with the skill's own directory name, not `.` — running it from
+   inside the skill's directory with `validate .` fails with "Directory name '' must match
+   skill name ..." even when the `SKILL.md` is valid (reported 2026-10-27).
 3. **Version claims.** When asked for a periodic check, or after a package release:
    ```r
    source("github-skill-maintenance/scripts/check_versions.R")
