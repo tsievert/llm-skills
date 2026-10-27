@@ -24,6 +24,9 @@ social_search("gratia", tags = c("gratia", "rstats"))   # both platforms in one 
 All functions return the same columns: `platform, source, created_at (UTC POSIXct), author, text, url,
 likes, reposts, replies, lang, id`. Sort or filter the data frame yourself, e.g. by `likes`.
 
+Keep queries to one or two words and filter dates locally (see Pitfalls). Print compactly, e.g.
+`res |> dplyr::arrange(dplyr::desc(created_at)) |> dplyr::transmute(created_at, author, text = substr(text, 1, 150), url) |> head(20)`.
+
 Show the user the `url` for every post you cite so they can verify it.
 
 ## Platform behaviour (tested 2026-10-23)
@@ -51,6 +54,28 @@ Show the user the `url` for every post you cite so they can verify it.
   "gam" match everything. Combine with `tag = "rstats"` or screen results for context. Bluesky matching is
   fuzzy: in a test, a quoted phrase also returned posts without that phrase (apparently matched through
   related text such as link cards), so filter the `text` column yourself when exactness matters.
+- **Multiword queries are AND-matched, and `since` shrinks them further.** Reproduced 2026-10-27: "postdoc
+  mammals" gave 67 posts without `since` but 1 with `since` one month back; a four-word query gave 0; the
+  single word "Verhaltensbiologie" gave 99 while "Postdoc Verhaltensbiologie Stelle" gave 0. Use at most two
+  content words, fetch without `since`, and filter `created_at` and keywords on the data frame. For precision
+  combine a short query with `author =` or `tag =` instead of adding words.
+- **Non-English queries need single words.** Phrases in German, French, Dutch, Swedish or Finnish mostly return
+  nothing. Search one word (e.g. a field term), then screen locally with job words in that language (Stelle,
+  vacature, poste, tjänst, tutkijatohtori). Expect low yield: job posts are often link-only cards, or bot posts
+  in English.
+- **Job-bot accounts.** Some accounts post every vacancy as "<employer> is hiring: <title> #tags". Find them
+  first (search "is hiring"), then query `bsky_search("hiring", author = <handle>, tag = <field tag>)`:
+  author alone hits the 400-post cap, author + tag is small and repeatable. The bot picks the tags, so niche
+  fields often only get generic ones, and yield per run can be near zero. The post is title-only: each lead
+  needs a second step to find the employer page and deadline.
+- **Mastodon job tags are saturated.** Broad tags (#jobs, #postdoc, #fedihire) return hundreds of unrelated
+  posts; topic tags (#rodents, #olfaction) return science news and bot summaries, not vacancies. A useful tag
+  needs both a job signal and a topic signal; field-specific job tags are low volume but cleaner.
+- **Screen with a job-word AND a topic-word filter, and read the hits.** Single weak words ("chemical",
+  "evolution", "animal", "behaviour") match chemistry, genomics and livestock posts, and "job|apply|position"
+  matches politics and ranger jobs. Exclude the fields the user rules out and print only the matches.
+- **Keep printed output small.** Select a few columns, `substr(text, 1, 150)` and `head()` before printing;
+  100+ rows of long text flood the console and the conversation.
 - **Hashtag mismatch.** Mastodon posts are tagged `#mgcv`, `#rstats`, `#GAM`; Bluesky users often skip tags,
   so use text search there and hashtags on Mastodon.
 - **Bias.** Results over-represent people who post publicly and who use these platforms; small counts say
