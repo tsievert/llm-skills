@@ -60,9 +60,19 @@ second calendar week's ledger diff.
    `state-and-files.md` (already stated in `stage-s4-classify.md`). Full notes and what was deliberately not
    built (a web-keyword ledger, a noise-share metric, an excluded-title stop-word pass): ledger section 15.
    132 unit tests still pass; `lint_skills()`, `check_skill_links()` and `skills-ref validate` all clean.
-5. Verify with `github-skill-maintenance` (`lint_skills()`, `check_skill_links()`, `check_skill_clashes()`,
-   `skills-ref validate` if `uvx` is available), then commit in logical groups: (a) `social-research-search`
-   notes, (b) pipeline skeleton, (c) later stage implementations, (d) this round's reference/`jobwatch.R` notes.
+5. **DONE (2026-10-27).** `lint_skills()` (repo-wide), `check_skill_links()`, `check_skill_clashes(new =
+   "job-opportunity-watch")` and `uvx --from skills-ref agentskills validate job-opportunity-watch` all clean
+   (no errors or warnings; the only findings are pre-existing info-level notes, confirmed unchanged by
+   diffing lint output before/after via `git stash`). Full pipeline test suite re-run (132 tests, 0 failures).
+   Committed in two groups on top of the three already-committed ones from earlier rounds: `d563783`
+   (`run_weekly.R`), `8fb2166` (the reference/`jobwatch.R` notes). Six commits total for this work stream
+   (`bc3beb3`, `242130d`, `5a99eb1`, `c112f28`, `d563783`, `8fb2166`), **not yet pushed** to `origin/main` --
+   ask the user before pushing. `HISTORY.md` closing entry added.
+
+All five next actions are done. What is left is outside this refactor's scope (see "Lessons triage state" and
+the "Todo: arrow reuse and cross-linking" section below) or explicitly deferred (web-keyword ledger,
+`jw_job_like_check()` noise-share metric, excluded-title stop-words, a real scheduled task, a second
+calendar week, non-Windows). Archive or delete this file once the user confirms the work stream is closed.
 
 ## Lessons triage state
 
@@ -84,11 +94,11 @@ second calendar week's ledger diff.
 
 ## Working-tree notes
 
-Uncommitted: `.gitattributes` (`*.qmd` rule, mine), `HISTORY.md` (mine), `research/...-refactor-ledger.md`
-(mine), `social-research-search/SKILL.md`, `job-opportunity-watch/` (new files and SKILL.md section), plus
-`AGENTS.md` and `.gitignore` changes that were already present when this session started: check
-`git diff AGENTS.md .gitignore` before committing so they are not committed by accident.
-`AGENTS.md` is about 17 KB and `HISTORY.md` about 105 KB; consider the `agents-md-maintenance` skill.
+Stale (2026-10-27): everything this section used to list (`.gitattributes`, `research/...-refactor-ledger.md`,
+`social-research-search/SKILL.md`, `job-opportunity-watch/` new files, `AGENTS.md`, `.gitignore`) is committed
+as of the six commits in next action 5. Only `HISTORY.md` and this handoff file itself remain uncommitted
+(their own closing edits). `AGENTS.md` is about 17 KB and `HISTORY.md` about 105 KB; consider the
+`agents-md-maintenance` skill if either grows further.
 
 ## Pitfalls met in this work stream (details in the lessons above)
 

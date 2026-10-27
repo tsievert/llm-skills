@@ -984,3 +984,27 @@ Researched and built the skeleton of a staged weekly pipeline for `job-opportuni
 ### 2026-10-27: job-opportunity-watch stages s1-s3 implemented
 
 Replaced the stubs by `jw_stage_fns.R` and `jw_checks.R` (job-like flag, profile-derived prefilter with reason, multilingual deadline extraction, resumable s3), added the `s1_anchors` side contract, `tests/test_stages.R` (26 tests total, all green), a one-page real smoke test, and docs (`references/pipeline.md`, profile template `search_synonyms`). Details: `research/job-opportunity-watch-refactor-ledger.md` section 13. Not committed; lint/link/clash checks not yet run.
+
+### 2026-10-27: job-opportunity-watch staged-pipeline refactor closed out (next actions 1-5)
+
+Finished the five next actions from `HANDOFF-job-watch-refactor.md`: (1) `run_weekly.R` runner plus a real
+`tar_make()` end-to-end run on 5 real links; (2) native sitemap support and a vacancy-likeness check in the
+probe; (3) `SKILL.md`/references rewritten around the stages; (4) the remaining triage notes folded into
+references (feed-verification checklist and a "don't silently simplify a filtered URL" note in
+`stage-s1-probe.md`; Near-miss and Aggregator-noise sections plus a `language` dimension in
+`classification.md`; a `jw_job_like_check()` noise-share gap noted in `portal-quirks.md`; `query_type`/
+`posts_per_month` actually implemented in `jobwatch.R`'s tag ledger, not just documented; a subagent-handoff
+cross-reference in `state-and-files.md`); (5) verification and commit. Full detail for (4):
+`research/job-opportunity-watch-refactor-ledger.md` section 15.
+
+Verified: `lint_skills()` (repo-wide, info-only findings, none new), `check_skill_links()`, `check_skill_clashes()`
+and `uvx --from skills-ref agentskills validate job-opportunity-watch` all clean; the full pipeline test suite
+(132 tests, 0 failures). Committed in two groups (`d563783` the runner, `8fb2166` the reference/`jobwatch.R`
+notes), on top of the three skeleton/stage-implementation commits from the two earlier rounds above and the
+`social-research-search` notes commit -- six commits total for this work stream, not yet pushed to `origin/main`.
+
+Explicitly deferred, not built (recorded as open gaps, not silently dropped): a companion web-keyword ledger
+for `web_search` queries, a `jw_job_like_check()` noise-share metric, an excluded-title stop-word pass for the
+tier-2 filter, Windows Task Scheduler itself, a second calendar week's ledger diff, non-Windows. Lessons-triage
+loose ends also still open (watermark not advanced further, `skill-feedback-triage` not re-run on the newer
+inbox file) -- separate from this refactor, tracked in the handoff doc's own "Lessons triage state" section.
