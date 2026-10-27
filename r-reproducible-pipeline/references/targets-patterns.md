@@ -1,7 +1,9 @@
 # targets patterns
 
-Contents: project layout; file targets and external tools; invalidation (tested); dynamic
-branching; seeds; Quarto reports; storage formats and memory; debugging; what to commit.
+Contents: project layout; file targets and external tools; invalidation (tested); a
+human/assistant stage as a file target; dynamic branching; seeds; Quarto reports; storage
+formats and memory (including parquet/arrow and data validation); Quarto dashboards for
+scheduled reports; debugging; what to commit.
 
 ## Project layout
 
@@ -44,6 +46,38 @@ tar_target(sim_csv, run_python_sim(sim_script, sample_id, n_obs, slope, tar_seed
 Rules are "cues" (`tar_cue()`); do not switch them off to hide a rerun you do not understand.
 Compare Snakemake's mtime-based triggers in `python-reproducible-pipeline`.
 
+## A human/assistant stage as a file target
+
+When one pipeline stage is performed outside the R process — a person edits a file, or an
+assistant conversation produces one — model it as an ordinary `format = "file"` target that
+stops with a clear message when the expected file is missing, using `tar_cue(mode = "always")`
+so the target is checked (not rebuilt) on every run:
+
+```r
+tar_target(stage_file, {
+  if (!file.exists("stage/handoff.parquet"))
+    stop("Waiting for stage/handoff.parquet; see <instructions>.")
+  "stage/handoff.parquet"
+}, format = "file", cue = tar_cue(mode = "always"))
+```
+
+Tested (targets 1.12.0, Windows): a missing file stops only that target and leaves everything
+upstream cached (`tar_progress()` shows it as `errored`); once the file appears, only this
+target and its downstream reran; a second run with no change reran nothing except the
+always-cued target itself (cheap: it only checks `file.exists()` and a hash).
+
+For a project that runs the same pipeline script against a fresh store per run (e.g. one run
+per calendar week), pass both explicitly instead of relying on the working directory:
+
+```r
+targets::tar_make(script = "assets/pipeline/_targets.R", store = "runs/2026-W43/_targets")
+```
+
+`tarchetypes::tar_quarto()` was not a fit for this shape in one project: it renders inside the
+working directory of the `_targets.R` it's declared in, which doesn't match a template file
+reused across many per-run store folders. The template was copied into the run folder instead
+and rendered as a plain file target with `quarto::quarto_render()`.
+
 ## Dynamic branching
 
 `tar_target(x, f(sample_id), pattern = map(sample_id))` creates one branch per element; branch
@@ -73,8 +107,51 @@ without a reason.
 ## Storage formats and memory
 
 Default RDS; `format = "qs"` (package qs2/qs) for speed and size on any object; `"feather"`
-(arrow) for data frames; `"file"` for data too large for memory. Parquet is not covered on the
-performance page. Large runs: `tar_option_set(memory = "transient", garbage_collection = 10)`.
+(arrow) for data frames; `"file"` for data too large for memory. Large runs:
+`tar_option_set(memory = "transient", garbage_collection = 10)`.
+
+**Parquet, `format = "file"` and `format = "parquet"` (arrow): schema contract, row rules, a
+completeness gate, and a Windows `mmap` trap.** Tested with arrow 26.0.0 on Windows: reading a
+parquet file with `arrow::read_parquet()` (or the `targets` built-in `format = "parquet"`
+target) memory-maps it by default, which then blocks overwriting or renaming that same file
+later in the same session —
+
+```
+IOError: Failed to open local file ... [Windows error 1224] The requested operation cannot be
+performed on a file with a user-mapped section open.
+```
+
+Fix: pass `mmap = FALSE` to every `read_parquet()` call on a file a later step rewrites, and
+write atomically (write to a temp name, then rename) rather than overwriting in place. This
+only bit on Windows; it was not seen reading-only or on files nothing rewrites.
+
+For validating data *between* pipeline stages, a hybrid approach (tested against `validate`
+1.1.7 and `pointblank` 0.12.4 on a small synthetic stage table) worked better than either tool
+alone: one `arrow::schema()` per stage, used both to write the parquet file and to validate it
+against; `validate::validator()` for row-level rules; a hand-written set-equality check for
+"every expected id appears exactly once" across stages (neither validation package covers this
+directly). `pointblank` was heavier than needed here (its own dependency tree pulls in roughly
+90 packages) for a report the pipeline already renders through Quarto. Caveat found while
+testing: `validate` silently **drops** a rule it can't parse (e.g. one written with
+`!logical_column`) and only emits a warning, not an error — compare `length(validator)` against
+the number of rules you wrote, not just whether validation ran. Write `NA` handling explicitly
+(`is.na(x) | ...`), since missing values otherwise pass or fail unpredictably depending on the
+rule.
+
+## Quarto dashboards for scheduled reports
+
+`format: dashboard` (Quarto's dashboard layout, not a plain document) suits a static,
+recurring report better than a long document when there's a handful of headline numbers and a
+few tables: value boxes (a `#| content: valuebox` chunk returning `list(icon, color, value)`),
+and a tabset of `reactable` tables. Tested (Quarto 1.10.18) rendering with
+`embed-resources: true` from a copy of the template placed in the run folder (see the
+assistant-stage pattern above) via `quarto::quarto_render(execute_params = list(...))`: a
+single self-contained HTML of about 3 MB took about 23 seconds to render. `execute_params`
+only changes what the code reads — a static YAML `title:` does not update per run, so
+parameterise the title from a chunk if it needs to vary. Each `htmlwidget` table embeds its own
+copy of its data, which is part of why file size grows with table count; for a report an
+assistant will need to re-read later, write a short plain-text `summary.md` alongside the HTML
+rather than re-parsing the rendered dashboard.
 
 ## Debugging
 

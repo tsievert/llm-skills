@@ -1008,3 +1008,35 @@ for `web_search` queries, a `jw_job_like_check()` noise-share metric, an exclude
 tier-2 filter, Windows Task Scheduler itself, a second calendar week's ledger diff, non-Windows. Lessons-triage
 loose ends also still open (watermark not advanced further, `skill-feedback-triage` not re-run on the newer
 inbox file) -- separate from this refactor, tracked in the handoff doc's own "Lessons triage state" section.
+
+Ran `skill-feedback-triage` on `llm-skills_20261027-170000_job-watch-refactor.md` (10 entries, found as a
+different-machine copy dropped in `context-inbox/lessons-transfer/` alongside a `restore.sh`/`SHA256SUMS`
+bundle that also contained the 7 `job-search_*` files; restored into the real inbox via `restore.sh`, left
+the `job-search_*` files untouched since this run was scoped to the new file only -- they're still only
+partly triaged per the earlier hand-off). All 10 entries parsed cleanly, no validator problems. Checked each
+proposed fix was not already present in the target skill before applying. Approved 9 `fix` outcomes, 1 `park`
+(low-confidence `new-skill-suggestion` `staged-assistant-workflow`, left in the inbox):
+`r-reproducible-pipeline` (5: assistant-stage file target + `tar_make(script, store)`; Windows
+`arrow::read_parquet(mmap = FALSE)`; a validate/pointblank/set-equality hybrid for inter-stage checks,
+including validate's silent rule-drop gotcha; Quarto `format: dashboard` for scheduled reports; corrected the
+`executeCode` `setwd()`/`on.exit()` note to explain it's baseline R function-frame semantics, not an
+assistant-tool quirk), `github-skill-maintenance` (bash-heredoc truncation added to "Pitfalls this repo has
+hit"), `skill-lessons` (documented a mapping from three types seen in practice but not in `lesson_types` --
+`new-script-suggestion`, `gap`, `script-change` -- to the canonical nine, plus a per-stage `use-case` entry
+convention; did not expand the enum itself, since that also touches `lesson_add()`'s validation and seemed
+like the larger, separate decision), `skill-feedback-triage` (a note on reading dropped-off conversation-export
+JSON), `agents-md-maintenance` (a "hand-off note" pattern for a work stream too large for `AGENTS.md`/
+`HISTORY.md`, using this very refactor's own `HANDOFF-job-watch-refactor.md` as the worked example).
+Found and fixed along the way: CRLF had crept back into every file this round touched (`r-reproducible-pipeline/
+SKILL.md` and `references/targets-patterns.md`, `github-skill-maintenance/SKILL.md`, `skill-feedback-triage/
+SKILL.md`, `skill-lessons/SKILL.md`, `agents-md-maintenance/SKILL.md`) -- the documented
+"CRLF regressed repeatedly" pitfall recurring yet again; `sed -i 's/\r$//'` after every edit batch, re-checked
+with `file` before lint. Verified: `lint_skills()` (repo-wide, only pre-existing info findings, confirmed none
+new), `check_versions()` (new claims -- arrow 26.0.0, pointblank 0.12.4 -- both match installed/CRAN current),
+`uvx --from skills-ref agentskills validate` on all five edited skills (all valid; note the command needs the
+skill directory as a bare relative path, not `.`, or it reports an empty directory name). Not run: `check_skill_
+links()`/`check_skill_clashes()` (no new skills or cross-links added). Watermark advanced to
+2026-10-27T19:11:31. Not done: the `job-search_*` files and the two other untriaged inbox files (`dlc-pig-
+method-paper` x2, an empty `llm-skills_20261026-152616_4194ec0d.md`) remain in the inbox for a future run; the
+processed file was *not* moved to `inbox/processed/` because its one parked entry (`staged-assistant-workflow`)
+is still open and the convention is to keep a file with an open item visible for the next triage pass.

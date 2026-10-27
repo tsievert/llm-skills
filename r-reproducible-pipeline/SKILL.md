@@ -182,6 +182,15 @@ session guard), which the checker reports as INFO.
   session in interactive use.
 - The assistant's R session may be blocked from reading `.Rprofile` and writing outside the
   project; use a git-ignored folder such as `tmp-examples/` for tests and delete it afterwards.
+- **A top-level `on.exit()` in an `executeCode` snippet does not restore `setwd()`.** This is
+  plain R semantics, not a quirk of the assistant's tool: `on.exit()` registers a handler on the
+  *current function's* frame, and top-level script code has no enclosing function frame to
+  exit — `old <- setwd(tmp); on.exit(setwd(old))` at top level is a no-op, and test files
+  (`_targets.R`, `_targets/`, parquet output) can land in the project root instead of a scratch
+  folder (reported once). Use absolute paths throughout, or wrap the directory change in
+  `withr::with_dir()`/`withr::local_dir()`, or pass `tar_make(script =, store =)` with absolute
+  paths instead of changing the working directory at all; check `git status` afterwards to
+  confirm no stray files remain.
 
 ## Related skills
 

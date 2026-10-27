@@ -94,6 +94,18 @@ environment: {os: "Windows 11", r: "4.6.0", python: null, packages: {mgcv: "1.9-
 
 `worked-well` is allowed: a recommendation that held up on real data is evidence too.
 
+**Only use the nine `type` values above.** Entries have been written in practice with values
+not in the list — `new-script-suggestion` (a new helper script, not a whole new skill),
+`gap` and `script-change` — and `lesson_add()`'s `match.arg()` rejects anything else, so these
+either failed to write or were hand-edited in after the fact; `skill-feedback-triage`'s
+validator then flags every one of them (`type missing or not in the allowed list`). Map them
+to an existing type instead of inventing one: a new-script idea is `missing-guidance` (the
+`suggested-change` field is where the script idea itself goes), a documentation gap is
+`missing-guidance`, and a change to an existing script's behaviour is `bug` (if it was wrong)
+or `worked-well` (if the change was confirmed correct). For a long staged or multi-conversation
+workflow, write one `use-case` entry per stage/conversation rather than one for the whole
+workflow — the per-stage granularity is what let triage see which stage actually had friction.
+
 ### Proposing a new skill
 
 A `new-skill-suggestion` entry is different from the rest: it proposes a skill that does not

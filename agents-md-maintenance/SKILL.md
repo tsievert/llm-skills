@@ -76,6 +76,14 @@ sections below are ways of applying it systematically.
   always-loaded file.
 - **Reference instead of duplicating.** Point at `README.md`, `.gitignore`, or existing docs
   rather than restating their content; duplicated facts drift apart over time.
+- **A hand-off note for a long work stream that outgrows one conversation.** When a multi-step
+  refactor or build spans more than the memory file and history log can usefully hold (a
+  17 KB `AGENTS.md` and a 105 KB `HISTORY.md` are both too large to re-derive one work stream's
+  state from), write a dedicated hand-off file instead of growing either: goal and decisions,
+  what exists and where, what's verified vs. not, a numbered "next actions" list, and "how to
+  resume" (the exact instruction to restart the work). Link it from the memory file with one
+  line, and archive or delete the hand-off file once the work stream closes — it's scratch
+  state for one thread of work, not a permanent record (that's what `HISTORY.md` is for).
 - **No single correct length.** Cited rules of thumb for always-loaded files range roughly from
   ~50 to ~200 lines depending on the file's role (global vs. project) and the source; treat these
   as a prompt to look harder when well exceeded, not a hard limit to enforce mechanically.

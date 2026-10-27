@@ -152,6 +152,13 @@ and say what it would change.
   error: if a field needs several values, join them into one delimited string (the `file_signals`
   field uses `'|'`, matching the regex-alternation syntax it is used for) rather than a native
   YAML sequence.
+- **Long Markdown through a bash heredoc can be silently truncated.** A reference file written
+  with a `cat <<'EOF' > file` heredoc, combined in the same `bash` call with several `sed -i`
+  edits (and once, an `Rscript -e` script using regex backslashes), ended mid-sentence, and a
+  later file in the same command was never created, with no error surfaced (reported once,
+  2026-10-27). Write multi-line Markdown or R with the `write`/`edit` tools instead of a bash
+  heredoc; if a heredoc is unavoidable, keep it to one file per `bash` call and check `wc -l`
+  plus a `tail` of the result afterwards. Keep `sed` to single-line changes only.
 
 ## What the linter does not judge
 

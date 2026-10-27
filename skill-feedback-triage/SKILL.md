@@ -30,6 +30,16 @@ cp -r ~/.posit/lessons/inbox ~/.posit/lessons/usage.tsv .posit/assistant/lessons
 If the user collected files from other machines or projects, they go into the same
 `inbox` copy; names do not collide by design.
 
+**Dropped-off conversation exports.** If the user also provides conversation-export JSON files
+as context (rather than, or alongside, lesson files), read them with
+`jsonlite::fromJSON(simplifyVector = FALSE)`: each turn is under `messages[[i]]$message$uiMessage`
+(`role`, `content`), and `content` is plain text with embedded tool-call/tool-result markup
+mixed in. The markup dominates file size (a 1 MB export can be mostly noise); strip it with a
+regex before printing, and print each turn truncated. In practice (3 exports, 0.9-1.4 MB each)
+the exports mostly corroborated lesson files already in the inbox, so read the lesson files
+first and use an export only to verify a claim or look for a user correction the lesson writer
+missed, rather than re-deriving the whole triage from scratch.
+
 ## Workflow
 
 1. **Read and validate.**
