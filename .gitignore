@@ -46,3 +46,6 @@ recipe-samples/
 # Private, machine-local identity/context (name, email, ORCID, machine paths);
 # see the pointer in AGENTS.md
 AGENTS.local.md
+
+# Drop-off folder for files used as context for skill development (never commit)
+context-inbox/

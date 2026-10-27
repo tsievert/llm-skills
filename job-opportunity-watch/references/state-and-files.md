@@ -13,7 +13,7 @@ Contents: layout; links file format; profile; state files; privacy; helper funct
     anchors_seen.tsv        every candidate link ever seen, with first_seen
     opportunities.tsv       verified opportunities (written by the assistant)
     runs.tsv                one row per run: counts for the audit trail
-    social_tags.tsv         hashtag/search-term ledger per platform (Step 4b of SKILL.md)
+    social_tags.tsv         hashtag/search-term ledger per platform (stage s5, see stage-s5-discover.md)
   digests/<date>.md         output of the headless run
   *.bak-<timestamp>         backups made before any edit of links or profile
 ```

@@ -40,6 +40,12 @@ career_search_profile:
     very_high_priority: {topic_1: {experience: "Very strong", interest: "Primary"}}
     excluded_if_central: ["Topic Y"]
 
+  # Optional: how the weekly prefilter recognises a profile key in a title (regex, any language).
+  # A key without an entry is matched by its own words, which finds fewer titles.
+  search_synonyms:
+    focal_system_1: "term one|term two|\\bterm three\\b"
+    Topic Y: "topic y|synonym of y"
+
   interdisciplinary_method_boundaries:
     molecular_biology: {collaborator_use: "Accept", personal_laboratory_work: "Exclude"}
 

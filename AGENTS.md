@@ -41,6 +41,13 @@ duplicating it here.
   questions. R run from the assistant cannot write to the assistant scratch dir; use the git-ignored `tmp-examples/` for tests
   and delete afterwards.
 
+## Context inbox (`context-inbox/`)
+
+Gitignored drop-off folder where the user puts files (conversation exports, scripts, samples) as context for
+developing or improving skills. When the user refers to files they "dropped off", or skill work starts with no
+other source given, list this folder and read the relevant files. Never commit its contents or copy them into
+skills verbatim (may contain personal data); anonymise any lesson drawn from it.
+
 ## Working rules
 
 - When writing or changing skill files (SKILL.md, frontmatter, scripts, references),
@@ -172,6 +179,11 @@ A detailed, dated log of what was built, tested and found while developing this 
 lives in [`HISTORY.md`](HISTORY.md), kept out of this file so it isn't reloaded into
 every conversation's context. Read it on demand rather than up front. When finishing a
 skill, a research round, or a triage run, append an entry there (not here).
+
+## Active work stream
+
+Resume the `job-opportunity-watch` staged-pipeline refactor from [`HANDOFF-job-watch-refactor.md`](HANDOFF-job-watch-refactor.md)
+(delete or archive it when the work stream ends).
 
 ## Lessons triage state
 

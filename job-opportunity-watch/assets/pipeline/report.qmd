@@ -1,0 +1,100 @@
+---
+title: "Job watch"
+format:
+  dashboard:
+    embed-resources: true
+    nav-buttons: []
+params:
+  root: "job-watch"
+  week: "2026-W01"
+  script_dir: "."
+  today: "2026-01-01"
+---
+
+```{r}
+#| include: false
+# Reads only what the stage functions wrote. Nothing here fetches anything.
+library(reactable)
+source(file.path(params$script_dir, "jw_report.R")); jw_load(params$script_dir)
+d <- jw_summary_data(params$week, params$root, as.Date(params$today))
+link <- function(v) htmltools::tags$a(href = v, target = "_blank", "open")
+tbl <- function(x, ...) if (is.null(x) || !nrow(x)) htmltools::p("none") else reactable(x, searchable = TRUE, filterable = TRUE, defaultPageSize = 25, ...)
+```
+
+# This week
+
+## Row {height=18%}
+
+```{r}
+#| content: valuebox
+#| title: "New this week"
+list(icon = "briefcase", color = "primary", value = nrow(d$new))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Closing within 14 days"
+list(icon = "alarm", color = "warning", value = nrow(d$soon))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Near-misses"
+list(icon = "exclamation-triangle", color = "info", value = if (is.null(d$near_miss)) 0 else nrow(d$near_miss))
+```
+
+```{r}
+#| content: valuebox
+#| title: !expr 'if (length(d$incomplete)) "INCOMPLETE" else "Complete"'
+list(icon = if (length(d$incomplete)) "x-octagon" else "check-circle", color = if (length(d$incomplete)) "danger" else "success",
+     value = if (length(d$incomplete)) length(d$incomplete) else "ok")
+```
+
+## Row
+
+```{r}
+#| title: "New opportunities (best class first)"
+x <- d$new[, c("class", "status", "employer", "title", "country", "track", "deadline", "url")]
+tbl(x, columns = list(url = colDef(cell = link, filterable = FALSE)))
+```
+
+```{r}
+#| title: "Closing within 14 days"
+tbl(d$soon[, c("class", "status", "employer", "title", "deadline", "url")],
+    columns = list(url = colDef(cell = link, filterable = FALSE)))
+```
+
+# Near-misses
+
+```{r}
+#| title: "Items that fail exactly one hard rule"
+tbl(d$near_miss[, c("employer", "title", "near_miss_rule", "why", "weakest_dimension", "evidence_url")])
+```
+
+# Sources
+
+```{r}
+#| title: "Sources (flag and status)"
+tbl(d$sources[, c("section", "type", "status", "flag", "n_anchors", "n_job_like", "note", "url")])
+```
+
+# Discovery
+
+```{r}
+#| title: "Social and web leads"
+tbl(d$s5[, c("platform", "query", "query_type", "lead_status", "text", "url", "note")])
+```
+
+# Run log
+
+## Row
+
+```{r}
+#| title: "Stages"
+tbl(data.frame(stage = names(d$stage_status), status = unname(d$stage_status)))
+```
+
+```{r}
+#| title: "Problems recorded this week (generic wording)"
+tbl(d$problems[, c("stage", "severity", "code", "message", "n", "reported")])
+```
