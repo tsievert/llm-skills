@@ -24,9 +24,9 @@ jw_s1_expected_n <- function(week = jw_week_id(), root = jw_root(), links_fn = j
 }
 
 jw_s1_probe <- function(week = jw_week_id(), root = jw_root(), today = Sys.Date(), delay = 1.5,
-                        probe_fn = jw_probe, links_fn = jw_read_links) {
+                        probe_fn = jw_probe, links_fn = jw_read_links, verbose = !nzchar(Sys.getenv("JW_QUIET"))) {
   links <- links_fn(jw_input_path("links.csv", week, root))
-  run <- probe_fn(links, delay = delay, profile = .read_profile(week, root), verbose = FALSE)
+  run <- probe_fn(links, delay = delay, profile = .read_profile(week, root), verbose = verbose)
   uniq <- links[is.na(links$dup_of), ]
   a <- run$anchors
   a$job_like <- if (nrow(a)) jw_anchor_job_like(a$text, a$href, a$role_hit, a$topic_hit) else logical()
@@ -104,8 +104,13 @@ jw_s3_deadlines <- function(week = jw_week_id(), root = jw_root(), today = Sys.D
   done <- if (file.exists(part_f)) as.data.frame(.read_pq(part_f)) else empty()
   done <- done[done$item_id %in% todo$item_id, ]
   todo <- todo[!todo$item_id %in% done$item_id, ]
+  t_loop <- Sys.time(); n_done <- 0L; n_todo <- nrow(todo)
+  if (n_todo) message(sprintf("s3: %d settled from link text, %d pages to read", sum(settled), n_todo))
   for (i in split(seq_len(nrow(todo)), ceiling(seq_len(nrow(todo)) / chunk))) {
     got <- lapply(todo$href[i], function(u) {
+      n_done <<- n_done + 1L
+      # jw_tick lives in jobwatch.R, which the offline tests do not source
+      if ((n_done %% 10 == 0 || n_done == n_todo) && exists("jw_tick", mode = "function")) jw_tick(n_done, n_todo, t_loop, substr(u, 1, 70))
       b <- tryCatch(fetch_fn(u), error = function(e) NULL)
       if (is.null(b)) data.frame(deadline = as.Date(NA), verdict = "unreadable", flag = NA_character_, dates = NA_character_)
       else tryCatch(jw_deadline_row(jw_deadline_from_text(b, today), today),

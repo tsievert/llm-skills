@@ -226,14 +226,26 @@ jw_probe_one <- function(url, timeout = 25, type = "portal") {
   out
 }
 
+# One-line progress message: "[i/n] 42% elapsed 1m05s, about 1m30s left | what". Goes to stderr via message(),
+# so it shows in the console and in logs of headless runs. `t0` is the start time of the loop.
+jw_tick <- function(i, n, t0, what = "") {
+  el <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+  fmt <- function(s) if (!is.finite(s)) "?" else if (s < 60) sprintf("%ds", round(s)) else sprintf("%dm%02ds", s %/% 60, round(s %% 60))
+  eta <- if (i > 0) el / i * (n - i) else NA_real_
+  message(sprintf("[%d/%d] %3d%% elapsed %s, about %s left | %s", i, n, round(100 * i / n), fmt(el), fmt(eta), what))
+}
+
 # Probe every unique link once (search-engine URLs are not fetched: their query is returned for the
 # web_search tool). Polite: one request at a time, >= `delay` s between requests to the same host.
 jw_probe <- function(links, delay = 1.5, timeout = 25, profile = NULL, verbose = TRUE) {
   uniq <- links[is.na(links$dup_of), ]
   jw_wait_state <- new.env()  # per-call state, isolated from other skills' pf_wait() calls
   src <- list(); anc <- list()
+  t_loop <- Sys.time()
   for (i in seq_len(nrow(uniq))) {
     r <- uniq[i, ]
+    # announce before the request, so a slow page is visible while it is being fetched
+    if (verbose) message(sprintf("[%d/%d] fetching %s", i, nrow(uniq), substr(r$url, 1, 80)))
     if (r$type == "search_engine") {
       src[[i]] <- data.frame(id = r$id, n = r$n, status = "search_engine", http = NA, final_url = NA,
                              text_hash = NA, n_anchors = 0L, note = r$query)
@@ -247,7 +259,8 @@ jw_probe <- function(links, delay = 1.5, timeout = 25, profile = NULL, verbose =
     src[[i]] <- data.frame(id = r$id, n = r$n, status = p$status, http = p$http, final_url = p$final_url,
                            text_hash = p$text_hash, n_anchors = na, note = p$note)
     if (na) anc[[length(anc) + 1]] <- cbind(source_id = r$id, p$anchors)
-    if (verbose) message(sprintf("[%d/%d] %-14s %s", i, nrow(uniq), p$status, substr(r$url, 1, 80)))
+    if (verbose) jw_tick(i, nrow(uniq), t_loop, sprintf("%s, %d anchors%s", p$status, na,
+                         if (!is.null(p$elapsed)) sprintf(", %.0fs", p$elapsed) else ""))
   }
   sources <- do.call(rbind, src)
   anchors <- if (length(anc)) do.call(rbind, anc) else
@@ -477,6 +490,7 @@ jw_headless <- function(dir = jw_dir(), delay = 1.5) {
   if (is.null(budget$n)) budget$n <- 0
   if (budget$n >= 8) return(character())
   budget$n <- budget$n + 1
+  message(sprintf("  sitemap request %d/8: %s", budget$n, substr(url, 1, 80)))
   txt <- .get_text(url); if (is.null(txt)) return(character())
   doc <- tryCatch(read_xml(txt), error = function(e) NULL); if (is.null(doc)) return(character())
   locs <- xml_text(xml_find_all(doc, "//*[local-name()='loc']"))
