@@ -21,27 +21,30 @@ especially `skill-lessons`. Full research and test log: `research/job-opportunit
 | `scripts/pipeline/jw_report.R` | `jw_load()`, `jw_preflight()` (s0), `jw_write_summary()`, `jw_render_report()` (s6) |
 | `scripts/pipeline/jw_checks.R`, `jw_stage_fns.R` | **done 2026-10-27**: s1-s3 functions (`jw_s1_probe`, `jw_s1_expected_n`, `jw_s2_queue`, `jw_s3_deadlines`) and pure text checks; side contract `s1_anchors`; network injected for tests (ledger section 13) |
 | `scripts/pipeline/tests/` | `test_pipeline.R` (14) and `test_stages.R` (12), 26 tests all passing; s0 runs them |
-| `assets/pipeline/_targets.R`, `report.qmd` | headless DAG (stops at the assistant stage until closed), Quarto dashboard |
+| `assets/pipeline/_targets.R`, `report.qmd`, `run_weekly.R` | headless DAG (stops at the assistant stage until closed), Quarto dashboard, scheduled-task runner |
 | `references/pipeline.md`, `stage-s4-classify.md`, `stage-s5-discover.md` | contracts, untrusted-text rule, batches, lessons close-out |
 | `SKILL.md` | one new section pointing to the above; the old Steps 0-5 still apply |
 
 Verified: unit tests; end-to-end `tar_make(script=, store=)` with fixture stubs (stops at s4, report rebuilds
-after close, third run no change); dashboard renders (Quarto 1.10.18). Not verified: real s1-s3, non-Windows,
-a scheduled run, two machines or a synced-folder lock, visual look of the dashboard.
+after close, third run no change); dashboard renders (Quarto 1.10.18); real s1-s3 and `run_weekly.R` against a
+real 5-link portal (2026-10-27, ledger section 14). Not verified: non-Windows,
+a real scheduled task (`schtasks`), two machines or a synced-folder lock, visual look of the dashboard, a
+second calendar week's ledger diff.
 
 ## Next actions (in this order)
 
-1. **DONE (2026-10-27): stubs implemented.** Not done from it: a `run_weekly` runner asset (notes are in
-   `references/pipeline.md`, "Scheduling notes"), `tar_make()` rerun with the real functions, test on a real
-   multi-link portal. Original brief, source material in the gitignored
-   `context-inbox/` (user scripts that worked on real pages): `job_like_check.R` (`jw_job_like_check`,
-   `jw_probe_sitemap`, `jw_sitemap_anchors`; s1 flag and sitemap sources), `filter_expired.R` and
-   `deadline_check.R` (s3; use the revised first-date-after-cue version, German/Finnish/Swedish cues, topic
-   prefilter first, chunks of about 150 URLs), `feed_filter.R` (s2; profile-derived word lists, reason column,
-   keep/drop title test list, smoke test), `run_weekly.R` (scheduling notes: path variable, seed the seen-files,
-   ask before installing a task, `//` switches for `schtasks` from Git Bash). Output must match
-   `jw_contracts()` (columns and types); gates in `jw_contracts.R` define completeness.
-   Do not copy personal data (profile, links, URLs) from those files into the skill.
+1. **DONE (2026-10-27, incl. the leftovers).** Stubs implemented; original brief, source material in the
+   gitignored `context-inbox/` (user scripts that worked on real pages): `job_like_check.R`, `filter_expired.R`
+   and `deadline_check.R`, `feed_filter.R`, `run_weekly.R`. Output must match `jw_contracts()`; gates in
+   `jw_contracts.R` define completeness. Personal data from those files was not copied into the skill.
+   Leftovers closed this round (ledger section 14): `assets/pipeline/run_weekly.R` written (path derivation,
+   `jw_status()` always printed, `STAGE_PENDING` treated as success, `schtasks` command as a comment only, not
+   auto-installed); a real `tar_make()` end-to-end run (not manual stage calls) on the real 5-link
+   `links.template.csv` portal set -- s1-s3 completed with real network results (one `blocked` aggregator, one
+   `weak` source, two `fine`), s4 stopped as designed, a second cached run confirmed `run_weekly.R`'s own logic.
+   Found and fixed along the way: `arrow`/`validate`/`reactable` were missing from this machine's R library
+   (reinstalled from CRAN). Confirmed, not new: the aggregator-noise gap in next action 4. Still open: Windows
+   Task Scheduler itself (`schtasks`), a second calendar week / real ledger diff, non-Windows.
 2. **DONE (2026-10-27):** native sitemap support (`type = sitemap`) in `jw_probe_one`; vacancy-likeness check after
    every probe in `jw_probe`; `\b` fix in `.jl_pat`; `tar_make()` run on 3 real links (s1-s3 done, stops at s4). Open:
    category links like `/jobs/life-science/` count as job-like (portal "fine" is weak evidence); feed sources not built.
@@ -49,12 +52,17 @@ a scheduled run, two machines or a synced-folder lock, visual look of the dashbo
    tag ledger into `stage-s5-discover.md`; `jw_category_link()` added to the job-like check). Original: Rewrite `SKILL.md` around the stages (shrink Steps 0-5 into the stage references; keep description and the
    standing sections: Related skills, Explain the reasoning, Capture lessons). Add a subagent note only where a
    genuine case exists (s4 bulk title skim is already covered).
-4. Remaining notes from triage (add to `job-opportunity-watch` references): feed-verification checklist, JS-only
-   source handling, aggregator noise and near-miss line in `classification.md`, tag ledger `query_type` and
-   posts per month, subagent handoff files go inside the data folder.
+4. **DONE (2026-10-27)**: feed-verification checklist and JS-only source handling in `stage-s1-probe.md`;
+   aggregator-noise and near-miss sections (plus a `language` assessment dimension) in `classification.md`,
+   with a matching `jw_job_like_check()` gap note in `portal-quirks.md`; tag ledger `query_type`/
+   `posts_per_month` actually implemented in `jobwatch.R` (they were documented but not built) and documented
+   in `state-and-files.md`/`stage-s5-discover.md`; subagent handoff location cross-referenced from
+   `state-and-files.md` (already stated in `stage-s4-classify.md`). Full notes and what was deliberately not
+   built (a web-keyword ledger, a noise-share metric, an excluded-title stop-word pass): ledger section 15.
+   132 unit tests still pass; `lint_skills()`, `check_skill_links()` and `skills-ref validate` all clean.
 5. Verify with `github-skill-maintenance` (`lint_skills()`, `check_skill_links()`, `check_skill_clashes()`,
    `skills-ref validate` if `uvx` is available), then commit in logical groups: (a) `social-research-search`
-   notes, (b) pipeline skeleton, (c) later stage implementations.
+   notes, (b) pipeline skeleton, (c) later stage implementations, (d) this round's reference/`jobwatch.R` notes.
 
 ## Lessons triage state
 

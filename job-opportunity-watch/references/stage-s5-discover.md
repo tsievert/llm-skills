@@ -26,12 +26,16 @@ read-only; link posts, do not profile individuals).
 
 1. Before searching, `jw_tags_read()`. Search with `keep` tags, then `candidate` tags; never `retired` ones.
    Hashtags are for Mastodon (`masto_tag`); on Bluesky use text search and the `tag` filter and record the term
-   actually used with `platform = "bluesky"`.
+   actually used with `platform = "bluesky"`. A job-bot account (one that posts every vacancy with its own tag
+   vocabulary) is best queried by author plus tag, not tag alone: record that as `query_type = "author+tag"`
+   with the combined key as free text in `tag` (for example `"<author handle> + #<tag>"`).
 2. Add at most a few new candidates per run, drawn from what you saw (co-occurring tags, field and language
    variants). Do not invent tags no post uses.
 3. After screening, `jw_tags_record(platform, tag, hits = <posts judged job-relevant>, useful = <of those, how many
-   led to a verified opportunity or a link the user accepted>)`. Count honestly; zero is valid. Note the query
-   type and posts per month so low-volume tags are recognised.
+   led to a verified opportunity or a link the user accepted>, query_type = <"hashtag"/"text"/"author+tag">,
+   posts_per_month = <rough estimate from this run>)`. Count honestly; zero is valid. `posts_per_month` is
+   overwritten each run, not accumulated: a niche field tag can look structurally low-volume (a few posts over
+   several months) rather than merely unlucky this week, which is the point of recording it.
 4. `jw_tags_review()` suggests status changes (keep after a useful hit; retire after several runs with none).
    Propose them; apply only with `jw_tags_set_status(..., confirmed = TRUE)`. Never delete rows.
 5. Report ledger changes in one line in the summary. Counts are small: a rough guide, not a ranking.

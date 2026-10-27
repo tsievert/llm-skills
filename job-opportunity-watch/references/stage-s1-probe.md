@@ -40,14 +40,23 @@ Record every attempt, continue, never stop the run for one link:
 - **`ok_js_suspect`, `blocked`, `nav_only`:** try the `webfetch` tool once. If still empty, list the source as
   "needs manual check" and do not claim it was checked. Sources that stay in this state for several weeks are
   candidates for replacement. JavaScript-only listings often have a feed, API or sitemap: look for one before
-  giving up (propose it as a `type = sitemap` link or a replacement).
+  giving up (propose it as a `type = sitemap` link or a replacement; `jw_find_replacement()` checks
+  `robots.txt` sitemaps too). Do not silently simplify a long filtered search URL to get a probe-able page: a
+  shortened URL searches something different from what the user asked for, so propose the plain and the
+  simplified version separately rather than swapping one in.
 - **`search_engine` links:** not fetchable. The probe returns the decoded query; run it (without operators)
   through `web_search`. The time filter in the URL is lost, so check dates in results.
 - **Aggregator noise:** an aggregator lists the same vacancy as many employers' pages and many unrelated roles;
   count one opportunity once (employer, title, reference, deadline), and use aggregators for discovery, not as
-  final evidence.
-- **Feeds:** before adding an RSS/Atom link, open it once and check it lists vacancies (not news), has dates and
-  links to the vacancy pages, and is not truncated. Feed sources are not built into the probe yet.
+  final evidence ([classification.md](classification.md)'s aggregator-noise note has the detail).
+- **Feeds (RSS/Atom):** before adding one, verify it rather than trusting the HTTP status: a 200 response with
+  an XML content type, or the presence of a sitemap, is not evidence of a usable vacancy feed. Checklist:
+  (1) it returns at least one item; (2) item titles read as vacancies, not news or a generic digest; (3) each
+  item has a date (`pubDate`/`updated`); (4) each item links to the vacancy page, not a category page; (5) any
+  filter in the original search is honoured by the feed, or can be applied locally after fetching (test with
+  and without the filter: a feed can look valid yet ignore it). A feed with items but none a vacancy, or an
+  empty category feed, fails the checklist and is not added. Feed sources are not built into the probe yet, so
+  a verified feed is read with `webfetch`/`xml2`, not `jw_probe_one()`.
 
 ## Dead or moved links (`http_error`, `error`)
 

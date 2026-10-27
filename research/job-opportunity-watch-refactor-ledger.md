@@ -164,3 +164,88 @@ Decisions and findings:
 - Tested: 26 tests green in total (was 14); one real page (nav-only) through s1-s3 on a temp data folder. Not tested: a real vacancy
   portal with many links, chunking against a live server, non-Windows, `tar_make()` with the real functions (only fixtures earlier).
 - Open: next action 2 (sitemap/feed sources in `jw_probe_one`); `run_weekly` runner asset not written (scheduling notes are in `references/pipeline.md`).
+
+## 14. `run_weekly.R` runner and a real `tar_make()` end-to-end run (2026-10-27)
+
+Closes next action 1's leftovers. Built `assets/pipeline/run_weekly.R`: derives `JW_SKILL` from its own
+location, reads `JW_ROOT`/`JW_WEEK` env vars, calls `tar_make()`, always prints `jw_status()` at the end
+(success or failure), treats `STAGE_PENDING` as expected rather than a failure, and carries the `schtasks`
+install command (doubled-slash switches for Git Bash) as a comment only -- not run automatically, matching the
+"ask before installing a scheduled task" rule.
+
+Machine state found first: `arrow`, `validate`, `reactable` were not actually installed in this R session
+(`requireNamespace()` FALSE) despite an earlier round's note that arrow 26.0.0 was installed -- likely stale
+from a different machine/session or lost after an R point-release (session reported packages "built under R
+4.6.1" while running R 4.6.0). Reinstalled all three from CRAN (allowed without asking per the project rule);
+`arrow` 26.0.0 as before.
+
+Real end-to-end test: copied the skill's own `assets/links.template.csv` (5 real links: EURAXESS search,
+academicpositions.com, two university career pages, one society page) and `job_profile.template.yml`
+(placeholder profile, not the user's) into a throwaway `tmp-examples/jw-real-test` data folder, then ran
+`targets::tar_make(script=, store=)` directly (not `jw_stage_run()` calls) for the current ISO week.
+
+Results: all 6 upstream targets built from a cold store; `preflight` 20-22 s (includes the 26-test unit suite);
+`s1` fetched all 5 links for real in under 7 s (1.5 s/host politeness, 5 hosts) -- EURAXESS 200/68 anchors/27
+job-like (`fine`), academicpositions.com 403 (`blocked`, `not_assessed`), jyu.fi 200/95 anchors/12 job-like
+(`fine`), SLU 200/20 anchors/2 job-like (`weak`, correctly below the 3-job-like floor), chemecol.org 200/40
+anchors/4 job-like (`fine`); `s2` kept 35 of 216 anchors, all tier 2 (role word only -- the template profile's
+placeholder terms like `focal_system_1` cannot match real topic words, so no tier-1 hits is expected, not a
+bug) and logged 181 drops by reason (`s2_dropped`, info); `s3` ran (35 rows); `s4_file` errored with
+`STAGE_PENDING` as designed, confirmed by `jw_status()`. Total wall time about 35 s including the network
+round trip. A second run against the same store (via `source(run_weekly.R)`) showed the intended caching:
+preflight reran (`cue = always`) but `s1`-`s3` were skipped (cached), confirming `run_weekly.R`'s own logic
+(path derivation, `jw_status()` printing, `STAGE_PENDING` treated as success) without a second network hit.
+
+Finding carried to the open items (not a new bug, reproduces the known gap): among the kept tier-2 items were
+aggregator navigation chrome rows ("Newest offers first", "Jobs & Opportunities", "ResearchComp") that matched
+the role-word regex incidentally; this is the aggregator-noise gap already named in next action 4
+(`classification.md`), now confirmed against real text rather than inferred.
+
+Not tested: Windows Task Scheduler itself (`schtasks`, a real scheduled trigger), a second calendar week
+(ledger diffing against a prior week with real data), non-Windows. Cleanup: `tmp-examples/jw-real-test`
+deleted after the test (gitignored, nothing committed from it).
+
+## 15. Next action 4: remaining triage notes folded into references (2026-10-27)
+
+Source: the two inbox lesson files quoted in the handoff (`job-search_20261027-092841_manual.md`,
+`job-search_20261027-150000_social-web-discovery.md`; no new web research this round). Five items, all
+documentation-only except the tag ledger:
+
+- **Feed-verification checklist** ([stage-s1-probe.md](../job-opportunity-watch/references/stage-s1-probe.md)):
+  expanded the one-line "Feeds" bullet into a 5-point checklist (item count, titles are vacancies, dates present,
+  links to the vacancy page, filter honoured or filterable locally); a plain 200/sitemap is not evidence.
+- **JS-only source handling** (same file): added "do not silently simplify a long filtered search URL" (it
+  changes what is searched) to the existing `ok_js_suspect`/feed/sitemap guidance, which already covered most of
+  this lesson.
+- **Aggregator noise and near-miss** ([classification.md](../job-opportunity-watch/references/classification.md)):
+  added a "Near-miss" section (one hard rule otherwise strong, `near_miss`/`near_miss_rule`, record a stated
+  range rather than one number) and an "Aggregator noise" section (field-category aggregators are mostly site
+  furniture and off-topic titles; `fine` is not relevance; add only where deadlines are structured); also added
+  `language` as its own assessed dimension per the lesson. `portal-quirks.md` got a matching note that
+  `jw_job_like_check()` reports a count, not a noise share -- documented as a known gap, not fixed in code (would
+  need an excluded-title stop-word pass or a share metric, out of scope for a docs-only round).
+- **Tag ledger `query_type`/`posts_per_month`**: these were already *described* in `stage-s5-discover.md` but not
+  actually implemented -- `social_tags.tsv` had no such columns and `jw_tags_record()` had no such arguments.
+  Added both as optional columns/arguments in `jobwatch.R` (`query_type` one of hashtag/text/author+tag/
+  web_keywords, validated; `posts_per_month` overwritten each run, not accumulated) and updated
+  `state-and-files.md` and `stage-s5-discover.md`. Tested interactively (new-row and update-row paths, both
+  columns round-trip through `.tsv_write`/`.tsv_read`) and the full suite re-run (132 tests, 0 failures, no
+  regressions). Explicitly not built (recorded as an open gap, not implemented): a separate web-keyword ledger
+  for `web_search` queries (language, keywords, channel, outcome) -- `query_type = "web_keywords"` with a
+  descriptive string in `tag` is the documented workaround for now.
+- **Subagent handoff files inside the data folder**: already present in `stage-s4-classify.md` from the next
+  action 3 round; added a short cross-reference in `state-and-files.md`'s Layout section so it is discoverable
+  from the file-layout reference too, not only from the s4 stage doc.
+
+Also updated `pipeline.md`'s forward reference ("not yet written") now that the aggregator-noise note exists.
+
+Verification: `lint_skills(skills = "job-opportunity-watch")` is unchanged from before this round (one
+pre-existing info-level `reference-toc` note on `pipeline.md`; `classification.md` now also crosses the same
+line-count threshold, confirmed by comparing lint output before/after via `git stash`, not a new defect).
+`check_skill_links()` found nothing (no new skill-to-skill links, only internal cross-references).
+`uvx --from skills-ref agentskills validate job-opportunity-watch` passes. CRLF crept back into several files
+after `edit` calls (the known repo pitfall); fixed with `sed -i 's/\r$//'` and re-checked with
+`git ls-files --eol` before finishing.
+
+Not done in this round: the companion web-keyword ledger, the `jw_job_like_check()` noise-share metric, and
+the excluded-title stop-word pass for tier-2 filtering (all explicitly deferred above, not silently dropped).

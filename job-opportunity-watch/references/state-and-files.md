@@ -22,6 +22,11 @@ In this repo `job-watch/` and `tmp-examples/` are in `.gitignore`. The assistant
 able to write inside the project folder; if the user keeps the data elsewhere and R is blocked, write the
 files with the `write` tool or ask the user to copy them.
 
+A subagent delegated part of a stage's work (for example a bulk title skim, see `stage-s4-classify.md`)
+needs a handoff file it can read. Write it inside this data folder, never the assistant's scratch
+directory or a temp directory: a scratch-dir write from the user's R session has been blocked by the
+permission layer in practice. Delete the handoff file once its result is folded in.
+
 ## links.csv
 
 UTF-8 CSV, one row per link, columns `url, section, label, enabled, added, added_by, replaces, note`
@@ -73,9 +78,17 @@ above each function; they are short.
 
 ## social_tags.tsv
 
-One row per (`platform`, `tag`); `platform` is `bluesky` or `mastodon`. Columns: `first_used`, `last_used`, `n_runs`,
-`n_hits` (posts judged job-relevant), `n_useful` (of those, how many led to a verified opportunity or an accepted
-link), `last_useful`, `status` (`candidate`, `keep`, `retired`), `note`. The assistant writes counts with
-`jw_tags_record()`; status changes are proposed by `jw_tags_review()` and applied only after the user agrees
+One row per (`platform`, `tag`); `platform` is `bluesky` or `mastodon`. Columns: `query_type` (`hashtag`, `text`,
+`author+tag`, `web_keywords`), `first_used`, `last_used`, `n_runs`, `n_hits` (posts judged job-relevant), `n_useful`
+(of those, how many led to a verified opportunity or an accepted link), `last_useful`, `posts_per_month` (a rough,
+overwritten-each-run estimate, so a tag that is structurally low-volume is not retried every week expecting more),
+`status` (`candidate`, `keep`, `retired`), `note`. A job-bot account is best queried by author plus its own tag
+vocabulary (`query_type = "author+tag"`), with the combined key as free text in `tag` (for example
+`"<author handle> + #<tag>"`), not by tag alone. The assistant writes counts with `jw_tags_record(..., query_type =,
+posts_per_month =)`; status changes are proposed by `jw_tags_review()` and applied only after the user agrees
 (`jw_tags_set_status(confirmed = TRUE)`, backup first). Retired rows are kept. No personal data about post authors
 is stored.
+
+Not built: a companion ledger for `web_search` keyword queries (language, keywords, channel, outcome) — `social_tags.tsv`
+covers Mastodon/Bluesky tags and author+tag combinations only; a web-search run can still use `query_type =
+"web_keywords"` with a descriptive string in `tag`, but there is no per-language breakdown yet.

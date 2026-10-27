@@ -23,6 +23,12 @@ new links and 1 to 2 queue items. So the diff works; a few failures are transien
 - Nav links and page-furniture are filtered by a stoplist of short phrases; some will leak through.
 - Some aggregators list unrelated regions (for example US faculty-job PDFs on a general ecology board):
   they appear as candidates and are removed by the geography rules in the profile, not by the script.
+- `jw_job_like_check()` reports a count of job-like anchors, not a share: a field-category aggregator can be
+  rated `fine` (20+ job-like anchors) while most of them are generic nav or category pages ("Life Science",
+  "Research Position") or roles outside the profile's groups, which only a page read or a title read catches.
+  A page rated `fine` is not evidence the vacancies behind it are relevant ([classification.md](classification.md)'s
+  aggregator-noise note). Not built: a share-of-noise metric or an excluded-system title stop-word pass, so
+  budget time for opening plausible tier-2 titles from any field-category aggregator.
 
 ## Reading hints for pages the script cannot parse
 

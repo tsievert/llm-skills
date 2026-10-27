@@ -1,7 +1,7 @@
 # Classification, fields and statuses
 
-Contents: fields to record; classes A-E; final statuses; opportunity tracks; evidence order; fallback
-defaults; stretch and mismatch method examples; deduplication.
+Contents: fields to record; classes A-E; near-miss; aggregator noise; final statuses; opportunity tracks;
+evidence order; fallback defaults; stretch and mismatch method examples; deduplication.
 
 ## Fields to verify and record (per opportunity)
 
@@ -22,10 +22,36 @@ Dates as ISO (`YYYY-MM-DD`).
 | D | Strong match |
 | E | Exceptional match: unusually strong scientific and contract fit |
 
-Assess scientific fit, method fit, eligibility, contract fit, geographic fit and strategic value
+Assess scientific fit, method fit, eligibility, contract fit, geographic fit, language and strategic value
 separately (a short word per dimension is enough). Do not hide a weak dimension in an overall score. The
 class is a summary of those dimensions, not a number. Distinguish learnable methods from expertise
-required on day one.
+required on day one. Keep language as its own dimension rather than folding it into eligibility: a local-
+language requirement is often the second blocker after a hard FTE or contract-type rule, and naming it
+separately is what makes a near-miss readable.
+
+## Near-miss (one hard rule, otherwise strong)
+
+An item that fails exactly one hard rule (FTE, language, geography, ...) while scoring well on every other
+dimension is a near-miss, not a plain rejection: a rare permanent post can be lost to a single dimension
+(for example a 100%-FTE rule rejecting an otherwise strong 30-50% post). Record it with `near_miss = TRUE`
+and the failing rule in `near_miss_rule` ([stage-s4-classify.md](stage-s4-classify.md)'s "What to write"). The
+rule still applies and the item is still rejected; surfacing the near-miss only shows the user what the rule
+costs them, so relaxing it stays their decision. Where a stated range would change the outcome (for example
+"30-50% by agreement"), record the range rather than collapsing it to one number.
+
+## Aggregator noise
+
+General and field-category aggregators (a national employer-mirror site, a broad academic job board's
+category pages) typically add far more noise than signal to the tier-2 queue: most new anchors on a first
+save are site furniture (category pages, "post a job", field-count pages) or jobs outside the profile's
+groups, and a page being probed `fine` only means it has vacancy-like links, not that they are relevant
+([portal-quirks.md](portal-quirks.md), [stage-s1-probe.md](stage-s1-probe.md)). Generic titles ("Research
+Position", "Wissenschaftlicher Mitarbeiter", "Curator") that a title-only filter lets through need a page
+read to judge; treat opening a handful of plausible tier-2 titles as the cost of using an aggregator, not a
+sign that the source is broken. Count one underlying opportunity once even when an aggregator mirrors an
+employer's own posting (deduplication, below). Add a field-category aggregator as a link only where it
+exposes structured deadlines; for a niche profile, a discipline society board or an employer's own page is
+usually higher yield than a broad aggregator's category pages.
 
 ## Final statuses (exactly one per opportunity)
 

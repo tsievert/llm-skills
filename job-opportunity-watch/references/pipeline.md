@@ -107,16 +107,32 @@ body that is a `urlset`/`sitemapindex` is also read as one). `jw_probe_one` keep
 at 2000 anchors (the note says so). A news-site sitemap with no vacancy URLs comes out as `nav_only`. After every
 probe `jw_probe` also adds `job_like` per anchor and `n_job_like`/`flag` per source (when `jw_checks.R` is
 loaded). Category links whose slug repeats a short link text (`Life Science` -> `/jobs/life-science/`) are not
-counted (`jw_category_link()`); `fine` still means "has vacancy-like links", not "has relevant vacancies". Feed sources are not built; a scheduled run is not tested.
+counted (`jw_category_link()`); `fine` still means "has vacancy-like links", not "has relevant vacancies". Feed
+sources are not built; a scheduled Task Scheduler run (vs. a manual `Rscript run_weekly.R` or sourced run) is
+not tested.
 Tested on 3 real links (a sitemap index with scheme-less `<loc>` values, a portal page, a news sitemap): s1 to s3
-completed and s4 stopped as designed.
+completed and s4 stopped as designed. Tested again (2026-10-27) on 5 real links from one multi-link portal set
+(`links.template.csv`) through `tar_make()` itself, not manual stage calls: one aggregator came back `blocked`
+(403, `not_assessed`), the others `fine` or `weak` with real anchor and job-like counts; s2's prefilter dropped
+most real anchors with a reason. Aggregator navigation chrome ("Newest offers first" next to the word
+"Research") still slipped past the role-word match -- a known gap, not new; see `classification.md`'s
+aggregator-noise note and `portal-quirks.md`'s `jw_job_like_check()` limitation (next action 4; the regex
+gap itself is not fixed, only documented).
 
 ## Scheduling notes
 
-- Keep the skills folder and data folder in two variables at the top of the runner (`JW_SKILL`, `JW_ROOT`), not
-  scattered paths; derive the project folder from the script's own location so any working directory works.
+- Runner: `assets/pipeline/run_weekly.R` (`Rscript run_weekly.R`, any working directory). It derives the skill
+  folder from its own location, reads `JW_SKILL`/`JW_ROOT`/`JW_WEEK` (set `JW_ROOT` for a real setup; the
+  default is a placeholder), calls `tar_make()` on `_targets.R`, and always prints `jw_status()` at the end so
+  a scheduled-task log is self-explanatory. A `STAGE_PENDING` error at s4 is reported as expected, not a
+  failure; any other error exits with status 1.
 - No seeding of "seen" files is needed: s2 derives what is new from earlier finished weeks, and the first week
   is reported as a baseline.
-- Ask the user before installing a scheduled task. From Git Bash, give `schtasks` its switches with a doubled
-  slash (`//Create //SC WEEKLY ...`) or the shell rewrites them as paths. A scheduled run executes s0 to s3
-  and stops with `STAGE_PENDING` at s4; the user starts the assistant stage in a new conversation.
+- Ask the user before installing a scheduled task; the exact `schtasks` command (with the doubled-slash
+  switches Git Bash needs) is in a comment at the end of `run_weekly.R`. Set `JW_ROOT` (and `JW_SKILL` if the
+  file is copied elsewhere) as system/user environment variables first: a scheduled task does not inherit the
+  interactive session's variables. A scheduled run executes s0 to s3 and stops with `STAGE_PENDING` at s4; the
+  user starts the assistant stage in a new conversation.
+- Tested (2026-10-27): `tar_make()` end-to-end (not manual stage calls) on the real multi-link `links.template.csv`
+  (5 links incl. a blocked aggregator); `run_weekly.R` sourced directly, including a cached second run where
+  s1-s3 skip and only preflight and the pending `s4_file` target rerun. See the ledger for findings.
