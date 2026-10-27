@@ -964,3 +964,11 @@ current/active state (working rules, open decisions, the todo table).
   package versions were added, so `check_versions()` was not run. Archived the 6 processed lesson
   files to `~/.posit/lessons/inbox/processed/` and advanced the watermark in `AGENTS.md` to
   2026-10-26T14:59:55 (last usage-log row seen). Not committed yet.
+
+### 2026-10-27: gratia 0.11.2.73 re-test (gam-interpretation, gam-mgcv)
+
+Installed gratia from GitHub (0.11.2.10 -> 0.11.2.73) with permission. Re-ran the documented features (ledger: `research/gam-gratia-retest-ledger.md`). Changes found and written into the notes: `confint()` takes `nsim` (`n_sim` errors), `variance_comp(type = "terms")` now returns proportions, `conditional_differences()` needs both `by` and `condition`. Version claims updated in `recent-developments.md`, `visualisation.md`, `uncertainty-and-inference.md`, `sz-smooths.md`, `gam-mgcv/SKILL.md`. Stripped CRLF from four working-copy files. Not committed.
+
+### 2026-10-27: lint_skills() file_signals dash warning made conditional
+
+`lint_skills()` warned on every `metadata.file_signals` alternative starting with `-` (e.g. `hpc-gpu-jobs`), although `scripts/skill-file-signal-hook.sh` already calls `grep -qE -- "$pat"`. Verified in Git Bash: with `--` the pattern `--gres=gpu` matches, without it grep errors; a synthetic `read` payload nudged `hpc-gpu-jobs` and `hpc-job-scripts`. The warning now fires only when the hook has no `grep -E ... --` call (negative control: removing `--` from a copy of the hook brought it back). Lint of `hpc-gpu-jobs` is clean. Not re-run: full lint, `skills-ref` (no `uvx` on this machine), clash/link checks.

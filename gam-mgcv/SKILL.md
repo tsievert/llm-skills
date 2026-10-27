@@ -63,7 +63,7 @@ Details, families and pitfalls: [references/smooths-and-families.md](references/
 - Default is one smoothing parameter per level; `id = 1` shares one across levels.
 - `k.check()` returns no k-index for the term, so do not claim `k` was verified from it.
 - The plotted term is a deviation from the main smooth, not the level's curve. Build level curves and level contrasts from whole-model predictions.
-- `gratia::difference_smooths()` errors on `sz` terms (verified in 0.11.2.10 and 0.11.2-64). `gratia::conditional_differences()` works on `sz` models where installed (verified in 0.11.2-64); the reference file also has a linear-combination helper for older versions. Check the installed gratia version and issues at https://github.com/gavinsimpson/gratia/issues?q=sz before asserting a limitation.
+- `gratia::difference_smooths()` errors on `sz` terms (verified in 0.11.2.10, 0.11.2-64 and 0.11.2.73). `gratia::conditional_differences()` works on `sz` models where installed (verified in 0.11.2-64 and 0.11.2.73; give both `by` and `condition`); the reference file also has a linear-combination helper for older versions. Check the installed gratia version and issues at https://github.com/gavinsimpson/gratia/issues?q=sz before asserting a limitation.
 
 ## Mixed models and hierarchical GAMs
 

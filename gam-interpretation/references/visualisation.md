@@ -13,7 +13,7 @@
 - Theming gratia plots (current API)
 - Common pitfalls
 
-Verified against gratia 0.11.2.10 / mgcv 1.9-4 where noted; other statements come from the gratia 0.11.2-66 documentation (October 2026). Check function availability first (see SKILL.md step 0).
+Verified against gratia 0.11.2.10 / 0.11.2-64 / 0.11.2.73 (the last re-tested 2026-10-27) with mgcv 1.9-4 where noted; other statements come from the gratia 0.11.2-66 documentation (October 2026). Check function availability first (see SKILL.md step 0).
 
 ## Quick start
 
@@ -47,7 +47,7 @@ ggplot(sm, aes(x2, .estimate)) +
 
 Add partial residuals with `add_partial_residuals(df, m, select = "s(x2)")`. For transformed covariates use `smooth_estimates(m, back_transform = TRUE)`; the evaluation grid is then even in the raw covariate. If gratia cannot find the data for a transformed term, pass `envir = environment()`.
 
-Simultaneous band (verified in 0.11.2.10): `confint(m, parm = "s(x2)", type = "simultaneous", shift = TRUE, n_sim = 5000)` returns `.lower_ci`/`.upper_ci` and `.crit`; `shift = TRUE` adds the model constant to put the band on the level of the linear predictor. Note the argument semantics in the installed version before use.
+Simultaneous band (verified in 0.11.2.73 with `nsim`; the 0.11.2.10 note used `n_sim`, which now errors): `confint(m, parm = "s(x2)", type = "simultaneous", shift = TRUE, nsim = 5000)` returns `.lower_ci`/`.upper_ci` and `.crit`; `shift = TRUE` adds the model constant to put the band on the level of the linear predictor. Note the argument semantics in the installed version before use.
 
 ## Predictions on the response scale
 
@@ -83,7 +83,7 @@ ggplot(fv, aes(x2, .fitted)) +
 
 ## Group differences
 
-- Whole-response contrasts: `conditional_differences()` (verified in 0.11.2-64, absent in 0.11.2.10). `draw()` on the result shows differences with a zero reference line, faceted by comparison, coloured by the conditioning factor (verified), and the call below also works on `sz` models.
+- Whole-response contrasts: `conditional_differences()` (verified in 0.11.2-64 and 0.11.2.73, absent in 0.11.2.10; supply both `by` (the factor) and `condition` (the covariate), e.g. `by = "Type", condition = "conc"`). `draw()` on the result shows differences with a zero reference line, faceted by comparison, coloured by the conditioning factor (verified), and the call below also works on `sz` models.
 
 ```r
 cd <- conditional_differences(m, by = "Treatment", condition = c("conc", "Type"),
@@ -93,7 +93,7 @@ cd <- conditional_differences(m, by = "Treatment", condition = c("conc", "Type")
 draw(cd)
 ```
 
-- Accumulated local effects (`ale()`, verified in 0.11.2-64): `a <- ale(m, focal = "x1"); draw(a)`, with `interval = "simultaneous"`, `scale = "response"` available. ALE combines all terms involving the covariate and averages over the reference data; it is a different quantity from a partial effect or a conditional prediction, so label it "ALE".
+- Accumulated local effects (`ale()`, verified in 0.11.2-64 and 0.11.2.73): `a <- ale(m, focal = "x1"); draw(a)`, with `interval = "simultaneous"`, `scale = "response"` available. ALE combines all terms involving the covariate and averages over the reference data; it is a different quantity from a partial effect or a conditional prediction, so label it "ALE".
 - Shape-only: `difference_smooths(m, select = "s(x)", interval = "simultaneous")`.
 - Never compare by overlaying bands and eyeballing overlap.
 

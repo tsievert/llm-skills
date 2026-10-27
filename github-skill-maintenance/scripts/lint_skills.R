@@ -131,8 +131,12 @@ lint_one_skill <- function(dir) {
       # grepl() has no option-parsing step, so a pattern starting with '-' compiles fine here
       # but the consuming hook calls grep, which parses a leading '-' as an option unless the
       # call uses an end-of-options marker (reported 2026-10-26; see skill-file-signal-hook.sh).
+      # Skip the warning when the hook script already passes '--' to its grep call.
+      hook <- file.path(dirname(normalizePath(dir)), "scripts", "skill-file-signal-hook.sh")
+      hook_safe <- file.exists(hook) &&
+        any(grepl("grep\\s+-[A-Za-z]*E[A-Za-z]*\\s+--\\s", readLines(hook, warn = FALSE)))
       dashy <- alts[grepl("^-", alts)]
-      if (length(dashy))
+      if (length(dashy) && !hook_safe)
         add("warn", "file_signals", paste("Alternative(s) starting with '-' can be parsed as a grep option by a consuming script unless it uses '--':", paste(dashy, collapse = ", ")))
     }
   }

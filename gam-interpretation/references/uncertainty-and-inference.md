@@ -34,7 +34,7 @@ mgcv's default intervals for smooths and predictions come from the Bayesian view
 | Simultaneous | Band calibrated so the whole curve (on the evaluated grid) lies inside with the nominal probability | Statements about the shape of the curve or "where does X differ from zero" |
 
 - Simultaneous coverage in gratia is approximate posterior coverage on the evaluated grid; it does not guarantee coverage between grid points or beyond the grid, and the scope of "simultaneous" (one contrast, or all returned contrasts) can matter (gratia's `simultaneous_scope` in `conditional_differences()`).
-- gratia: `interval = "simultaneous"` in `fitted_values()`, `difference_smooths()`; `confint(m, parm = "s(x)", type = "simultaneous")` (verified in 0.11.2.10); `n_sim` controls simulation; check the stability of the limits across `seed` and `n_sim`. The gratia authors recommend increasing the draws and confirming that conclusions near an interval limit are stable.
+- gratia: `interval = "simultaneous"` in `fitted_values()`, `difference_smooths()`; `confint(m, parm = "s(x)", type = "simultaneous")` (verified in 0.11.2.10 and 0.11.2.73); in `confint()` the number of simulations is `nsim` (`n_sim` errors in 0.11.2.73, so check the installed formals); check the stability of the limits across `seed` and the number of simulations. The gratia authors recommend increasing the draws and confirming that conclusions near an interval limit are stable.
 
 ## Conditional vs unconditional
 
@@ -103,7 +103,7 @@ Rules:
 
 - `summary(m)` smooth p-values (Wood 2013 approach) test whether the term is zero; they are approximate, conditional on the smoothing parameters, and say nothing about size or shape. Terms shrunk to near-zero edf can still have p-values; do not read much into them.
 - edf: effective degrees of freedom under the penalty; larger means more flexible, not "more significant". `edf` close to `k'` can indicate a basis restriction (check `k.check`), but not by itself.
-- `variance_comp()` (gratia) summarizes penalty variances and (with `type = "terms"`) the shares of linear-predictor variance by term. Shares need not sum as expected term-by-term; with correlated terms shares can exceed 1 or be negative; they describe the fitted model on this sample, not importance in general. Check `?variance_comp` for the installed version's output: in both 0.11.2.10 and 0.11.2-64 a call with `type = "terms"` returned the same table as `type = "penalty"` for a simple Gaussian GAM (no proportion columns), contrary to the site's description, so verify what you get and do not report term shares unless the output actually contains them.
+- `variance_comp()` (gratia) summarizes penalty variances and (with `type = "terms"`) the shares of linear-predictor variance by term. Shares need not sum as expected term-by-term; with correlated terms shares can exceed 1 or be negative; they describe the fitted model on this sample, not importance in general. Check `?variance_comp` for the installed version's output: in 0.11.2.10 and 0.11.2-64 a call with `type = "terms"` returned the same table as `type = "penalty"` for a simple Gaussian GAM (no proportion columns), contrary to the site's description. In 0.11.2.73 it returns the term table with `.proportion` columns and a `total` row (checked on one simulated Gaussian GAM), so older notes about missing shares no longer apply there. Still verify what you get, and do not report term shares unless the output actually contains them.
 
 ## Concurvity and identifiability
 

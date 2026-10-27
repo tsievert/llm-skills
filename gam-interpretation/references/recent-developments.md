@@ -1,6 +1,6 @@
 # Recent developments and how to stay current
 
-Compiled October 2026 from the gratia site (version shown there: 0.11.2-66), the gratia changelog, Gavin Simpson's blog and GitHub, mgcv help pages (1.9-4) and package docs. Features were then re-tested against gratia 0.11.2-64 (R-universe build, installed on 2026-10-23; mgcv 1.9-4, R 4.6.0) after an earlier session with gratia 0.11.2.10. Always test the installed version.
+Compiled October 2026 from the gratia site (version shown there: 0.11.2-66), the gratia changelog, Gavin Simpson's blog and GitHub, mgcv help pages (1.9-4) and package docs. Features were first tested against gratia 0.11.2.10, then 0.11.2-64 (R-universe build, 2026-10-23), and re-tested on 2026-10-27 against gratia 0.11.2.73 (GitHub `main`, i.e. 0.11.2-73; mgcv 1.9-4, R 4.6.0, ggplot2 4.0.3). Always test the installed version.
 
 ## Contents
 - Re-check protocol
@@ -24,20 +24,20 @@ Compiled October 2026 from the gratia site (version shown there: 0.11.2-66), the
 
 "Verified" means run successfully in the live session; version columns are the builds actually tested.
 
-| Feature | Introduced (from changelog/docs) | 0.11.2.10 | 0.11.2-64 |
-|---|---|---|---|
-| `response_derivatives()` | gratia 0.9.0 (March 2024) | present, works | present |
-| `conditional_values()` | gratia 0.10.0 (December 2024) | present, works | present |
-| `conditional_differences()` (whole-model contrasts; `by`, `condition`, `scale`, `uncertainty = "delta"/"simulation"`, `interval = "simultaneous"`, `simultaneous_scope`) | 0.11.x development series; version not stated in the changelog text read | absent | present; verified for factor-by model (CO2 example), `delta` and `simulation`, and for an `sz` model |
-| `ale()` (1D accumulated local effects; `interval = "simultaneous"`) | 0.11.x development series | absent | present; verified (`ale(m, focal = "x1")`, `draw()`, simultaneous interval) |
-| Theme-based plot customization (`element_geom`, `gratia_theme_set()`, `gratia.alpha.interval`) | development; deprecation warnings cite gratia 0.11.3 | not tested | verified: `p & theme(geom.gratia.smooth = element_geom(...), ...)` and `gratia_theme_set()` work; `smooth_col` gives a deprecation warning |
-| Sampling API rework (`n_draws`, `n_grid`) | development | old args accepted | verified: `n_draws` works; `n =` now errors with "Argument 'n' has been removed. Use n_draws. See vignette('sampling-migration')" |
-| `fitted_values(interval = "simultaneous")`, `confint(type = "simultaneous")` | long-standing / documented | works | not re-tested |
-| `variance_comp()` | documented | present | present; output for `type = "terms"` was identical to `type = "penalty"` in a Gaussian GAM, differing from the site description, so check before using term shares |
-| `difference_smooths()` on `bs = "sz"` terms | not documented for `sz` | errors | still errors |
-| `shape_intervals()`, `shape_confidence_set()` (shape-constrained smooths) | documented | not tested | exported; not run |
-| `simultaneous_bands` | listed on the reference index as a topic | not exported | not exported as a function (appears to be a documentation topic only) |
-| `quantile_residuals()`, `dharma_residuals()`, `posterior_predictive_plot()`, `residual_correlation()`, `model_concurvity()`, `get_vcov()` | documented | partly checked earlier | exported in 0.11.2-64; not run |
+| Feature | Introduced (from changelog/docs) | 0.11.2.10 | 0.11.2-64 | 0.11.2.73 |
+|---|---|---|---|---|
+| `response_derivatives()` | gratia 0.9.0 (March 2024) | present, works | present | present |
+| `conditional_values()` | gratia 0.10.0 (December 2024) | present, works | present | present |
+| `conditional_differences()` (whole-model contrasts; `by`, `condition`, `scale`, `uncertainty = "delta"/"simulation"`, `interval = "simultaneous"`, `simultaneous_scope`) | 0.11.x development series; version not stated in the changelog text read | absent | present; verified for factor-by model (CO2 example), `delta` and `simulation`, and for an `sz` model | verified again: CO2 factor-by (`by = "Type", condition = "conc"`), `uncertainty = "simulation"`, `interval = "simultaneous"` with `simultaneous_scope`, and an `sz` model. **Both `by` and `condition` are required** (`condition` omitted gives "`condition` must be supplied"; a `condition` naming the factor gives "`by` must name one or more distinct factors") |
+| `ale()` (1D accumulated local effects; `interval = "simultaneous"`) | 0.11.x development series | absent | present; verified (`ale(m, focal = "x1")`, `draw()`, simultaneous interval) | verified again, same call |
+| Theme-based plot customization (`element_geom`, `gratia_theme_set()`, `gratia.alpha.interval`) | development; deprecation warnings cite gratia 0.11.3 | not tested | verified: `p & theme(geom.gratia.smooth = element_geom(...), ...)` and `gratia_theme_set()` work; `smooth_col` gives a deprecation warning | verified again; `element_geom()` is exported by ggplot2 4.0, not gratia; `smooth_col` still warns (deprecated as of gratia 0.11.3) |
+| Sampling API rework (`n_draws`, `n_grid`) | development | old args accepted | verified: `n_draws` works; `n =` now errors with "Argument 'n' has been removed. Use n_draws. See vignette('sampling-migration')" | verified again (`smooth_samples(n_draws =)` works, `n =` errors with the same message). The older `confint()` argument is still `nsim`, not `n_draws` (see next row) |
+| `fitted_values(interval = "simultaneous")`, `confint(type = "simultaneous")` | long-standing / documented | works | not re-tested | both run. In `confint()` use **`nsim`** (and `seed`); `n_sim = ` errors with "formal argument "n_sim" matched by multiple actual arguments" (the 0.11.2.10 note used `n_sim`; the signature is `nsim`, so recheck against the installed formals) |
+| `variance_comp()` | documented | present | present; output for `type = "terms"` was identical to `type = "penalty"` in a Gaussian GAM, differing from the site description, so check before using term shares | **changed**: `type = "terms"` now returns the term table with `.proportion`, `.proportion_lower_ci` and `.proportion_upper_ci` plus a `total` row, and differs from `type = "penalty"` (which has `scale` and no proportions). Checked on one simulated Gaussian GAM only |
+| `difference_smooths()` on `bs = "sz"` terms | not documented for `sz` | errors | still errors | still errors (`subscript out of bounds`). On an ordinary factor-`by` model with unequal `conc` grids per level it errored with "Factor levels ... must use the same prediction grid"; not investigated |
+| `shape_intervals()`, `shape_confidence_set()` (shape-constrained smooths) | documented | not tested | exported; not run | exported; not run |
+| `simultaneous_bands` | listed on the reference index as a topic | not exported | not exported as a function (appears to be a documentation topic only) | still not exported |
+| `quantile_residuals()`, `dharma_residuals()`, `posterior_predictive_plot()`, `residual_correlation()`, `model_concurvity()`, `get_vcov()` | documented | partly checked earlier | exported in 0.11.2-64; not run | exported; `dharma_residuals()`, `quantile_residuals()`, `model_concurvity()` and `posterior_predictive_plot()` ran without error on a Gaussian GAM (output not inspected); `residual_correlation()` and `get_vcov()` not run |
 
 Installed versions are development builds; their numbering (0.11.2.x, "0.11.3" in warnings) can drift from the site. Prefer testing functions over trusting version numbers.
 
@@ -45,7 +45,7 @@ Installed versions are development builds; their numbering (0.11.2.x, "0.11.3" i
 
 - Sampling arguments: `n_draws` (total draws) and `n_grid` (automatic grid); obsolete names raise migration errors (verified for `n`). `derivative_samples()` takes `model` not `object`; `add_*()` sampling helpers take `data`.
 - `fitted_samples()` returns all distribution parameters by default; request `quantity = "expectation"` for expected responses. Gaussian LSS now returns the standard deviation rather than its reciprocal.
-- `draw.gam()` draws parametric terms by default (`parametric = NULL`); parametric-term intervals include intercept uncertainty by default (`overall_uncertainty = FALSE` for the old behaviour); parametric covariates are plotted as evaluated in the model (use `back_transform = TRUE` for original units). Formals `parametric`, `overall_uncertainty`, `grouped`, `show_ci`, `back_transform` are present in 0.11.2-64 (verified), and `grouped_by` is still present as a deprecated argument.
+- `draw.gam()` draws parametric terms by default (`parametric = NULL`); parametric-term intervals include intercept uncertainty by default (`overall_uncertainty = FALSE` for the old behaviour); parametric covariates are plotted as evaluated in the model (use `back_transform = TRUE` for original units). Formals `parametric`, `overall_uncertainty`, `grouped`, `show_ci`, `back_transform` are present in 0.11.2-64 and 0.11.2.73 (verified; defaults in 0.11.2.73: `parametric = NULL`, `overall_uncertainty = TRUE`, `grouped = c("sz", "fs")`, `show_ci = c("factor-by", "sz")`, `back_transform = FALSE`, `n_2d = 50`), and `grouped_by` is still present as a deprecated argument.
 - Surface default grid is 50 x 50 (`n_2d`); derivative sampling grid defaults to 200 points.
 - `grouped_by` deprecated; use `grouped = "factor-by"` (or c("factor-by", "sz", "fs")).
 - Colour, alpha, linewidth arguments deprecated in favour of ggplot2 theme settings.
@@ -56,7 +56,8 @@ Installed versions are development builds; their numbering (0.11.2.x, "0.11.3" i
 Notes from this machine (Windows, R 4.6.0, Rtools45), October 2026:
 - `remotes::install_github("gavinsimpson/gratia")` compiled the package's C++ code but failed at the load test ("unable to load shared object ... gratia.dll"); the install then rolled back to the previous version. Adding Rtools to `PATH` did not help.
 - The R-universe binary worked after an R restart: `install.packages("gratia", repos = c("https://gavinsimpson.r-universe.dev", getOption("repos")), type = "binary")` gave 0.11.2-64. The GitHub `main` branch was at 0.11.2-66 at the time.
-- A running session keeps the old namespace loaded; restart R after installing. Ask the user before installing packages.
+- On 2026-10-27 `remotes::install_github("gavinsimpson/gratia", upgrade = "never")` succeeded on the same machine and gave 0.11.2-73 (the earlier load-test failure did not recur, cause unknown). If it fails again, fall back to the R-universe binary.
+- A running session keeps the old namespace loaded; restart R (or `unloadNamespace("gratia")`) after installing. Ask the user before installing packages.
 
 ## Other tools worth knowing
 

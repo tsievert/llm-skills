@@ -1,6 +1,6 @@
 # Sum-to-zero factor smooths (`bs = "sz"`)
 
-Newer mgcv basis (Simon Wood, with input from Matteo Fasiolo), still thinly documented. This file collects the documented behaviour (mgcv 1.9-4 help pages `?factor.smooth` and `?smooth.construct.sz.smooth.spec`), gratia issue history, and behaviour verified by running code (mgcv 1.9-4, gratia 0.11.2.10, October 2026). Items marked "verified" were observed; anything else is from the docs. Re-check against the installed versions before relying on edge cases.
+Newer mgcv basis (Simon Wood, with input from Matteo Fasiolo), still thinly documented. This file collects the documented behaviour (mgcv 1.9-4 help pages `?factor.smooth` and `?smooth.construct.sz.smooth.spec`), gratia issue history, and behaviour verified by running code (mgcv 1.9-4, gratia 0.11.2.10, October 2026; the gratia items below were re-run on 0.11.2.73 on 2026-10-27 where stated). Items marked "verified" were observed; anything else is from the docs. Re-check against the installed versions before relying on edge cases.
 
 ## Contents
 - What it does
@@ -103,7 +103,7 @@ fv <- fitted_values(m, data = grid)       # link or response scale; check ?fitte
 
 Hold other covariates at typical values (`data_slice` does this) and exclude random effects as needed.
 
-**Pairwise differences between levels.** `difference_smooths()` **fails on an `sz` term** (`subscript out of bounds`; verified in gratia 0.11.2.10 and again in 0.11.2-64), and its documentation describes factor-`by` smooths only. `gratia::conditional_differences()` (whole-model contrasts; absent in 0.11.2.10, present in 0.11.2-64) **works on `sz` models**: with `by = "fac"`, `condition = "x2"` it returned all pairwise contrasts, and on the link scale with `uncertainty = "delta"` its estimates and standard errors matched the linear-combination helper below to about 1e-15 (verified on one simulated model). Use it when installed (`exists("conditional_differences", asNamespace("gratia"))`); otherwise use the explicit linear-combination approach below.
+**Pairwise differences between levels.** `difference_smooths()` **fails on an `sz` term** (`subscript out of bounds`; verified in gratia 0.11.2.10, 0.11.2-64 and 0.11.2.73), and its documentation describes factor-`by` smooths only. `gratia::conditional_differences()` (whole-model contrasts; absent in 0.11.2.10, present in 0.11.2-64 and 0.11.2.73) **works on `sz` models** (re-run on 0.11.2.73; `by` and `condition` are both required): with `by = "fac"`, `condition = "x2"` it returned all pairwise contrasts, and on the link scale with `uncertainty = "delta"` its estimates and standard errors matched the linear-combination helper below to about 1e-15 (verified on one simulated model). Use it when installed (`exists("conditional_differences", asNamespace("gratia"))`); otherwise use the explicit linear-combination approach below.
 
 For `sz`, the level-a minus level-b difference equals the difference of the two deviation smooths (the main smooth cancels). This helper computes it with pointwise and simultaneous intervals (verified to reproduce differences of `smooth_estimates()` to machine precision):
 
@@ -130,9 +130,9 @@ sz_difference(m, nd1, nd2, "s(fac,x2)")
 
 Notes: this compares the smooth-shape part only. If the model also has other terms that differ by level (for example interactions of the factor with other smooths), include those columns (drop the `cols` restriction) to get the whole-model difference. Use `set.seed()` before calling for reproducible bands. For the difference in expected response, compute on the link scale and transform, or use `gratia::conditional_differences()` where available.
 
-**Derivatives.** `gratia::derivatives(m, select = "s(fac,x2)")` ran in 0.11.2.10 (verified; it returned a tibble). Issue #362 had reported failures on `s(Year, Site, bs = "sz")` (closed); re-check on your version for multi-factor terms.
+**Derivatives.** `gratia::derivatives(m, select = "s(fac,x2)")` ran in 0.11.2.10 and 0.11.2.73 (verified; it returned a tibble). Issue #362 had reported failures on `s(Year, Site, bs = "sz")` (closed); re-check on your version for multi-factor terms.
 
-**Posterior sampling.** `gratia::smooth_samples(m, select = "s(fac,x2)", n_draws = ..., seed = ...)` ran (verified, 0.11.2.10). Remember the sampling-argument renames in newer gratia (`n_draws`, see the gratia sampling-migration article).
+**Posterior sampling.** `gratia::smooth_samples(m, select = "s(fac,x2)", n_draws = ..., seed = ...)` ran (verified, 0.11.2.10 and 0.11.2.73). Remember the sampling-argument renames in newer gratia (`n_draws`, see the gratia sampling-migration article).
 
 ## gratia support and known issues
 
