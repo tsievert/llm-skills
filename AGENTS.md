@@ -127,7 +127,12 @@ defaults (so the setting repeats them: `~/.agents/skills`, `~/.posit/assistant/s
   never block the session). Derives the repo dir from its own location.
 - Registered in `~/.posit/assistant/settings.json` (global, so it runs regardless of workspace trust),
   `timeout` ~20 s. On Windows, shell-form commands run under `cmd.exe`, so the entry calls
-  `bash C:/Users/thorb/Sync_Home_Work/llm-skills/scripts/sync-skills.sh` explicitly (Git Bash).
+  Git Bash explicitly. The file is **identical on every machine** (the clone sits at
+  `%USERPROFILE%\Sync_Home_Work\llm-skills` on both the `thorb` and `au783787` machines), so it uses
+  `~/Sync_Home_Work/llm-skills` in `skills.paths` and, in the hook command,
+  `"C:\Program Files\Git\bin\bash.exe" "%USERPROFILE%/Sync_Home_Work/llm-skills/scripts/sync-skills.sh"`
+  (cmd.exe expands `%USERPROFILE%`). Do not hard-code a user name there. The gitignored project
+  `.posit/assistant/settings.json` lists permission paths for both machines.
 - Newly pulled skills are available from the next conversation; a mid-session rescan is unverified.
 
 ## Open decisions
