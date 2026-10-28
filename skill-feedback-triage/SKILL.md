@@ -88,7 +88,7 @@ missed, rather than re-deriving the whole triage from scratch.
    `create-skill` and build the new skill folder, including the standing sections this repo
    requires: subagent-delegation note where it fits, "Related skills", "Explain the
    reasoning", "Capture lessons"), then load and follow `github-skill-maintenance`
-   (`lint_skills()`, `skills-ref validate`, `check_versions()` when versions are named,
+   (`lint_skills()`, `uvx --from skills-ref agentskills validate <dir>` (the bare `skills-ref` command is not on PATH), `check_versions()` when versions are named,
    `check_skill_clashes()` and `check_skill_links()` for a new skill), run any changed
    script or snippet, and state what was and was not tested. Do not call anything ready
    while errors remain.

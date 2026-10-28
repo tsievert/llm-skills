@@ -3,8 +3,11 @@
 # Needs: arrow, validate, jsonlite, quarto (R package + Quarto CLI), kableExtra, yaml.
 
 jw_script_dir <- function() getOption("jobwatch.script_dir", file.path("job-opportunity-watch", "scripts", "pipeline"))
+# Also records the folder in options(jobwatch.script_dir): jw_render_report() needs it, and the relative
+# default only works when the working directory happens to be the skills repo root.
 jw_load <- function(dir = jw_script_dir()) {
-  source(file.path(dir, "jw_contracts.R")); source(file.path(dir, "jw_pipeline.R")); invisible(TRUE)
+  source(file.path(dir, "jw_contracts.R")); source(file.path(dir, "jw_pipeline.R"))
+  options(jobwatch.script_dir = normalizePath(dir)); invisible(TRUE)
 }
 
 # ---- S0 preflight ---------------------------------------------------------------------------------
@@ -82,7 +85,9 @@ jw_summary_data <- function(week = jw_week_id(), root = jw_root(), today = Sys.D
 
 jw_write_summary <- function(week = jw_week_id(), root = jw_root(), today = Sys.Date(), max_lines = 15) {
   d <- jw_summary_data(week, root, today)
-  fmt <- function(x) sprintf("- [%s] %s | %s | %s | deadline %s | %s", x$class, x$status, x$employer, x$title,
+  # Expired with a future deadline is a stale listing: show the s4 note so it does not look like a data error
+  fmt <- function(x) sprintf("- [%s] %s%s | %s | %s | deadline %s | %s", x$class, x$status,
+                             ifelse(x$status == "Expired" & !is.na(x$deadline) & x$deadline >= d$today & !is.na(x$notes), paste0(" (", x$notes, ")"), ""), x$employer, x$title,
                              ifelse(is.na(x$deadline), "n/a", format(x$deadline)), x$url)
   lines <- c(sprintf("# Job watch %s", d$week), "",
     if (length(d$incomplete)) c(sprintf("**INCOMPLETE:** %s.", paste(d$incomplete, collapse = "; ")), "") else "Complete: all required stages done.",
@@ -105,14 +110,24 @@ jw_write_summary <- function(week = jw_week_id(), root = jw_root(), today = Sys.
 # ---- S6 report: summary.md first (independent of Quarto), then the HTML report -----------------------
 jw_render_report <- function(week = jw_week_id(), root = jw_root(), today = Sys.Date(),
                              template = file.path(dirname(jw_script_dir()), "..", "assets", "pipeline", "report.qmd")) {
+  sd <- jw_script_dir()
+  if (!file.exists(file.path(sd, "jw_report.R")))
+    stop("jobwatch.script_dir does not point at the pipeline scripts: ", sd, " (jw_load() sets it)", call. = FALSE)
   jw_stage_begin("s6", week, root); rd <- jw_run_dir(week, root); on.exit(jw_lock_release(rd), add = TRUE)
   jw_write_summary(week, root, today)
   qmd <- file.path(rd, "report.qmd"); file.copy(template, qmd, overwrite = TRUE)
+  html <- file.path(rd, "report.html"); t0 <- Sys.time() - 1
   err <- tryCatch({
     quarto::quarto_render(qmd, quiet = TRUE, execute_params = list(root = normalizePath(root), week = week,
-      script_dir = normalizePath(jw_script_dir()), today = format(today)))
+      script_dir = normalizePath(sd), today = format(today)))
     NULL }, error = function(e) conditionMessage(e))
-  if (!is.null(err)) jw_problem("s6", "report_render_failed", err, "error", 1L, week, root)
+  # quiet = TRUE hides quarto's own error text, so also check that a fresh html file exists
+  if (is.null(err) && (!file.exists(html) || file.mtime(html) < t0)) err <- "render returned no error but report.html was not updated"
+  if (!is.null(err)) {
+    jw_problem("s6", "report_render_failed", err, "error", 1L, week, root)
+    warning("report render failed (", jw_scrub(err), "); report.html is missing or stale. Re-run ",
+            "quarto::quarto_render('", qmd, "', quiet = FALSE) to see quarto's output.", call. = FALSE)
+  }
   jw_manifest_update(rd, "s6", status = if (is.null(err)) "done" else "failed", finished = .now(), n_rows = NA_integer_,
                      md5 = .md5(file.path(rd, "summary.md")))
   invisible(file.path(rd, "report.html"))

@@ -1,6 +1,6 @@
 # Stage s4: shortlist and classify (assistant, own conversation)
 
-Contents: start; untrusted text; batches; triage rules; verifying and classifying; what to write; close.
+Contents: start; untrusted text; batches; triage rules; verifying and classifying; what to write; close; correcting a decided row.
 
 ## Start (a new conversation; do not rely on earlier chats)
 
@@ -63,9 +63,22 @@ costs, and relaxing it is the user's decision.
 ## Close
 
 `jw_stage_close("s4")` merges the parts, validates schema, rules and the completeness gate, and updates the
-ledger. If it reports errors, fix the rows (`jw_pending()` shows missing ids) and close again. Then write the
-lessons, `jw_lessons_mark_reported()`, and one `usecase_add()` built from `jw_usecase_args("s4")`. Say in one
-sentence what was decided, what is pending and what the next stage is.
+ledger. If it reports errors, fix the rows (`jw_pending()` shows missing ids) and close again. Before closing,
+run the audit of broad-call class A rows ([classification.md](classification.md), "Reading eligibility
+wording"). Then write the lessons, `jw_lessons_mark_reported()`, and one `usecase_add()` built from
+`jw_usecase_args("s4")`. Say in one sentence what was decided, what is pending and what the next stage is.
+`jw_lessons_mark_reported()` also acknowledges warnings such as `changed_mid_week_job_profile` once the user has
+seen them (`codes = "changed_mid_week_job_profile"` marks only that one); `jw_status()` lists unreported errors.
+
+## Correcting a decided row (user disputes a verdict)
+
+Do not edit the part files by hand and do not append a second row. Use
+`jw_s4_amend("<item_id>", class = "C", status = "Unresolved", notes = "<open question>")`: it rewrites that row,
+refuses unknown ids and unknown columns, re-opens and re-closes s4 (merge, validation, ledger update), and with
+`rerender = TRUE` re-renders the report. Downstream stages are not flagged stale automatically, so re-run
+`jw_render_report()` yourself if you did not pass `rerender`. If a title-only subagent skim is used on a
+baseline queue, its "keep" rows are a cheap first pass that still needs your own title pass before opening
+(one run: 1874 titles in, 92 kept, 25 opened; reported once). Archive mirrors often carry stale postings.
 
 ## Related
 

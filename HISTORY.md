@@ -1130,3 +1130,20 @@ description-length info), `check_skill_links()`, `check_skill_clashes()`, `skill
 `check_versions()`, `check_sync_setup()` (no settings change), a live-session test. Gotcha: `$PA_SCRATCH_DIR` has
 backslashes, so `rm -f $dir/*` matched nothing and stale markers faked results; use `cygpath -u`. DEBUG marker and
 payload log deleted afterwards.
+
+### 2026-10-28: lessons triage run (17 entries, 4 files, 2 projects)
+
+Since watermark: 6 loads (`job-opportunity-watch` 1, `github-skill-maintenance` 1, `skill-feedback-triage` 1, `skill-lessons` 3);
+the 12 `job-opportunity-watch` entries came from one manual file, so loads say nothing about capture reliability. One file
+(s4 first-run report) lacked the template heading; read by hand and kept in the inbox because its one suggestion is parked.
+Outcomes: `fix` render robustness (`jw_load()` sets `jobwatch.script_dir`; `jw_render_report()` stops on a bad dir, checks for
+a fresh html and warns with the re-run hint), `jw_status()` lists unreported errors, new `jw_s4_amend()` and last-row-wins
+`jw_parts_read()`; `fix` classification rules (priority lists are not filters, method-boundary rule, partial evidence, expired
+marker overrides future deadline, post-s4 audit of broad-call class A rows) and Expired note shown in summary/report;
+`add-note` acknowledging warnings via `jw_lessons_mark_reported()`; `fix` validator wrapper form (`uvx --from skills-ref
+agentskills validate`) in `skill-feedback-triage` and `AGENTS.md`; `add-note` hook-test `cygpath` advice in
+`github-skill-maintenance/references/testing-skills.md`; cosmetics entry closed (already applied); expired-deadline bug entry
+rejected (superseded by the correct-classification entry); stale-date subagent suggestion parked (one report).
+Verified: pipeline tests 30 pass (3 new blocks plus summary-note test), `lint_skills()` (no new findings; pre-existing
+`day` warning and info), `skills-ref validate` for the three edited skills. Not verified: a real quarto render failure
+(only the bad-script-dir path), `check_skill_links()`/`check_skill_clashes()` (no description or link changes).

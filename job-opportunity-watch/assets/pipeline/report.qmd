@@ -6,6 +6,17 @@ format:
     toc: true
     toc-location: left
     df-print: default
+    theme:
+      light: cosmo
+      dark: darkly
+    page-layout: full
+    grid:
+      sidebar-width: 220px
+      body-width: 1700px
+      margin-width: 20px
+execute:
+  echo: false
+  warning: false
 params:
   root: "job-watch"
   week: "2026-W01"
@@ -51,7 +62,7 @@ parquet files directly with `arrow` for anything that needs filtering.
 ## New opportunities (best class first)
 
 ```{r}
-tbl(d$new[, c("class", "status", "employer", "title", "country", "track", "deadline", "url")])
+tbl(d$new[, c("class", "status", "employer", "title", "country", "track", "deadline", "notes", "url")])
 ```
 
 ## Closing within 14 days

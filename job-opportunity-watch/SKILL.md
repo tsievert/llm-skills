@@ -34,7 +34,7 @@ Pages behind a bot wall, login or CAPTCHA are recorded as blocked and are not by
 ## Start every session the same way
 
 ```r
-source("<skill-dir>/scripts/pipeline/jw_report.R"); jw_load("<skill-dir>/scripts/pipeline")
+source("<skill-dir>/scripts/pipeline/jw_report.R"); jw_load("<skill-dir>/scripts/pipeline")   # also sets options(jobwatch.script_dir)
 options(jobwatch.dir = "<data folder>")      # holds links.csv, job_profile.yml, runs/<week>/
 jw_status()                                   # the table, the next stage and which reference to read
 ```

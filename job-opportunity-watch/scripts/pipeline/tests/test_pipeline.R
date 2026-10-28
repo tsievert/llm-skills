@@ -171,3 +171,35 @@ test_that("dashboard renders from a finished synthetic week", {
   expect_true(file.exists(out)); expect_equal(jw_manifest_read(jw_run_dir(WK, r))$stages$s6$status, "done")
   expect_match(paste(readLines(out, warn = FALSE), collapse = " "), "Postdoc x")
 })
+
+test_that("jw_s4_amend corrects one row in place, refuses unknown ids, and parts read keeps the last row per item", {
+  r <- new_root(); build_to_s3(r); jw_stage_begin("s4", WK, r); jw_part_write(s4_ok(), "s4", WK, r); jw_stage_close("s4", WK, r, TODAY)
+  expect_error(jw_s4_amend("nope", class = "C", week = WK, root = r), "not found")
+  expect_error(jw_s4_amend("i3", colour = "x", week = WK, root = r), "unknown s4 column")
+  v <- jw_s4_amend("i3", class = "C", notes = "open call", week = WK, root = r)
+  expect_equal(nrow(v), 0)
+  d <- jw_read_stage("s4", WK, r); expect_equal(nrow(d), 3); expect_equal(d$class[d$item_id == "i3"], "C")
+  expect_equal(jw_manifest_read(jw_run_dir(WK, r))$stages$s4$status, "done")
+  # a re-written batch for the same id must not duplicate it
+  jw_part_write(transform(s4_ok()[2, ], class = "D"), "s4", WK, r)
+  p <- jw_parts_read("s4", WK, r); expect_equal(sum(p$item_id == "i3"), 1); expect_equal(p$class[p$item_id == "i3"], "D")
+})
+
+test_that("jw_status lists unreported errors; jw_load records the script dir; render with a bad script dir stops", {
+  r <- new_root(); dir.create(jw_run_dir(WK, r), recursive = TRUE)
+  jw_problem("s6", "report_render_failed", "boom", "error", 1L, WK, r)
+  out <- capture.output(st <- jw_status(WK, r)); expect_true(any(grepl("Unreported error", out)))
+  expect_equal(nrow(st$unreported_errors), 1)
+  jw_lessons_mark_reported(WK, r); expect_equal(nrow(jw_status(WK, r, quiet = TRUE)$unreported_errors), 0)
+  old <- options(jobwatch.script_dir = NULL); on.exit(options(old))
+  jw_load(here); expect_equal(getOption("jobwatch.script_dir"), normalizePath(here))
+  options(jobwatch.script_dir = file.path(tempdir(), "nope"))
+  expect_error(jw_render_report(WK, r, TODAY), "script_dir")
+})
+
+test_that("summary shows the s4 note next to Expired when the listed deadline is still in the future", {
+  r <- new_root(); build_to_s3(r); x <- s4_ok(); x$status[1] <- "Expired"; x$notes[1] <- "page marked expired"
+  jw_stage_begin("s4", WK, r); jw_part_write(x, "s4", WK, r); jw_stage_close("s4", WK, r, TODAY); jw_stage_skip("s5", "n/a", WK, r)
+  jw_write_summary(WK, r, TODAY)
+  expect_true(any(grepl("Expired [(]page marked expired[)]", readLines(file.path(jw_run_dir(WK, r), "summary.md")))))
+})

@@ -227,7 +227,29 @@ jw_part_write <- function(df, stage, week = jw_week_id(), root = jw_root()) {
 jw_parts_read <- function(stage, week = jw_week_id(), root = jw_root()) {
   fs <- list.files(jw_part_dir(stage, week, root), pattern = "\\.parquet$", full.names = TRUE)
   if (!length(fs)) return(as.data.frame(jw_coerce(data.frame()[0, ], jw_contracts()[[stage]]$schema)))
-  do.call(rbind, lapply(fs, function(f) as.data.frame(.read_pq(f))))
+  d <- do.call(rbind, lapply(fs, function(f) as.data.frame(.read_pq(f))))
+  # a corrected row (jw_s4_amend, or a re-written batch) wins over the earlier one for the same item
+  d[!duplicated(d$item_id, fromLast = TRUE), , drop = FALSE]
+}
+# Correct decided rows of a closed or open s4: rewrites the matching part row in place, refuses unknown ids,
+# re-opens and re-closes s4 (merge, validate, ledger), and optionally re-renders the report.
+# Example: jw_s4_amend("abc123", class = "C", status = "Unresolved", notes = "open call; field list not exclusive")
+jw_s4_amend <- function(item_id, ..., week = jw_week_id(), root = jw_root(), rerender = FALSE) {
+  chg <- list(...); stopifnot(length(item_id) == 1L, length(chg) > 0, !is.null(names(chg)), all(nzchar(names(chg))))
+  bad <- setdiff(names(chg), setdiff(names(jw_contracts()$s4$schema), "item_id"))
+  if (length(bad)) stop("unknown s4 column(s): ", paste(bad, collapse = ", "), call. = FALSE)
+  fs <- list.files(jw_part_dir("s4", week, root), pattern = "\\.parquet$", full.names = TRUE)
+  hit <- Filter(function(f) item_id %in% as.data.frame(.read_pq(f))$item_id, fs)
+  if (!length(hit)) stop("item_id not found in the s4 parts: ", item_id, call. = FALSE)
+  for (f in hit) {
+    d <- as.data.frame(.read_pq(f)); i <- which(d$item_id == item_id)
+    for (cn in names(chg)) d[i, cn] <- chg[[cn]]
+    jw_write_parquet(d, f, jw_contracts()$s4$schema)
+  }
+  jw_stage_begin("s4", week, root)
+  v <- jw_stage_close("s4", week, root, note = paste("amended", item_id))
+  if (rerender) jw_render_report(week, root)
+  invisible(v)
 }
 jw_parts_merge <- function(stage, week = jw_week_id(), root = jw_root()) {
   d <- jw_parts_read(stage, week, root)
@@ -274,6 +296,7 @@ jw_status <- function(week = jw_week_id(), root = jw_root(), quiet = FALSE) {
   nxt <- jw_stages$stage[ready & !jw_stages$optional]
   nxt <- if (length(nxt)) nxt[1] else NA_character_
   locked <- file.exists(jw_lock_path(rd))
+  pr <- jw_problems_read(week, root); pr <- pr[!pr$reported & pr$severity == "error", ]
   if (!quiet) {
     cat("Week", week, if (locked) "(LOCKED)" else "", "\n"); print(tab, row.names = FALSE)
     if (is.na(nxt)) cat("Next: nothing required.\n") else {
@@ -281,9 +304,11 @@ jw_status <- function(week = jw_week_id(), root = jw_root(), quiet = FALSE) {
       cat("Next:", nxt, "-", jw_stages$name[jw_stages$stage == nxt], if (w == "assistant") "(assistant stage: start a NEW conversation, read" else "(headless; read",
           jw_stages$reference[jw_stages$stage == nxt], ")\n")
     }
+    if (nrow(pr)) cat("Unreported error(s):", paste(sprintf("%s/%s", pr$stage, pr$code), collapse = ", "),
+                      "- write them up with jw_lessons_candidates(), then jw_lessons_mark_reported().\n")
     if (any(ready & jw_stages$optional)) cat("Optional and ready:", paste(jw_stages$stage[ready & jw_stages$optional], collapse = ", "), "\n")
   }
-  invisible(list(table = tab, next_stage = nxt, locked = locked))
+  invisible(list(table = tab, next_stage = nxt, locked = locked, unreported_errors = pr))
 }
 
 # ---- lessons hand-off (skill-lessons) --------------------------------------------------------------

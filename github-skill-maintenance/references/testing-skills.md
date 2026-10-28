@@ -12,6 +12,7 @@ equivalent skill-trigger CLI, so the runs here are manual in fresh conversations
 - Does the description trigger? (manual)
 - Does the skill improve the answer? (with/without comparison)
 - Code in the skill
+- Testing hooks and scripts that clean directories (Windows)
 - When to stop
 
 ## Static checks (always, before every commit)
@@ -75,6 +76,13 @@ whether the skill is ever used.
   recursively over folders that link into a shared cache (`renv/library`, `.venv`, junctions): a write through the link damages the
   shared cache for every project. Point caches at a scratch folder when a test must write into an environment (renv: `RENV_PATHS_CACHE`,
   uv: `UV_CACHE_DIR`).
+
+## Testing hooks and scripts that clean directories (Windows)
+
+When a bash test deletes or recreates a scratch directory (`rm -f "$dir"/*`), convert a Windows backslash
+path first (`cygpath -u "$dir"`) or build it with forward slashes: a glob on a backslash path matches nothing
+and `rm -f` stays silent, so stale state files from earlier cases make later cases pass or fail for the wrong
+reason. List the state directory before each test case (one report, high confidence).
 
 ## Testing several neighbouring skills together (proxy test)
 

@@ -50,12 +50,25 @@ synced folder (Syncthing, OneDrive): never run stages on two machines at once (n
 ## Running it
 
 - Status: `jw_status()` prints the table and the next stage, and for an assistant stage the reference to read.
+  It also prints an `Unreported error(s): stage/code, ...` line for every error-severity problem not yet
+  marked reported, even when every stage is `done` (a failed then successful s6 re-run leaves the earlier
+  `report_render_failed` row). The returned list has `table`, `next_stage`, `locked` and `unreported_errors`
+  (a data frame). Clear the line by writing the problems up (`jw_lessons_candidates()`) and calling
+  `jw_lessons_mark_reported()`.
+- Correcting a decided s4 row: `jw_s4_amend(item_id, <column> = value, ..., rerender = FALSE)`. It rewrites
+  that row in its `s4_parts/` file (never append a second row, never edit parquet by hand), stops on an unknown
+  `item_id` or column, then re-opens and re-closes s4 (merge, validation, completeness gate, ledger update) and
+  returns the validation problems invisibly. `rerender = TRUE` also re-runs `jw_render_report()`. Later stages
+  are not flagged stale, so re-render the report yourself otherwise. `jw_parts_read()` keeps the last row per
+  `item_id`, so a re-written batch cannot duplicate an item. Details: [stage-s4-classify.md](stage-s4-classify.md).
 - Headless: `targets::tar_make(script = "<skill>/assets/pipeline/_targets.R", store = "<data>/runs/<week>/_targets")`
   with `JW_ROOT`, `JW_SKILL` (and optionally `JW_WEEK`) set. It stops with `STAGE_PENDING` at the assistant
   stage; after the conversation closes s4 run it again and only `report` rebuilds. Tested with fixture stage
   functions; the real s1-s3 functions are in "The mechanical stages".
 - Report: `jw_render_report()` writes `summary.md` first (small; later conversations read this, not the HTML)
-  and then renders `assets/pipeline/report.qmd` into the run folder.
+  and then renders `assets/pipeline/report.qmd` into the run folder. It needs `options(jobwatch.script_dir)`,
+  which `jw_load()` sets; it stops if that folder is wrong, and it warns (and records `report_render_failed`)
+  when the render errors or `report.html` was not refreshed.
 
 ## Lessons hand-off (skill-lessons)
 

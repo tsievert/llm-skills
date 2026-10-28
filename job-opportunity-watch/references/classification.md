@@ -1,6 +1,6 @@
 # Classification, fields and statuses
 
-Contents: fields to record; classes A-E; near-miss; aggregator noise; final statuses; opportunity tracks;
+Contents: fields to record; classes A-E; near-miss; reading eligibility wording; aggregator noise; final statuses; opportunity tracks;
 evidence order; fallback defaults; stretch and mismatch method examples; deduplication.
 
 ## Fields to verify and record (per opportunity)
@@ -38,6 +38,28 @@ and the failing rule in `near_miss_rule` ([stage-s4-classify.md](stage-s4-classi
 rule still applies and the item is still rejected; surfacing the near-miss only shows the user what the rule
 costs them, so relaxing it stays their decision. Where a stated range would change the outcome (for example
 "30-50% by agreement"), record the range rather than collapsing it to one number.
+
+## Reading eligibility wording (do not judge on the headline)
+
+Three user corrections and one audit found the same mistake: a class A / `Irrelevant` or `Rejected` verdict
+given from a headline, a field list or a method label instead of the full call text.
+
+- A "priority areas", "especially" or named-fields list is **not an eligibility filter**. If the call also says
+  "all fields", "related field" or is a broad institute or cluster call, score topic fit on the profile, not on
+  the list. When role type, contract and geography fit, classify at most B with an explicit open question;
+  never A / `Irrelevant` on topic alone for an open-field call.
+- `Irrelevant` needs the **central duties** to be unrelated to the profile, not just the headline theme.
+- A method-boundary rejection (for example wet-lab work) applies only when the work is mandatory for every
+  candidate. If the call offers alternative tracks, assess the track that fits the profile.
+- An explicit "expired" or "closed" marker on the vacancy page overrides a listed deadline that is still in
+  the future (stale aggregator listings do this). Keep the status `Expired` and put the reason in `notes`; the
+  summary and report show that note next to the status so it does not look like a data error.
+- Rejecting from a mirror text or a form-only page: say the evidence is partial (status `Inaccessible` or a
+  note), and do not cite species or duties the page did not show.
+
+After s4, re-open every class A `Irrelevant` row that came from a broad (multi-position, institute or cluster)
+call and read its full eligibility wording before closing the stage; a short audit of class A rows found 1 of
+11 and 2 of 3 wrongly judged in two cases (reported, one project).
 
 ## Aggregator noise
 

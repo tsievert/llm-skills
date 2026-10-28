@@ -77,7 +77,7 @@ skills verbatim (may contain personal data); anonymise any lesson drawn from it.
   a pointer for depth. Implemented as a section "Explain the reasoning (teaching rule)" at the end of each `SKILL.md`;
   new skills must include it.
 - **Verify before reporting ready (added 2026-10-23).** Before telling the user that a new or changed skill is ready to
-  commit, always load and follow the `github-skill-maintenance` skill: run `lint_skills()` (and `skills-ref validate`
+  commit, always load and follow the `github-skill-maintenance` skill: run `lint_skills()` (and `uvx --from skills-ref agentskills validate`
   for the skill) and fix or report every error and warning, run `check_versions()` if the skill names package versions,
   and state in the reply what was checked and what was not. Do not use the words "ready" or "done" while errors remain.
 - **Capture lessons (added 2026-10-23).** Every skill except `skill-lessons` must end with a section "Capture lessons
@@ -183,7 +183,7 @@ skill, a research round, or a triage run, append an entry there (not here).
 
 ## Lessons triage state
 
-- Lessons usage watermark: 2026-10-28T10:41:08
+- Lessons usage watermark: 2026-10-28T16:00:56
 
 The watermark above is read/written by `skill-feedback-triage/scripts/read_lessons.R`'s
 `triage_watermark()`/`triage_watermark_set()`, which default to `agents = "AGENTS.md"` —
