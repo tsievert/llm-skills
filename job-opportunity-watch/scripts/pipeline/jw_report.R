@@ -1,6 +1,6 @@
-# jw_report.R -- S0 preflight and S6 report (summary.md + Quarto dashboard) for the staged pipeline.
+# jw_report.R -- S0 preflight and S6 report (summary.md + a standard Quarto HTML report) for the staged pipeline.
 # Load everything with: source("<skill-dir>/scripts/pipeline/jw_report.R"); jw_load()
-# Needs: arrow, validate, jsonlite, quarto (R package + Quarto CLI), reactable, yaml.
+# Needs: arrow, validate, jsonlite, quarto (R package + Quarto CLI), kableExtra, yaml.
 
 jw_script_dir <- function() getOption("jobwatch.script_dir", file.path("job-opportunity-watch", "scripts", "pipeline"))
 jw_load <- function(dir = jw_script_dir()) {
@@ -15,7 +15,7 @@ jw_preflight <- function(week = jw_week_id(), root = jw_root(), run_tests = TRUE
   on.exit(jw_lock_release(rd), add = TRUE)
   prob <- function(code, msg, sev = "error") jw_problem(stage, code, msg, sev, 1L, week, root)
 
-  need <- c("arrow", "validate", "jsonlite", "yaml", "httr2", "xml2", "rvest", "reactable", "quarto", "targets")
+  need <- c("arrow", "validate", "jsonlite", "yaml", "httr2", "xml2", "rvest", "kableExtra", "quarto", "targets")
   miss <- need[!vapply(need, requireNamespace, logical(1), quietly = TRUE)]
   if (length(miss)) prob("pkg_missing", paste("missing packages:", paste(miss, collapse = ", ")))
   qv <- tryCatch(as.character(quarto::quarto_version()), error = function(e) NA_character_)
@@ -102,7 +102,7 @@ jw_write_summary <- function(week = jw_week_id(), root = jw_root(), today = Sys.
   invisible(d)
 }
 
-# ---- S6 report: summary.md first (independent of Quarto), then the dashboard -----------------------
+# ---- S6 report: summary.md first (independent of Quarto), then the HTML report -----------------------
 jw_render_report <- function(week = jw_week_id(), root = jw_root(), today = Sys.Date(),
                              template = file.path(dirname(jw_script_dir()), "..", "assets", "pipeline", "report.qmd")) {
   jw_stage_begin("s6", week, root); rd <- jw_run_dir(week, root); on.exit(jw_lock_release(rd), add = TRUE)

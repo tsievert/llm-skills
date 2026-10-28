@@ -556,6 +556,10 @@ jw_find_replacement <- function(url, max_candidates = 8, verbose = TRUE) {
 jw_tags_read <- function() {
   x <- .tsv_read(jw_state("social_tags.tsv"))
   if (is.null(x)) x <- as.data.frame(setNames(rep(list(character()), length(.jw_tag_cols)), .jw_tag_cols))
+  # Migrate an older file written before a column was added (e.g. query_type, posts_per_month):
+  # fill it with NA and reorder, rather than assuming the file matches .jw_tag_cols exactly.
+  for (cn in setdiff(.jw_tag_cols, names(x))) x[[cn]] <- NA_character_
+  x <- x[, .jw_tag_cols]
   for (cn in c("n_runs", "n_hits", "n_useful")) x[[cn]] <- as.integer(x[[cn]])
   x$posts_per_month <- suppressWarnings(as.numeric(x$posts_per_month))
   x

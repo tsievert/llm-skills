@@ -19,7 +19,7 @@ headless) and start from `jw_status()` plus a short summary, not from memory of 
 | s3 deadline check | headless | s2 | `s3_deadlines.parquet` (one row per s2 item; `not_checked` after the topic prefilter) |
 | s4 shortlist and classify | **assistant, own conversation** | s3 | `s4_classified.parquet`, then the cross-week ledger |
 | s5 social and web discovery | **assistant, own conversation, optional** | s4 | `s5_discovery.parquet` |
-| s6 report | headless | s4 | `summary.md` and `report.html` (Quarto dashboard) |
+| s6 report | headless | s4 | `summary.md` and `report.html` (standard Quarto HTML document, static `kableExtra` tables, see stage-s6-report.md) |
 
 ## Folder layout
 

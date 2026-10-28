@@ -62,6 +62,11 @@ usually higher yield than a broad aggregator's category pages.
 - Sources conflict: retain both claims, prefer the stronger source, label the conflict.
 - Do not use `Verified open` unless the official employer or funder page shows an open call and a
   deadline in the future (or an open-ended call).
+- A candidate reached only through a third-party aggregator/mirror, where the mirror's stated
+  "official" link returns a not-found error: before marking it `Inaccessible`, try one fallback —
+  search the employer's own careers page (or a site-restricted search for employer + title) for the
+  same posting under its native URL. Only fall back to `Inaccessible` if that also turns up nothing;
+  note which route was tried in the evidence field.
 
 ## Opportunity tracks (report separately)
 

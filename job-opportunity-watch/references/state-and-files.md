@@ -76,6 +76,15 @@ skill files.
 `jw_write_confirmed`, `jw_headless`, `jw_tags_read`, `jw_tags_record`, `jw_tags_review`, `jw_tags_set_status`. Read the file header and the comments
 above each function; they are short.
 
+If a long session already has an older copy of one of these functions loaded from an earlier stage's
+`source()`, re-loading the skill through its documented entry point does not refresh it — the stale
+definition keeps shadowing the current one until that specific file is `source()`d again. When a stage
+needs a helper that may have changed since it was last sourced in this session, re-source
+`scripts/jobwatch.R` (or the relevant pipeline script) explicitly rather than assuming an earlier load
+in the same session is still current. State-file readers like `jw_tags_read()` also tolerate a file
+written by an older schema (missing columns are filled with `NA` and reordered) rather than assuming
+the file matches the current column vector exactly.
+
 ## social_tags.tsv
 
 One row per (`platform`, `tag`); `platform` is `bluesky` or `mastodon`. Columns: `query_type` (`hashtag`, `text`,
