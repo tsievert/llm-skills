@@ -1,14 +1,22 @@
 ---
 name: staged-assistant-workflow
-description: Designs a recurring or long multi-step assistant task as named stages, each a separate conversation or headless run with one input file and one output file, so no conversation holds the whole task's context. Covers a stage table, a status function for "which stage is next and why", file-based hand-offs, completeness gates between stages, and resumable per-item batches. Use for a task that repeats on a schedule or keeps growing past one conversation, when stages, a status check, or resuming without redoing earlier work is wanted. Not for a one-off task fitting one conversation. For an all-headless DAG use `r-reproducible-pipeline`/`python-reproducible-pipeline` instead; this is for when a stage needs assistant judgment. For one non-recurring stream, use `agents-md-maintenance`'s hand-off note instead. Close-out logging belongs to `skill-lessons`.
+description: Designs a long or complex multi-step assistant task as named stages, each a separate conversation or headless run with one input file and one output file, so no single conversation has to hold the whole task's context. Covers a stage table, a status function for "which stage is next and why", file-based hand-offs, completeness gates between stages, and resumable per-item batches. Use when a task's own length or complexity looks likely to exhaust one conversation's context before it's done — a multi-week build, a task with many similar sub-items, or (as one specific case) a job that also recurs on a schedule and needs assistant judgment each run. Not for a one-off task that comfortably fits one conversation. For an all-headless DAG with no assistant-judgment step use `r-reproducible-pipeline`/`python-reproducible-pipeline` instead. For one long but non-recurring stream, `agents-md-maintenance`'s hand-off note may be enough on its own. Close-out logging belongs to `skill-lessons`.
 ---
 
 # Staged assistant workflow
 
-A pattern for tasks that are too long for one conversation and recur (weekly digest, periodic
-re-check, a multi-week build). Breaks the task into named stages, each with exactly one file in
-and one file out, so a stage can run in its own conversation (or headless) without the assistant
-needing to remember what earlier stages did — it rereads the input file instead.
+A pattern for a task whose own length or complexity is likely to exhaust one conversation's
+context before it's finished — a multi-week build, a task with many similar sub-items to work
+through, or any work stream where "just keep going in this conversation" would eventually mean
+losing earlier context or needing `/compact`. Breaks the task into named stages, each with exactly
+one file in and one file out, so a stage can run in its own conversation (or headless) without the
+assistant needing to remember what earlier stages did — it rereads the input file instead.
+
+A task that **also** recurs on a schedule (weekly digest, periodic re-check) and needs assistant
+judgment at some stage is a specific, secondary case of the same problem: recurrence is just one
+common *reason* a task's cumulative context would otherwise outgrow one session, not the thing this
+skill is defined by. The mechanism (stage table, gates, status function) doesn't care why a task
+needs staging, only that it does.
 
 This generalises a real build (a weekly job-listing pipeline's staged refactor, October 2026)
 and is being used for a second time before any part of it is proven
@@ -22,7 +30,8 @@ cluster back end that this pattern does not try to reinvent.
 | Signal | Use |
 |---|---|
 | Every stage is deterministic code (fit a model, render a report) | `r-reproducible-pipeline` / `python-reproducible-pipeline` |
-| At least one stage needs the assistant to read, judge, or write prose (classify items, draft a summary, decide a borderline case) | this skill |
+| At least one stage needs the assistant to read, judge, or write prose (classify items, draft a summary, decide a borderline case), and the task's own length risks outgrowing one conversation | this skill |
+| The task also repeats on a schedule and needs assistant judgment each run | this skill — treat the schedule as the reason staging is needed, not a different problem |
 | One long work stream, not recurring, just needs a restart point | `agents-md-maintenance`'s hand-off-note pattern (lighter weight, no stage table) |
 | The assistant-judgment stage can be scripted later with an LLM API call (`ellmer`) instead of a conversation | still start here; swapping the stage's *implementation* doesn't change the stage table |
 
