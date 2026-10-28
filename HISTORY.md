@@ -1164,3 +1164,16 @@ Skill change: new short section in `gam-mgcv/SKILL.md`, new `gam-mgcv/references
 `skills-ref validate`, `check_versions(offline = TRUE)` (claims match installed). Not verified: trigger behaviour, the Primer's
 guidelines, random-effect or `by =` terms in gamlss2, gratia plotting of gamlss2 fits, non-Windows. Edits reintroduced CRLF in
 three files; fixed with `sed` and re-checked with `git ls-files --eol`.
+
+### 2026-10-28: gamlss2 random effects, by-variables and vignettes (gam-mgcv reference)
+
+Read the gamlss2 vignettes `families`, `specials`, `family_extensions` (the `prediction` vignette still 404s) and the local
+help topics `?special_terms`, `?random`, `?lin`. Tested on simulated overdispersed counts (25 groups x 40, 3-level factor with
+by-smooths, `NBI` vs mgcv `nb()`): `s(g, bs = "re")` matched mgcv (AIC 5272.1 vs 5273.3, predictions within 0.3%, random-effect
+sd 0.466 vs 0.481); `re(~1|g)` (nlme-based) within 3.8%; random effect and by-smooths in sigma, `bs = "fs"` and `bs = "sz"` fitted.
+Gotchas: new factor level in `newdata` errors (use `type = "terms"` and drop `s(g)`), `se.fit` needs `parameter =` (`model =`
+silently gives NaN), `summary()` shows no random-effect sd, `re()` random slope reports edf 50 so its AIC is inflated.
+Changed: `gam-mgcv/references/gamlss-and-extra-families.md` (random-effect, prediction and specials/extensions bullets replace the
+old "not tested" line) and the research ledger (Round 2 section). Verified: `lint_skills()`, `check_skill_clashes()`,
+`skills-ref validate`. Not verified: `check_skill_links()` and `check_versions()` (no link or version-claim change), `bamlss2()`,
+custom specials and families, correlated random slopes, held-out comparison, non-Windows.

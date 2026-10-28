@@ -110,3 +110,26 @@ Data: `gamlss2::HarzTraffic$bikes` (daily motorcycle counts, n = 1057, mean 203,
 - 2026-10-28: fetched gamlss2 index, firststeps, topmodels, bayesian, NEWS; inlaws README and compatibility vignette; Nature article blocked (metadata via search). No installs, no local tests. No skill files changed.
 - 2026-10-28 (later): installed gamlss2, topmodels, inlaws (+ gamlss from CRAN) with user approval; compared mgcv nb(), inlaws nbls(), gamlss2 NBI on HarzTraffic bikes; results and gotchas above. No skill files changed.
 - 2026-10-28 (merge): folded `gam-distributional-resources-ledger.md` (parallel session, same research, no installs) into this file: added MIGRATION.md provenance, fitting-method caveat, division of labour with gratia, Tonkin author note, implications list. That file was deleted. `gam-mgcv` skill section and reference added and checked (lint, links, clashes, skills-ref validate, version claims).
+
+## Round 2, 2026-10-28 (vignettes and random-effect/by tests)
+
+Sources: gamlss2 vignettes `families` (read), `specials` (read), `family_extensions` (read), `prediction` (blocked again, 404 for .html and .qmd; still unread). Local help pages `?special_terms`, `?random`, `?lin` read via `tools::Rd_db`.
+
+Facts: families can be bridged from `distributions3` (`family(Normal(), links = ...)`) or hand-written lists of class `gamlss2.family` (required: `family`, `names`, `links`, `pdf`; optional `cdf`, `quantile`, `random`, `support`, `score`, `hessian`, ...). The families vignette does not mention gamlss.dist, but the first-steps vignette uses its families. Built-in specials: `lo()`, `tree()`, `ct()`, `cf()`, `n()`, `lin()`, `re()`, `random()`, `gnet()`, `la()`, plus mgcv `s()`, `te()`, `ti()`, `t2()`; special terms are refitted from the working response and weights each backfitting iteration and centred. Extensions: `truncate_family()`, `censor_family()`, `round_family()` (order matters), `inflate_family()` (adds point masses, log-odds link), `hurdle_family()`. Random effects: `s(g, bs = "re")` via mgcv or `re(random, correlation)` wrapping nlme `lme()` (`?random`).
+
+Tests (simulated NB counts, 25 groups x 40 obs, 3-level factor with by-smooths, seed 6153; mgcv 1.9.4, gamlss2 0.1-0):
+
+| Model (`NBI`) | AIC | Result |
+|---|---|---|
+| mgcv `nb()` reference: `s(x, by = f) + f + s(g, bs = "re")` | 5273.3 | |
+| gamlss2 same formula | 5272.1 | predictions within 0.3% of mgcv; RE sd 0.466 vs mgcv 0.481 (simulated 0.474) |
+| gamlss2 `re(~1 \| g)` instead | 5274.3 | predictions within 3.8% |
+| plus `s(g, bs = "re")` in sigma | 5272.1 | fitted; sigma RE edf 0 (none simulated) |
+| `s(x, f, bs = "fs") + s(g, bs = "re")` | 5278.6 | fitted |
+| `s(x) + s(f, x, bs = "sz") + s(g, bs = "re")` | 5278.8 | fitted (sz not checked for correctness) |
+| by-smooths and `f` also in sigma | 5279.3 | fitted |
+| `re(~ xc \| g)` random slope | 5304.5 | fitted; edf reported as 50 (all coefficients), AIC penalised accordingly |
+
+Gotchas: new factor level in `newdata` errors (mgcv `exclude` has no equivalent argument; use `type = "terms"` and drop the `s(g)` column, up to a constant centring shift); `predict(..., model = "mu", se.fit = TRUE)` silently returned NaN, the argument is `parameter =`; `summary()` shows no RE sd (use `fitted.specials[[par]][[term]]$lambdas`, sd approx 1/sqrt(lambda) for unit-scale NBI). Not tested: `bamlss2()`, custom specials/families, other families, held-out comparison, correlated random slopes with `correlation =`.
+
+Open items remaining: Primer full text; `prediction` vignette; inlaws authors/licence/NEWS; brms or glmmTMB cross-check.
