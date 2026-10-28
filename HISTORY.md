@@ -1115,3 +1115,18 @@ fire `UserPromptSubmit`, so the post-compaction false positive cannot be removed
 Not built. Verified: `bash -n`, a synthetic matrix (below/above threshold, second hit, loaded skill, missing file,
 shared markers, `PostToolUse` regression), `lint_skills()` (only pre-existing findings), `check_skill_links()`,
 `check_skill_clashes()`, `check_sync_setup(cfg=)` (only dirty tree and unpushed commits), `uvx --from skills-ref agentskills validate staged-assistant-workflow` (valid). Not run: a live-session test of the growth nudge, `check_versions()` (no version claims).
+
+### 2026-10-28: staged-assistant-workflow /compact baseline marker
+
+Captured a typed `/compact` with the hooks DEBUG switch (ledger 12.6): it fires `UserPromptSubmit` with `prompt`
+starting with the literal `/compact`; `session_id` and `transcript_path` do not change; `lm-messages.jsonl` stays
+large (539 KB right after compaction), confirming the false-positive class from 12.5. Built the baseline marker
+(ledger 12.7): on a `/compact` prompt `skill-file-signal-hook.sh` writes `$sid.compactbase` (current
+`lm-messages.jsonl` size) and `check_growth` receives `size - base` while it exists. Auto-compaction stays invisible;
+nudge-once is shared, so a session nudged before `/compact` is not nudged again. Verified: `bash -n`, seven synthetic
+cases (nudge without marker, silent after `/compact`, +20 KB silent, +360 KB nudges, mid-sentence mention does not
+reset, bare `/compact` resets, missing file no crash), `lint_skills()` (only the pre-existing `day` warning and
+description-length info), `check_skill_links()`, `check_skill_clashes()`, `skills-ref validate` (passes). Not run:
+`check_versions()`, `check_sync_setup()` (no settings change), a live-session test. Gotcha: `$PA_SCRATCH_DIR` has
+backslashes, so `rm -f $dir/*` matched nothing and stale markers faked results; use `cygpath -u`. DEBUG marker and
+payload log deleted afterwards.

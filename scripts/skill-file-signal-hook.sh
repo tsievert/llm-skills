@@ -52,8 +52,8 @@
 #       medium/large/very large" bands Posit Assistant's own UI shows (no numeric definition of
 #       those bands is published; see ledger section 12.1) -- the bytes-per-token ratio was
 #       fitted as tokens ~= 30.6k + bytes/4.15 (ledger section 12.4), so the threshold of 350000 B
-#       (~125k tokens) sits just past the start of "medium". Unreliable after compaction, because
-#       lm-messages.jsonl never shrinks (ledger section 12.5); nudge-once-per-session bounds that.
+#       (~125k tokens) sits just past the start of "medium". After a typed /compact the hook stores a baseline
+#       size and counts growth from it (ledger 12.6-12.7); auto-compaction is invisible, so it can still over-count.
 #
 # Both `file_signals` and `prompt_signals` are deliberately opt-in and scoped to skills with a
 # strong, low-ambiguity signal (do not add either speculatively to every skill -- see ledger
@@ -183,6 +183,16 @@ case "$event" in
     ctx=""
     tp=$(jstr transcript_path)
     size=$(lm_messages_size "$tp")
+    # A typed /compact (live capture, ledger 12.6: prompt starts with the literal /compact) does not
+    # shrink lm-messages.jsonl, so record the size now and count growth from it. Auto-compaction
+    # fires no hook and stays invisible (ledger 12.5).
+    if printf '%s' "$payload" | grep -qE '"prompt":"/compact([[:space:]\\"]|$)'; then
+      [ -n "$size" ] && printf '%s' "$size" > "$STATE/$sid.compactbase" 2>/dev/null
+    fi
+    if [ -n "$size" ] && [ -f "$STATE/$sid.compactbase" ]; then
+      base=$(tr -cd '0-9' < "$STATE/$sid.compactbase")
+      if [ -n "$base" ] && [ "$size" -ge "$base" ]; then size=$((size - base)); fi
+    fi
     for dir in "$REPO_DIR"/*/; do
       skill_md="$dir/SKILL.md"
       [ -f "$skill_md" ] || continue

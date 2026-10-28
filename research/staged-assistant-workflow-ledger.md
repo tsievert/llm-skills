@@ -644,3 +644,37 @@ is a ~10-line change in `check_growth`. Revisit if a `PreCompact`/`PostCompact` 
 
 `research/HANDOFF-content-growth-hook.md` was removed 2026-10-28 once 5.2 was built; its content lives in sections
 9-12 of this ledger (recover the file with `git show HEAD:research/HANDOFF-content-growth-hook.md`).
+
+### 12.6 Live capture of the typed `/compact` payload (2026-10-28)
+
+Source: DEBUG switch (`~/.posit/skill-triggers/state/DEBUG`) payload log from this session (status: read). Only structure
+recorded; the DEBUG marker and the payload log were deleted afterwards.
+
+Facts:
+- **`/compact` does fire `UserPromptSubmit`.** Fields: `session_id`, `transcript_path`, `cwd`, `hook_event_name`,
+  `permission_mode`, `prompt` (same shape as any other prompt). The `prompt` string starts with the literal `/compact`
+  followed by two spaces and the argument text the UI attaches, so a `case`/prefix match on `"/compact"` works.
+- **No identity change at compaction:** `session_id` and `transcript_path` (the same `conversation.json` path) are
+  identical to the prompts before and after. No new session, no `SessionStart`.
+- **`lm-messages.jsonl` does not reset.** Measured right after compaction: 539 KB, last write ~7 s before the
+  `conversation.json` update. That is above the 350000-byte threshold while the live context is now small, so the
+  false positive described in 12.5 is confirmed for compaction. (No pre-compaction size was captured, so "never
+  shrinks" rests on the post-compaction size being large, not on a before/after pair.)
+- Each prompt appears twice in the log because two registered hook scripts (`skill-trigger-hook.sh`,
+  `skill-file-signal-hook.sh`) both write debug payloads on `UserPromptSubmit`; not a double firing by the host.
+
+Consequence: the baseline-marker design in 12.5 is feasible for manual `/compact` (detect prefix, write
+`$sid.compactbase` = current `lm-messages.jsonl` size, subtract in `check_growth`). Auto-compaction remains invisible.
+Not built; awaiting user decision.
+
+### 12.7 Baseline marker built (2026-10-28)
+
+`scripts/skill-file-signal-hook.sh` (`UserPromptSubmit` branch): a prompt matching `"prompt":"/compact` followed by
+whitespace, a quote or end writes `$sid.compactbase` with the current `lm-messages.jsonl` size; whenever that marker
+exists, the size passed to `check_growth` is `size - base`. Auto-compaction is still invisible.
+Synthetic tests (bash, temp state dir; seven cases, all as expected): growth nudge fires on a big file without a
+marker; `/compact` on a big file is silent and stores the base; +20 KB stays silent; +360 KB nudges; a prompt that only
+mentions `/compact` mid-sentence does not reset the base; bare `/compact` resets it; missing `lm-messages.jsonl` does
+not crash and writes no marker. Test gotcha: `$PA_SCRATCH_DIR` has backslashes, so `rm -f $dir/*` silently matched
+nothing and stale markers faked results; use `cygpath -u`.
+Limitation: nudged-once is shared, so a session already nudged before `/compact` is not nudged again afterwards.
