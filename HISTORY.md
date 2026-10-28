@@ -1177,3 +1177,17 @@ Changed: `gam-mgcv/references/gamlss-and-extra-families.md` (random-effect, pred
 old "not tested" line) and the research ledger (Round 2 section). Verified: `lint_skills()`, `check_skill_clashes()`,
 `skills-ref validate`. Not verified: `check_skill_links()` and `check_versions()` (no link or version-claim change), `bamlss2()`,
 custom specials and families, correlated random slopes, held-out comparison, non-Windows.
+
+### 2026-10-28: gamlss2 correlated random slopes (gam-mgcv reference)
+
+Tested `re(~ xc | g)` (nlme-based) against `glmmTMB(nbinom2)` and mgcv independent `s(g, bs = "re")` terms on simulated NB counts
+(40 groups x 30, simulated sds 0.5 and 0.8, correlation 0.6). gamlss2 gave sds 0.545 and 0.888 with correlation 0.647
+(glmmTMB 0.545, 0.917, 0.671); group-level BLUPs correlated 0.999 and 0.994 with glmmTMB's, link predictions 0.998; mgcv
+independent terms gave 0.559 and 0.935 and no correlation. With 8 groups both tools overestimated the slope sd. Gotchas:
+variance components come from `nlme::VarCorr(fit$fitted.specials$mu[[1]]$model)` and its "Residual" is on the working response;
+`re()` charges edf = number of random coefficients, so AIC is not comparable with glmmTMB or mgcv; `correlation =` is accepted but
+acts on the working response; `type = "response"` with `parameter =` errors (use `type = "link"`); new group level errors.
+Changed: `gam-mgcv/references/gamlss-and-extra-families.md` (correlated-slope, extraction, AIC and `correlation =` bullets) and the
+ledger (Round 3). Verified: `lint_skills()`. Not run this round: `check_skill_clashes()`, `check_skill_links()`,
+`skills-ref validate` (no description or link change; validated earlier the same day). Not tested: nested or multiple grouping
+levels in `re()`, `correlation =` under real autocorrelation, held-out scoring.

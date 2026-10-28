@@ -133,3 +133,23 @@ Tests (simulated NB counts, 25 groups x 40 obs, 3-level factor with by-smooths, 
 Gotchas: new factor level in `newdata` errors (mgcv `exclude` has no equivalent argument; use `type = "terms"` and drop the `s(g)` column, up to a constant centring shift); `predict(..., model = "mu", se.fit = TRUE)` silently returned NaN, the argument is `parameter =`; `summary()` shows no RE sd (use `fitted.specials[[par]][[term]]$lambdas`, sd approx 1/sqrt(lambda) for unit-scale NBI). Not tested: `bamlss2()`, custom specials/families, other families, held-out comparison, correlated random slopes with `correlation =`.
 
 Open items remaining: Primer full text; `prediction` vignette; inlaws authors/licence/NEWS; brms or glmmTMB cross-check.
+
+## Round 3, 2026-10-28 (correlated random slopes in gamlss2)
+
+Question: does `re(~ xc | g)` give correlated random intercept and slope, and how does it compare with glmmTMB and mgcv? Source for the mechanism: `?random` and `gamlss2:::re` (a wrapper around `nlme::lme()` fitted on the working response inside backfitting).
+
+Setup: simulated NB counts (size 4), 40 groups x 30 obs, random intercept sd 0.5, slope sd 0.8, correlation 0.6 (realised 0.63), fixed intercept 1.5, slope 0.5; seed 2917. glmmTMB (nbinom2) is the reference.
+
+| Quantity | glmmTMB | gamlss2 `re(~xc\|g)` | mgcv `s(g,bs="re")` + `s(g,xc,bs="re")` |
+|---|---|---|---|
+| sd intercept / slope | 0.545 / 0.917 | 0.545 / 0.888 | 0.559 / 0.935 (independent) |
+| correlation | 0.671 | 0.647 | not estimated |
+| fixed intercept / slope | 1.642 / 0.717 | 1.644 / 0.752 | not compared |
+| NB size (theta) | 3.51 | 3.86 | 3.51 |
+| AIC | 6419.5 | 6340.8 (edf 80) | 6313.8 |
+
+BLUP agreement with glmmTMB: intercept 0.999, slope 0.994; link-scale predictions correlate 0.998 (median abs diff 0.02, max 0.26). Weak identification: with 8 groups, slope sd gamlss2 1.36 vs glmmTMB 1.45 (simulated 0.8).
+
+Other findings: `correlation = corAR1(form = ~ t | g)` accepted and passed through (phi about 0 with no true autocorrelation; applies to the working response, so not interpretable as count autocorrelation; no test with real autocorrelation); new group level errors in `predict()`; `predict(parameter = "mu", type = "response")` errors ("Predictions on the response scale require all distributional parameters"), use `type = "link"` with `parameter =`; `coef()` names are `mu.p.(Intercept)`, `sigma.p.(Intercept)`; AIC across glmmTMB (marginal likelihood), mgcv and gamlss2 (penalised, edf = number of random coefficients) is not comparable.
+
+Not tested: several grouping levels or nested `re()`, `correlation` under real autocorrelation, other families, held-out scoring.
