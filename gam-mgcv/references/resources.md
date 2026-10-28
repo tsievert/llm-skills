@@ -24,6 +24,7 @@ Gavin L. Simpson (Aarhus University) is the author of gratia and publishes tutor
 
 - Help pages: `?gam`, `?gam.models`, `?smooth.terms`, `?choose.k`, `?gam.check`, `?k.check`, `?concurvity`, `?random.effects`, `?family.mgcv`, `?bam`, `?mgcv.FAQ`, `?predict.gam`.
 - Index: https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/00Index.html
+- GAMLSS: gamlss2 site https://gamlss-dev.github.io/gamlss2/ (R-universe, not CRAN); Merder et al. (2026), Nat Rev Methods Primers 6:49, https://www.nature.com/articles/s43586-026-00498-z . Extra mgcv families: https://github.com/gam-mafia/inlaws (experimental). Details in `gamlss-and-extra-families.md`.
 - Book: Wood, S.N. Generalized Additive Models: An Introduction with R (2nd ed.), the reference for theory and mgcv.
 
 ## Tutorials, courses, papers

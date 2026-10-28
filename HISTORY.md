@@ -1147,3 +1147,20 @@ rejected (superseded by the correct-classification entry); stale-date subagent s
 Verified: pipeline tests 30 pass (3 new blocks plus summary-note test), `lint_skills()` (no new findings; pre-existing
 `day` warning and info), `skills-ref validate` for the three edited skills. Not verified: a real quarto render failure
 (only the bad-script-dir path), `check_skill_links()`/`check_skill_clashes()` (no description or link changes).
+
+### 2026-10-28: gam-mgcv: gamlss2 and inlaws section
+
+Research (ledger `research/gam-distributional-and-extra-families-ledger.md`, merged from two overlapping ledgers written by
+parallel sessions): gamlss2 site and vignettes (firststeps, topmodels, bayesian), the Nature Reviews Methods Primers GAMLSS
+article (full text blocked by a bot wall, abstract and authors only), and `gam-mafia/inlaws` (README, compatibility vignette,
+MIGRATION.md). With user approval installed gamlss2 0.1-0, gamlss.dist, topmodels 0.3-0 (R-universe) and inlaws 0.0.0.9000
+(GitHub); `gamlss` from CRAN was also needed. Tested on `HarzTraffic$bikes` (counts, cyclic smooth): mgcv `nb()`, inlaws `nbls()`,
+gamlss2 `NBI` constant and smooth sigma. Smooth dispersion improved AIC by about 340; `nbls()` and gamlss2 agreed closely
+(theta correlation 1.00, median mean-curve difference 0.7%); one chronological hold-out favoured the location-scale fits.
+Gotchas: gamlss2 fit fails without `gamlss` installed, `predict(m, newdata = ...)` must name `newdata`, `bam()` rejects `nbls()`,
+gratia masks `topmodels::rootogram`, inlaws general families silently use REML.
+Skill change: new short section in `gam-mgcv/SKILL.md`, new `gam-mgcv/references/gamlss-and-extra-families.md`, one line in
+`references/resources.md`. Verified: `lint_skills()`, `check_skill_links()`, `check_skill_clashes(new = "gam-mgcv")` (no findings),
+`skills-ref validate`, `check_versions(offline = TRUE)` (claims match installed). Not verified: trigger behaviour, the Primer's
+guidelines, random-effect or `by =` terms in gamlss2, gratia plotting of gamlss2 fits, non-Windows. Edits reintroduced CRLF in
+three files; fixed with `sed` and re-checked with `git ls-files --eol`.

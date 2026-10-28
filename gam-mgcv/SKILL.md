@@ -65,6 +65,10 @@ Details, families and pitfalls: [references/smooths-and-families.md](references/
 - The plotted term is a deviation from the main smooth, not the level's curve. Build level curves and level contrasts from whole-model predictions.
 - `gratia::difference_smooths()` errors on `sz` terms (verified in 0.11.2.10, 0.11.2-64 and 0.11.2.73). `gratia::conditional_differences()` works on `sz` models where installed (verified in 0.11.2-64 and 0.11.2.73; give both `by` and `condition`); the reference file also has a linear-combination helper for older versions. Check the installed gratia version and issues at https://github.com/gavinsimpson/gratia/issues?q=sz before asserting a limitation.
 
+## Beyond mgcv families: gamlss2 and inlaws
+
+When mgcv's families (including `gaulss()`, `gammals()`, `gevlss()`, `ziplss()`) cannot give a parameter its own predictor, or a family is missing, two non-CRAN packages exist: `gamlss2` (GAMLSS; `y ~ s(x) | s(x)` puts predictors on mu and sigma, mgcv smooths work) and `inlaws` (experimental extra families for `gam()`, e.g. `nbls()`, `zinb()`; unrelated to R-INLA). Both need the user's permission to install, and inlaws is flagged by its own README as largely untested, so validate against another tool. Tested syntax, gotchas (`predict(m, newdata = ...)`, undeclared `gamlss` dependency, no `bam()` for `nbls()`) and a worked comparison: [references/gamlss-and-extra-families.md](references/gamlss-and-extra-families.md).
+
 ## Mixed models and hierarchical GAMs
 
 Prefer random effects and factor smooths inside `gam()`/`bam()` with REML. Use `gamm4` (lme4 backend), `gamm()` (nlme, for corAR1 and other correlation structures), `glmmTMB` (smooths via `s()`), or `brms` when you need correlated random slopes, specialised families, or a full Bayesian fit. The five HGAM model types (G, GS, GI, S, I) from Pedersen et al. (2019) and the by-variable ordered factor pattern are in [references/hgam-and-random-effects.md](references/hgam-and-random-effects.md).
