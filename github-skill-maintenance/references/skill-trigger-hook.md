@@ -213,6 +213,63 @@ per skill):
 | `hpc-python-code` | `'\bSIGUSR1\b\|signal\.signal\(signal\.SIGTERM'` |
 | `hpc-r-code` | `'parallelly::availableCores\|future\.batchtools\|\bR_LIBS_USER\b'` |
 
+### The prompt-signal channel (added 2026-10-28)
+
+A second, parallel channel reuses all of the above mechanics (nudge once, escalate on a second
+ignored match, never block itself) but keys off the **user's own prompt wording** instead of file
+content, via a `metadata.prompt_signals` field (same shape as `file_signals`: a single
+`'|'`-separated regex-alternation string). Added for `staged-assistant-workflow`, whose trigger is
+"this task's own length/complexity" — a quality of the user's request, not something that shows up
+in a file read — so the file-content channel doesn't apply (see
+`research/staged-assistant-workflow-ledger.md` section 9 for the design history).
+
+`skill-file-signal-hook.sh` now also handles `UserPromptSubmit`, scanning the whole raw payload
+(same embedded-quotes reasoning as `skill-trigger-hook.sh`'s `UserPromptSubmit` handler) against
+every skill's declared `prompt_signals`. Both channels share one marker namespace per skill
+(`$sid.loaded.<skill>` / `$sid.nudged.<skill>` / `$sid.pending.fs.<skill>`), so a skill nudged once
+via either channel is not nudged again via the other, and a second ignored hit on *either* channel
+escalates into `skill-trigger-hook.sh`'s `Stop` block the same way.
+
+| Skill | `prompt_signals` |
+|---|---|
+| `staged-assistant-workflow` | length/complexity phrases first (`huge/massive/very large/too big or long` + task noun; `many/several/multiple sessions ... to finish`; `will take weeks/days/sessions`), recurrence phrases second (`weekly/daily/recurring/periodic/every week`) — length leads per the skill's own rescoped definition (section 6 of its ledger), recurrence is a named secondary case, not the trigger. |
+
+Settings entry: `skill-file-signal-hook.sh` added alongside `skill-trigger-hook.sh` under
+`hooks.UserPromptSubmit` (additive, not a replacement):
+
+```json
+"UserPromptSubmit": [{"hooks": [
+  {"type": "command", "command": "bash .../skill-trigger-hook.sh", "timeout": 10},
+  {"type": "command", "command": "bash .../skill-file-signal-hook.sh", "timeout": 10}
+]}]
+```
+
+`check_sync_setup()` gained matching checks: `prompt-signal UserPromptSubmit hook` (the command is
+present), `prompt-signal declaring skills` (which skills declare the field, mirroring the
+file-signal one), and an error if any skill declares `prompt_signals` but no hook command is wired
+under `UserPromptSubmit`. `lint_skills()` gained a matching `prompt_signals` check (single string,
+compiles as an extended regex, specificity warning on short alternatives) — note the specificity
+check splits naively on every `|`, so a pattern that nests `|` inside a parenthesised group (e.g.
+`every (week|day|month)`) can produce a spurious low-specificity warning on the inner word alone
+(seen once, for `day`, when `staged-assistant-workflow` was first declared); this is a known,
+accepted over-warn, not a bug, since it can only misfire in the direction of extra caution.
+
+**Tested** (synthetic piped payloads, Windows Git Bash): a matching `UserPromptSubmit` prompt
+nudges once; a second matching prompt in the same session escalates (writes
+`pending.fs.<skill>`, no second `additionalContext` line) instead of repeating itself; an unrelated
+prompt is silent; a length/complexity-phrased prompt and a recurrence-phrased prompt both match
+(two different alternatives in the same field); a skill already loaded via a prior `PostToolUse`
+`skill` call is never nudged via `UserPromptSubmit` either (shared marker namespace confirmed); a
+prompt with embedded double quotes is still detected (whole-payload scan, not an extracted field);
+a missing `session_id` and malformed/empty stdin do not crash the script; the pre-existing
+`file_signals`/`PostToolUse` channel still works unchanged after the refactor that factored both
+channels through one shared `check_signal()` function, including the dash-leading-pattern `--`
+guard (`hpc-gpu-jobs`'s `--gres=gpu`). **Not tested:** firing inside a real conversation turn (only
+synthetic payloads this round); Linux/macOS; whether the length/complexity phrasing is well
+calibrated against real negative examples (e.g. "I check my email daily" containing "daily" with no
+task relevance) — drafted from the ledger's phrase sketches, not yet tuned against a negative-example
+set the way `references/testing-skills.md`'s trigger-query protocol recommends.
+
 `hpc-cluster-docs` deliberately has none: it is a "run this first" skill about identifying a
 cluster, not keyed to a distinguishing content pattern the way the others are.
 

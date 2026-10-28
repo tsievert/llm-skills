@@ -236,16 +236,20 @@ check_sync_setup <- function(repo = NULL, fetch = FALSE,
     out
   }
   sig_skill <- signal_hook_entries("PostToolUse")
+  sig_prompt <- signal_hook_entries("UserPromptSubmit")
   add("file-signal PostToolUse hook", if (length(sig_skill)) "ok" else "warn",
       if (length(sig_skill)) paste(unique(vapply(sig_skill, function(e) e$matcher, "")), collapse = ", ")
       else "No skill-file-signal-hook command under hooks.PostToolUse: file-content nudges are disabled.")
+  add("prompt-signal UserPromptSubmit hook", if (length(sig_prompt)) "ok" else "warn",
+      if (length(sig_prompt)) sig_prompt[[1]]$cmd
+      else "No skill-file-signal-hook command under hooks.UserPromptSubmit: prompt-content nudges (metadata.prompt_signals) are disabled.")
   if (length(sig_skill)) {
     matchers_seen <- unique(vapply(sig_skill, function(e) e$matcher, ""))
     add("file-signal matcher covers 'skill'", if (any(vapply(matchers_seen, matcher_hits, logical(1), tool = "skill"))) "ok" else "error",
         "Needs a 'skill' matcher entry so a skill load is recorded as loaded and never nudged for afterward.")
     add("file-signal matcher covers read/grep/bash", if (any(vapply(matchers_seen, function(m) matcher_hits(m, "read") || matcher_hits(m, "grep") || matcher_hits(m, "bash"), logical(1)))) "ok" else "error",
         "Needs a 'read|grep|bash' (or similar) matcher entry so file content is actually scanned.")
-    cmds_s <- vapply(sig_skill, function(e) e$cmd, "")
+    cmds_s <- vapply(c(sig_skill, sig_prompt), function(e) e$cmd, "")
     scripts_s <- unique(sub("^\\s*bash\\s+", "", cmds_s))
     if (.Platform$OS.type == "windows")
       add("file-signal hook uses bash explicitly", if (all(grepl("^\\s*bash\\s", cmds_s))) "ok" else "warn",
@@ -269,7 +273,7 @@ check_sync_setup <- function(repo = NULL, fetch = FALSE,
         add("file-signal hook syntax (bash -n)", if (identical(st, 0L)) "ok" else "error", script)
       }
     }
-    # Which skills in this clone actually declare a file_signals pattern.
+    # Which skills in this clone actually declare a file_signals or prompt_signals pattern.
     skill_dirs <- list.dirs(repo, recursive = FALSE)
     declared <- Filter(function(p) {
       f <- file.path(p, "SKILL.md")
@@ -277,6 +281,15 @@ check_sync_setup <- function(repo = NULL, fetch = FALSE,
     }, skill_dirs)
     add("file-signal declaring skills", "info",
         if (length(declared)) paste(basename(declared), collapse = ", ") else "None declare metadata.file_signals yet.")
+    declared_p <- Filter(function(p) {
+      f <- file.path(p, "SKILL.md")
+      file.exists(f) && any(grepl("^\\s*prompt_signals:", readLines(f, warn = FALSE)))
+    }, skill_dirs)
+    add("prompt-signal declaring skills", "info",
+        if (length(declared_p)) paste(basename(declared_p), collapse = ", ") else "None declare metadata.prompt_signals yet.")
+    if (length(declared_p) && !length(sig_prompt))
+      add("prompt-signal hook missing", "error",
+          "Skill(s) declare metadata.prompt_signals but no skill-file-signal-hook command is under hooks.UserPromptSubmit, so those nudges never fire.")
   }
   tdir <- file.path(home, ".posit/skill-triggers")
   seen_t <- tryCatch({

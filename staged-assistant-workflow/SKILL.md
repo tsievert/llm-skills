@@ -1,6 +1,8 @@
 ---
 name: staged-assistant-workflow
 description: Designs a long or complex multi-step assistant task as named stages, each a separate conversation or headless run with one input file and one output file, so no single conversation has to hold the whole task's context. Covers a stage table, a status function for "which stage is next and why", file-based hand-offs, completeness gates between stages, and resumable per-item batches. Use when a task's own length or complexity looks likely to exhaust one conversation's context before it's done — a multi-week build, a task with many similar sub-items, or (as one specific case) a job that also recurs on a schedule and needs assistant judgment each run. Not for a one-off task that comfortably fits one conversation. For an all-headless DAG with no assistant-judgment step use `r-reproducible-pipeline`/`python-reproducible-pipeline` instead. For one long but non-recurring stream, `agents-md-maintenance`'s hand-off note may be enough on its own. Close-out logging belongs to `skill-lessons`.
+metadata:
+  prompt_signals: '\b(huge|massive|very large|too (big|long))\b[^.?!\n]{0,40}\b(task|project|build|refactor)\b|\b(many|several|multiple)\b[^.?!\n]{0,30}\b(sessions|conversations)\b[^.?!\n]{0,20}\b(finish|complete|build)\b|\bwill take\b[^.?!\n]{0,30}\b(weeks|days|sessions)\b|\b(weekly|daily|recurring|periodic|every (week|day|month))\b'
 ---
 
 # Staged assistant workflow

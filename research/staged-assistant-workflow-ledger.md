@@ -414,3 +414,80 @@ second example, and none should be picked from a single observation.
 - The handoff's step 4 is now addressed at the research level; building either design still needs
   the user's go-ahead (new hook = settings.json change + `check_sync_setup()` coverage, per the
   repo's "verify before reporting ready" rule).
+
+## 10. Log: 2026-10-28, same session, step 4's 5.1 built (user-approved)
+
+User approved building the 5.1 prompt-content nudge now, reusing existing hook infrastructure
+without new calibration (distinct from 5.2, which still needs a second session's growth curve --
+not built this round).
+
+Implementation, reusing `skill-file-signal-hook.sh` rather than adding a new script: added a
+`metadata.prompt_signals` frontmatter field (same shape as `file_signals`: one `'|'`-separated
+regex string) to `staged-assistant-workflow/SKILL.md`, with the length/complexity-led phrase set
+drafted in section 9.3 (length/complexity phrases first, recurrence phrases kept as a named,
+secondary alternative per section 6's rescoping). Extended `skill-file-signal-hook.sh` with a new
+`UserPromptSubmit` case and a shared `check_signal()` helper so both the file-content and
+prompt-content channels use identical nudge-once/escalate-on-repeat logic and marker namespace
+(`$sid.loaded.<skill>` / `$sid.nudged.<skill>` / `$sid.pending.fs.<skill>`) -- a skill nudged via
+either channel is not nudged again via the other, and a second ignored hit on either channel still
+escalates into `skill-trigger-hook.sh`'s existing `Stop` block, with no changes needed to that
+script. Added matching `lint_skills()` and `check_sync_setup()` coverage for `prompt_signals`
+(mirroring the existing `file_signals` checks), and a new subsection in
+`github-skill-maintenance/references/skill-trigger-hook.md` ("The prompt-signal channel"). Wired
+into the real `~/.posit/assistant/settings.json` (`skill-file-signal-hook.sh` added to
+`hooks.UserPromptSubmit`, additive alongside the existing `skill-trigger-hook.sh` entry).
+
+Verified: `bash -n` on the edited hook script; a full synthetic-payload test matrix (first-hit
+nudge, second-hit escalation, unrelated prompt silent, length-phrase and recurrence-phrase
+alternatives both match, already-loaded skill never nudged via either channel, embedded quotes
+still detected, missing session_id and malformed stdin do not crash) plus a regression check that
+the pre-existing `file_signals`/`PostToolUse` channel, including the `hpc-gpu-jobs` dash-leading
+pattern's `--` guard, still works after the shared-helper refactor. `lint_skills()` (repo-wide:
+only the known, accepted `prompt_signals` specificity over-warn on the nested-group word `day`,
+documented as harmless, plus unrelated pre-existing info findings), `check_skill_links()` and
+`check_skill_clashes(new = "staged-assistant-workflow")` (both clean, 30 skills), `skills-ref
+validate staged-assistant-workflow` (valid), and `check_sync_setup()` against the real, live
+settings.json content read via `bash`/`cat` (same R-session path-guard workaround as the other hook
+audits) -- all `ok`/expected `info`/`warn` only (uncommitted tree, one unpushed commit; both
+pre-existing, not from this change).
+
+Not done: 5.2 (content-growth hook) is still not built, per the two-point calibration task tracked
+separately below. Real-conversation-turn confirmation (only synthetic payloads tested this round,
+same limitation the original R1/R2 scripts had before their own first live confirmation). The
+phrase list's negative-example calibration (`references/testing-skills.md` discipline) is still
+not done -- flagged as a known gap, not a blocker, since the cost of a miss is bounded to one
+ignorable nudge or, on a second miss, one forced `Stop` turn (the same accepted-risk class as R1/R2).
+
+### Two-point calibration for 5.2, same session
+
+At the user's request, inspected `lm-messages.jsonl` size twice in this same session, anchored
+against the user's own reported token count the second time:
+
+| When | `lm-messages.jsonl` | Lines | User-reported tokens |
+|---|---|---|---|
+| Start of this round (before the build) | 276,251 bytes | 82 | not given |
+| After the build, user reports ~120k tokens | 357,584 bytes | 99 | ~120,000 |
+
+Ratio at the second point: ~2.98 bytes per reported token. Still only one token-anchored data point
+-- not enough to fix a byte-based threshold with confidence (the ratio could shift with how much of
+a session is prose vs. large tool outputs, which this very session's own mix of file reads and
+edits is not necessarily representative of). Useful enough to sanity-check an eventual threshold
+order of magnitude (e.g. a context limit quoted in the low hundreds of thousands of tokens would
+correspond to roughly one to a few MB of `lm-messages.jsonl`), but 5.2 remains un-built pending more
+data points, per this ledger's section 9.3 recommendation.
+
+### Third data point, same session, after the build+verification work
+
+| When | `lm-messages.jsonl` | Lines | `ui-messages.jsonl` | Lines |
+|---|---|---|---|---|
+| Start of this round | 276,251 bytes | 82 | 211,402 bytes | 6 |
+| Mid-round (~120k tokens reported) | 357,584 bytes | 99 | 269,692 bytes | 10 |
+| After building the 5.1 hook + verification | 667,354 bytes | 221 | 4,792,761 bytes | 34 |
+
+Notable: `ui-messages.jsonl` grew far faster than `lm-messages.jsonl` between points 2 and 3 (roughly
+18x vs. 1.9x) during a stretch of heavy tool use (many `read`/`edit`/`bash` calls while building and
+testing the hook). This suggests `ui-messages.jsonl` batches larger per-entry payloads (plausibly
+full diffs/tool-call renderings for the UI) and may be a noisier, spikier proxy than
+`lm-messages.jsonl` for "how much is actually in the model's context" -- another reason to prefer
+`lm-messages.jsonl` for a future 5.2 threshold, not yet settled with more than this one session's
+data. Still only one session; no cross-session comparison has been done.

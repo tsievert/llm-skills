@@ -141,6 +141,34 @@ lint_one_skill <- function(dir) {
     }
   }
 
+  # --- prompt_signals (opt-in prompt-content trigger for scripts/skill-file-signal-hook.sh's
+  # UserPromptSubmit handler; see research/staged-assistant-workflow-ledger.md section 9) ---
+  ps <- meta$metadata$prompt_signals
+  if (!is.null(ps)) {
+    if (!is.character(ps) || length(ps) != 1) {
+      add("error", "prompt_signals", "metadata.prompt_signals must be a single '|'-separated string, not a YAML list.")
+    } else {
+      compiled <- tryCatch({ grepl(ps, "", perl = FALSE); TRUE }, error = function(e) e)
+      if (inherits(compiled, "error"))
+        add("error", "prompt_signals", paste("Does not compile as an extended regex:", conditionMessage(compiled)))
+      # Naive split on every '|', same as the file_signals check above; a prompt_signals value
+      # may nest '|' inside a parenthesised group for its own regex alternation (e.g.
+      # "(huge|massive)"), so this only approximates "one alternative" for the specificity
+      # check below, not a structural parse -- harmless, since it can only under- or over-warn
+      # on specificity, never affect what the consuming hook actually matches.
+      alts <- strsplit(ps, "\\|")[[1]]
+      short <- alts[nchar(gsub("[^A-Za-z0-9_]", "", alts)) < 4 & !grepl("\\\\b", alts)]
+      if (length(short))
+        add("warn", "prompt_signals", paste("Alternative(s) with little specificity (risk of matching incidental text):", paste(short, collapse = ", ")))
+      dashy <- alts[grepl("^-", alts)]
+      hook <- file.path(dirname(normalizePath(dir)), "scripts", "skill-file-signal-hook.sh")
+      hook_safe <- file.exists(hook) &&
+        any(grepl("grep\\s+-[A-Za-z]*E[A-Za-z]*\\s+--\\s", readLines(hook, warn = FALSE)))
+      if (length(dashy) && !hook_safe)
+        add("warn", "prompt_signals", paste("Alternative(s) starting with '-' can be parsed as a grep option by a consuming script unless it uses '--':", paste(dashy, collapse = ", ")))
+    }
+  }
+
   # --- size ---
   n_body <- length(fm$body)
   if (n_body > 500) add("error", "size", sprintf("Body is %d lines (limit 500); move detail to references/.", n_body))
