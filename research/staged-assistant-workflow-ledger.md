@@ -313,3 +313,104 @@ Not done this round (still open, per the original handoff's step 4 and section 7
 - `HISTORY.md` has not been updated with a closing entry for this round -- do that once the
   remaining handoff step (or the user's decision to stop here) is settled, per this repo's
   convention of logging there rather than in `AGENTS.md`.
+
+## 9. Round 3 (2026-10-28, same session): handoff step 4, with a live finding mid-research
+
+Prompted by the user: "look into hooks and other means to trigger this skill efficiently." This
+round's own tool calls incidentally triggered both existing skill-trigger hooks while reading their
+source for reference -- a real, unplanned test of the exact mechanisms being evaluated, kept and
+reported here rather than discarded as noise.
+
+### 9.1 Live false positives found while reading the existing hooks (not staged-assistant-workflow-specific, but directly informs the design below)
+
+- **R1 (`skill-trigger-hook.sh`, explicit-instruction detector):** the user's own prompt this round
+  -- "Look into hooks and other means to trigger this skill efficiently" -- matched
+  `TRIGGER_RE` (`trigger ... skill` within 60 characters) and set a `.pending` marker, even though
+  the sentence is a request to *research* triggering, not an instruction to *load* a skill right
+  now. This is the same "question/meta-discussion near-miss" class already documented in
+  `github-skill-maintenance/references/skill-trigger-hook.md` ("Should we use a different skill
+  here?"), now confirmed for a declarative (non-question) meta-sentence too -- the accepted-false-
+  positive class is broader than just questions.
+- **R2 (`skill-file-signal-hook.sh`, file-signal nudge):** reading this round's own source material
+  -- `scripts/skill-trigger-hook.sh`, `scripts/skill-file-signal-hook.sh`, and
+  `github-skill-maintenance/references/skill-trigger-hook.md` via the `read`/`bash` tools -- tripped
+  nudges (and, on a second hit, escalation markers) for `deeplabcut-hpc`, `hpc-gpu-jobs`,
+  `hpc-job-scripts`, `hpc-r-code`, and `hpc-resource-allocation`. None of this round's work touches
+  HPC or DeepLabCut; the match was on the `file_signals` example patterns themselves (`sbatch`,
+  `SIGUSR1`, `--gres=gpu`, etc.) appearing *as literal text* inside documentation that describes
+  those patterns. This is a self-referential/meta false positive the existing ledger (section 6.5,
+  step 1) did not anticipate: `file_signals` assumes a match means "this looks like a real HPC
+  script", but a skill-authoring conversation that merely *discusses* another skill's signal text
+  triggers the same hook. Cleared the stale markers for this session afterward (diagnosed as false
+  positives, not left as an open block) rather than letting the next `Stop` force an unrelated
+  "load `hpc-job-scripts`" block. **Not fixed**: this is a real gap in `skill-file-signal-hook.sh`
+  worth a `skill-lessons` entry for `github-skill-maintenance`/`skill-trigger-hooks-ledger.md`
+  (logged as an open item below, not fixed this round -- out of scope for step 4).
+
+### 9.2 Resolved: `transcript_path`'s actual structure (closes an open item from section 2 and section 5.2)
+
+Enabled the hooks' own `DEBUG` switch (`touch ~/.posit/skill-triggers/state/DEBUG`) for two of this
+session's own tool calls, inspected the captured payload, then disabled it and deleted the capture
+file again (per the hook docs' own "may hold private content, delete afterwards" instruction).
+
+Finding: `transcript_path` is **not** a growing conversation log. It is a small JSON *index* file
+(`conversation.json`, example: 2.9 KB after ~80 lm-messages in this very session) holding only the
+turn tree (parent/child message-group ids) -- it grows by a few bytes per turn, not per token, so
+its file size is a poor proxy for context/token growth, contrary to section 2's untested assumption.
+
+The real content lives in two sibling files in the **same directory** as `transcript_path`
+(`dirname(transcript_path)`), neither named in the hooks docs' field table:
+
+| File | What (observed, this session) | Size this session |
+|---|---|---|
+| `lm-messages.jsonl` | one JSON object per line, one per LM-level message (`role`: `user`/`assistant`/`tool`); this is the actual content sent to/from the model, including full tool inputs/outputs | 276 KB, 82 lines |
+| `ui-messages.jsonl` | one JSON object per line, coarser-grained (UI-level turns, not LM messages) | 211 KB, 6 lines |
+| `usage-events.jsonl` | present but not inspected this round | 2.2 KB |
+
+This resolves section 5.2's design: a length-based hook should stat (or `wc -l`) **`lm-messages.jsonl`
+next to `transcript_path`**, not `transcript_path` itself. Byte size tracks cumulative context
+reasonably well (it includes full tool outputs, which is exactly what consumes the model's context
+window), though a single large `read`/`grep`/`bash` result can inflate it without the task actually
+being "long" in the sense this skill cares about -- so it is a proxy for context *pressure*, not a
+perfect proxy for "this task needs staging." One data point only (this session, a real multi-file
+research-and-edit task, hit 276 KB over ~80 LM messages); no threshold has been calibrated against a
+second example, and none should be picked from a single observation.
+
+### 9.3 Revised recommendation for the two sketches
+
+- **5.1 (prompt-content phrase nudge):** still worth building, on the same non-blocking,
+  `additionalContext`-only, dedup-per-session basis as the existing R1/R2 nudges -- the bounded cost
+  (one ignorable line, or at most one forced `Stop` turn if escalated the same way R2 escalates) is
+  the same accepted risk class as the finding in 9.1, not a new one. Phrase list, revised to lead
+  with length/complexity per the section 6 rescoping (not recurrence-only):
+  `\b(huge|massive|very large|too (big|long))\b[^.?!\n]{0,40}\b(task|project|build|refactor)\b`,
+  `\b(many|several|multiple)\b[^.?!\n]{0,30}\b(sessions|conversations)\b[^.?!\n]{0,20}\b(finish|complete|build)\b`,
+  `\bwill take\b[^.?!\n]{0,30}\b(weeks|days|sessions)\b`, plus the original recurrence set
+  (`\b(weekly|daily|recurring|periodic|every (week|day|month))\b`) kept as a secondary pattern per
+  section 6.2's "recurrence is one case, not the definition." Not yet implemented or tested against
+  negative examples (same discipline `testing-skills.md` requires) -- this round only drafted the
+  patterns, per the user's "research" framing.
+- **5.2 (content-growth signal):** now concretely buildable (9.2 closes the structural unknown), but
+  still needs a second real session's `lm-messages.jsonl` growth curve before picking a byte
+  threshold -- one data point is not enough to calibrate a nudge that fires at the right time rather
+  than too early (noisy) or too late (useless). Recommend: collect the size at a few natural check
+  points (e.g. whenever `skill-lessons` or `agents-md-maintenance` is invoked, since those already
+  mark "this work stream is wrapping up or handing off") across a few real sessions before writing
+  the hook, rather than guessing a number now.
+- Neither is built this round. Per this repo's standing rule, any new hook needs `check_sync_setup()`
+  coverage and the user's sign-off on the settings.json change before being added -- not sought yet.
+
+### 9.4 Open items (new this round)
+
+- The R2 self-referential false-positive class found in 9.1 is a real gap in
+  `skill-file-signal-hook.sh`/`skill-trigger-hooks-ledger.md`, not just a staged-assistant-workflow
+  concern -- recorded here with a pointer, but not filed as a formal lesson or fixed yet. A plausible
+  mitigation (restricting matches to files outside `github-skill-maintenance`/research-ledger paths,
+  or more simply, only matching within code/script content, not prose) is not designed.
+  Cross-referenced from `skill-trigger-hooks-ledger.md`'s own log (see its entry for this date).
+- 5.1's revised phrase list is drafted, not implemented or tested.
+- 5.2's design is now unblocked but needs a second session's data before a threshold is chosen; not
+  scheduled.
+- The handoff's step 4 is now addressed at the research level; building either design still needs
+  the user's go-ahead (new hook = settings.json change + `check_sync_setup()` coverage, per the
+  repo's "verify before reporting ready" rule).

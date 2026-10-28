@@ -466,3 +466,25 @@ in a way worth measuring (still unsized, per section 7.6/8.4).
 - Whether to widen `file_signals` further (`hpc-cluster-docs` with a different kind of signal,
   e.g. matching on an absence rather than a presence, or the `python-reproducible-pipeline` /
   `r-reproducible-pipeline` skills) is undiscussed and not proposed here.
+
+## 10. Log addendum, 2026-10-28: `transcript_path` structure resolved; a new self-referential false positive
+
+While researching trigger designs for `staged-assistant-workflow` (full detail in
+`research/staged-assistant-workflow-ledger.md` section 9, not duplicated here):
+
+- Resolved the open "transcript file's actual structure... has not been inspected" item (section 5,
+  item R2.5.2 / section 7.6): `transcript_path` itself is a small, slow-growing JSON *index* file
+  (turn tree only). The actual message content is in sibling files in the same directory,
+  `lm-messages.jsonl` (one JSON object per LM-level message, including full tool I/O) and
+  `ui-messages.jsonl` (coarser UI-turn granularity) -- `lm-messages.jsonl` is the useful proxy for
+  context growth, not `transcript_path`. Relevant to any future hook wanting a length/size signal,
+  not just the staged-assistant-workflow use case.
+- Found a new false-positive class for `skill-file-signal-hook.sh`, not previously documented:
+  reading/writing *about* another skill's `file_signals` patterns (e.g. this very kind of research,
+  or `github-skill-maintenance` documentation quoting `#SBATCH`/`SIGUSR1`/etc. as examples) matches
+  the pattern the same as a real occurrence would, and nudged/escalated for `deeplabcut-hpc`,
+  `hpc-gpu-jobs`, `hpc-job-scripts`, `hpc-r-code`, `hpc-resource-allocation` during a skill-authoring
+  session that touched none of them. Not fixed this round; a plausible mitigation (exclude matches
+  found only in prose/documentation paths, e.g. this repo's own `research/`, `references/` folders,
+  or skill-authoring files) is not designed. Worth a `skill-lessons` entry next time
+  `skill-feedback-triage` runs, if it recurs.
