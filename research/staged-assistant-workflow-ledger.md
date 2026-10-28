@@ -491,3 +491,20 @@ full diffs/tool-call renderings for the UI) and may be a noisier, spikier proxy 
 `lm-messages.jsonl` for "how much is actually in the model's context" -- another reason to prefer
 `lm-messages.jsonl` for a future 5.2 threshold, not yet settled with more than this one session's
 data. Still only one session; no cross-session comparison has been done.
+
+## 11. Log: 2026-10-28, RStudio's own size bands discovered; hand-off written
+
+User reported RStudio's own UI labels conversation length qualitatively: 120k tokens = "medium",
+and this session's current 196.2k tokens = "very large". This is a new, more useful calibration
+anchor than guessing a byte threshold independently -- see
+`research/HANDOFF-content-growth-hook.md` for the full write-up and next steps. Fourth data point
+recorded: at 196.2k tokens, `lm-messages.jsonl` was 687,109 bytes (233 lines). Combined with the
+~120k-token point from earlier this session (357,584 B), the average bytes/token ratio is
+~3.0-3.5, but the *incremental* ratio between the two points (~4.33 bytes/token) is higher and
+unexplained -- flagged in the hand-off as needing more, varied data points before trusting a
+constant.
+
+Work on 5.2 is paused here (user asked for a clean hand-off to start a fresh conversation, this
+session having itself reached "very large"). `research/HANDOFF-content-growth-hook.md` is the
+authoritative resume point, written to the same convention as
+`research/HANDOFF-job-watch-refactor.md`.
