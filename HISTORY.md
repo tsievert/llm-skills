@@ -1073,3 +1073,45 @@ are still open for a future run.
 ### 2026-10-27: lessons triage, staged-assistant-workflow created
 
 Ran `skill-feedback-triage` on the 3 remaining inbox files plus the carried-over parked file (`llm-skills_20261026-152616_4194ec0d.md` -- turned out to hold 2 real entries, not empty as previously logged; `llm-skills_20261027-170000_job-watch-refactor.md`; `llm-skills_20261027-190156_7da426be.md`; `llm-skills_20261027-201424_d70bde2f.md`; 7 entries total, no validator problems). `usage.tsv` showed 0 new rows since the last watermark. Outcomes: (1) CRLF-reintroduction reports (now 3+ independent sessions) rejected as new findings -- already fully covered by `github-skill-maintenance`'s existing pitfall note, and this round's own edits reconfirmed the mechanism live (every one of 7 touched files came back CRLF after `edit`/`sed`, fixed with the documented `sed -i 's/\r$//'` workaround) rather than revealing anything new; (2) added a one-sentence rule to `skill-feedback-triage/SKILL.md`'s Archive step for a lesson file with mixed resolved/parked entries (keep it whole in the inbox until every entry has a non-park disposition); (3) added a one-line caveat to `github-skill-maintenance/SKILL.md` next to the `skills-ref validate` command (pass the skill's own directory name, not `.`; reproduced the failure live); (4) the `staged-assistant-workflow` new-skill-suggestion, still only one report, was promoted anyway at the user's explicit choice (offered as the non-default option) rather than parked for a second case. Built `staged-assistant-workflow` (pattern skill: stage table, status function, file-based hand-offs, completeness gates, resumable per-item batches, lessons close-out; explicitly hands off to `r-reproducible-pipeline`/`python-reproducible-pipeline` for all-headless DAGs and to `agents-md-maintenance` for a single non-recurring hand-off note). Added backlinks in those three skills' Related-skills sections and a new ownership-table row in `github-skill-maintenance/references/skill-boundaries.md`. Verified: `lint_skills()` clean on all 6 touched skills (one pre-existing, unrelated info finding on `r-reproducible-pipeline`'s `targets-patterns.md` TOC), `check_skill_links()` and `check_skill_clashes(new = "staged-assistant-workflow")` both clean, `uvx --from skills-ref agentskills validate staged-assistant-workflow` valid. Not run: `check_versions()` (no version claims added). Archived all 4 processed files to `inbox/processed/`; watermark left unchanged (no new usage rows). Explicitly unproven: the new skill is built from a single real workflow and has not yet been applied a second time -- its own "Capture lessons" section flags this.
+
+### 2026-10-28: lessons triage, job-opportunity-watch fixes
+
+Ran `skill-feedback-triage` on 9 inbox files (8 `job-search` + 1 `llm-skills`, all against
+`job-opportunity-watch`). Outcomes: (1) the `reactable`/dashboard blank-tables-under-`file://` bug, reported
+independently 3 times, was already fixed (checked `references/stage-s6-report.md` and `report.qmd`: static
+`kableExtra` tables, no JS) -- archived as a no-op; (2) reproduced a real bug on a synthetic old-schema TSV --
+`jw_tags_read()` broke when `social_tags.tsv` predated a newer expected column -- fixed with a column-migration
+step (fill missing expected columns with `NA`, reorder) in `scripts/jobwatch.R`; (3) added a note to
+`references/state-and-files.md` that a stage needing a possibly-changed helper should re-`source()` the
+specific file rather than rely on an earlier load in the same session, since reloading the skill via its
+documented entry point does not refresh an already-sourced function; (4) the `profile_no_final_newline` report
+turned out to already be handled correctly (`sev = "warn"`, distinct from the hard truncation/unparseable
+checks) -- rejected, no change; (5) at the user's choice (offered as a non-default option), added a fallback
+step to `references/classification.md`: when a candidate's only lead is a dead "official" link behind an
+aggregator mirror, try the employer's own careers page before marking it `Inaccessible`; (6) a single-report
+suggestion to pre-sort the s4 subagent's title-skim queue by apparent posting age was parked (one report, no
+failure, kept in the inbox for a second case). Verified: `parse()` on the edited R file, `lint_skills()` on
+`job-opportunity-watch` (only pre-existing info-level TOC findings), and (closed in a same-day follow-up once
+the invocation was found) `uvx --from skills-ref agentskills validate job-opportunity-watch` -- valid; the
+plain `skills-ref` binary is not on `PATH`, invoke it via `uvx --from skills-ref agentskills validate <skill>`.
+Not run: `check_versions()` (no version claims touched), `check_skill_links()`/`check_skill_clashes()` (no
+`inbox/processed/`; the s4 staleness-pre-sort file stays parked in the inbox. Watermark advanced to
+`2026-10-28T10:41:08` (max usage-log timestamp seen this run).
+
+### 2026-10-28: staged-assistant-workflow content-growth hook (5.2)
+
+Built the second nudge channel for `staged-assistant-workflow`, following the hand-off in
+`research/HANDOFF-content-growth-hook.md` (removed this round; recoverable from git). The host publishes no numeric
+definition of the "small/medium/large/very large" UI bands, so they were calibrated from user-reported anchors
+(59.3k small, 100k small-to-medium, 120k medium, 196.2k very large; "large" boundary still unknown) against the byte
+size of the sibling `lm-messages.jsonl` of the transcript. Fit: tokens ~= 30.6k + bytes/4.15 (residuals <= ~3%); the
+~30k offset is the system prompt, tools, skills and memory. This corrected an earlier reading that bytes/token varies
+1.3-3.5x by session composition. Added `metadata.content_growth_threshold_bytes: "350000"` (~125k tokens) to
+`staged-assistant-workflow/SKILL.md` (quoted, `lint_skills()` requires string values) and `growth_threshold()`,
+`lm_messages_size()`, `check_growth()` to `scripts/skill-file-signal-hook.sh`, wired into the `UserPromptSubmit` case.
+It shares the nudge/loaded/escalation markers with the prompt-signal channel; the script still never emits
+`decision:block`. Considered linking to compaction (ledger 12.5): `PreCompact` is not fired, auto-compaction does not
+fire `UserPromptSubmit`, so the post-compaction false positive cannot be removed; bounded by nudge-once-per-session.
+Not built. Verified: `bash -n`, a synthetic matrix (below/above threshold, second hit, loaded skill, missing file,
+shared markers, `PostToolUse` regression), `lint_skills()` (only pre-existing findings), `check_skill_links()`,
+`check_skill_clashes()`, `check_sync_setup(cfg=)` (only dirty tree and unpushed commits), `uvx --from skills-ref agentskills validate staged-assistant-workflow` (valid). Not run: a live-session test of the growth nudge, `check_versions()` (no version claims).

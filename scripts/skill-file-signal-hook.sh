@@ -41,6 +41,19 @@
 #       namespace as the file-signal channel, so a skill already nudged via one channel this
 #       session is not nudged again via the other, and a second ignored hit on *either*
 #       channel escalates to the same `skill-trigger-hook.sh` `Stop` block.
+#     - also checks a third, unrelated channel on the same event: `metadata.content_growth_
+#       threshold_bytes` (a plain integer, not a regex -- added 2026-10-28 for
+#       staged-assistant-workflow, see research/staged-assistant-workflow-ledger.md section 12).
+#       Stats `lm-messages.jsonl` next to `transcript_path` (the sibling file holding the actual
+#       LM-level conversation content -- `transcript_path` itself is a small turn-tree index, not
+#       a content proxy, see the ledger's section 9.2) and, once its size crosses a skill's
+#       declared threshold, nudges exactly like the other two channels and shares their marker
+#       namespace. This is a crude proxy for the token-based "small/
+#       medium/large/very large" bands Posit Assistant's own UI shows (no numeric definition of
+#       those bands is published; see ledger section 12.1) -- the bytes-per-token ratio was
+#       fitted as tokens ~= 30.6k + bytes/4.15 (ledger section 12.4), so the threshold of 350000 B
+#       (~125k tokens) sits just past the start of "medium". Unreliable after compaction, because
+#       lm-messages.jsonl never shrinks (ledger section 12.5); nudge-once-per-session bounds that.
 #
 # Both `file_signals` and `prompt_signals` are deliberately opt-in and scoped to skills with a
 # strong, low-ambiguity signal (do not add either speculatively to every skill -- see ledger
@@ -83,6 +96,18 @@ signal_field() {
 }
 file_signals()   { signal_field "$1" file_signals; }
 prompt_signals() { signal_field "$1" prompt_signals; }
+growth_threshold() { signal_field "$1" content_growth_threshold_bytes; }
+
+# Size, in bytes, of the sibling lm-messages.jsonl next to a given transcript_path. Empty if the
+# path is missing or the file doesn't exist (e.g. a very first SessionStart, or a host/version
+# that doesn't write this file) -- callers must treat empty as "can't check" and skip quietly.
+lm_messages_size() {
+  local tp=$1
+  [ -n "$tp" ] || return 0
+  local lm="$(dirname -- "$tp")/lm-messages.jsonl"
+  [ -f "$lm" ] || return 0
+  wc -c < "$lm" 2>/dev/null | tr -d '[:space:]'
+}
 
 # Shared nudge/escalate logic for one (skill, pattern, content) triple. Appends to the global
 # $ctx on a first match; writes an escalation marker (read by skill-trigger-hook.sh's Stop
@@ -97,6 +122,24 @@ check_signal() {
   else
     touch "$STATE/$sid.nudged.$cand" 2>/dev/null
     ctx="${ctx}$label matched the $cand skill's declared signal; if this task is in its domain, consider loading it before continuing. "
+  fi
+}
+
+# Growth-channel nudge: same dedup/escalate mechanics as check_signal, keyed on a byte-size
+# threshold instead of a regex match. Shares check_signal's `$sid.nudged.<skill>` marker, so a
+# skill nudged on content/prompt grounds is never also nudged on growth grounds, and vice versa.
+check_growth() {
+  local cand=$1 threshold=$2 size=$3
+  [ -f "$STATE/$sid.loaded.$cand" ] && return 0
+  case "$threshold" in ''|*[!0-9]*) return 0 ;; esac
+  [ -n "$size" ] || return 0
+  case "$size" in *[!0-9]*) return 0 ;; esac
+  [ "$size" -ge "$threshold" ] || return 0
+  if [ -f "$STATE/$sid.nudged.$cand" ]; then
+    touch "$STATE/$sid.pending.fs.$cand" 2>/dev/null
+  else
+    touch "$STATE/$sid.nudged.$cand" 2>/dev/null
+    ctx="${ctx}This conversation's transcript content has grown large; if the remaining work is substantial, consider whether it should be staged per the $cand skill rather than continuing in one long conversation. "
   fi
 }
 
@@ -135,12 +178,17 @@ case "$event" in
     # JSON string breaks on embedded quotes, which free user text will contain (same reasoning
     # as skill-trigger-hook.sh). The other UserPromptSubmit fields (session_id, transcript_path,
     # cwd, hook_event_name, permission_mode) cannot plausibly contain a prompt_signals match.
+    # transcript_path is used separately below for the growth channel (check_growth), not scanned
+    # for prompt_signals itself.
     ctx=""
+    tp=$(jstr transcript_path)
+    size=$(lm_messages_size "$tp")
     for dir in "$REPO_DIR"/*/; do
       skill_md="$dir/SKILL.md"
       [ -f "$skill_md" ] || continue
       cand=$(basename "$dir")
       check_signal "$cand" "$(prompt_signals "$skill_md")" "$payload" "Your message"
+      check_growth "$cand" "$(growth_threshold "$skill_md")" "$size"
     done
     emit_and_exit "UserPromptSubmit"
     ;;

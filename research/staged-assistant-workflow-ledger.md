@@ -508,3 +508,139 @@ Work on 5.2 is paused here (user asked for a clean hand-off to start a fresh con
 session having itself reached "very large"). `research/HANDOFF-content-growth-hook.md` is the
 authoritative resume point, written to the same convention as
 `research/HANDOFF-job-watch-refactor.md`.
+
+## 12. Round 4 (2026-10-28, fresh conversation): hand-off step 1 resolved, step 2 in progress
+
+Resuming per `research/HANDOFF-content-growth-hook.md`.
+
+### 12.1 Step 1: no numeric band boundaries exist in the docs
+
+Re-read `https://assistant.posit.co/docs/features/context-management/` in full, this time
+looking specifically for numbers, not just the "UI-only" fact (already established in section 2).
+Result: the page documents exactly one number anywhere on the topic --
+`features.autoCompactTokenBuffer` (default **30,000 tokens**), the context-limit buffer reserved
+for the auto-compaction summary, which triggers once fewer than that many tokens remain in the
+window. The page has no mention of "small"/"medium"/"large"/"very large" labels, no percentage
+bands, and no other threshold. **Conclusion: the labels the user sees in the Session HUD are not
+documented anywhere reachable** -- they are a UI-only presentation detail with no published
+numeric definition. Per the handoff's own fallback instruction, this round stops looking for more
+bands and treats the two-point data (120k = "medium", 196.2k = "very large") as the only anchor,
+stated explicitly rather than invented.
+
+### 12.2 Step 2: a third data point gathered (this session, different composition)
+
+Used the same DEBUG-capture protocol as section 9.2 (`touch
+~/.posit/skill-triggers/state/DEBUG`, one `bash` call, inspect, delete the capture file and the
+DEBUG marker afterward -- confirmed deleted). This session's `transcript_path` points at
+`.../b7b36a33-fd83-422b-84dc-69db9a2afa06/conversation.json`; the sibling files at that point (20
+lm-messages in, early in a read-the-ledger-and-one-webfetch-heavy round, not yet matched by a
+user-reported token count):
+
+| File | Size | Lines |
+|---|---|---|
+| `lm-messages.jsonl` | 79,543 B | 20 |
+| `ui-messages.jsonl` | 56,299 B | 2 |
+| `usage-events.jsonl` | 1,884 B | n/a |
+
+Not yet anchored to a token count -- asked the user (same turn) to report what the status-bar
+token counter/HUD currently shows, to get a third token-anchored ratio point from a
+lighter-tool-use, more prose-heavy session than the one that produced the first two points (section
+10/11). Note `ui-messages.jsonl`'s line count (2) looks implausibly low for ~20 lm-messages and
+several tool calls so far -- worth a second look once more sessions are inspected, since section
+10 already flagged `ui-messages.jsonl` as spikier/noisier; this may be another instance of that, or
+a sign the two files batch differently early in a session than later.
+
+### 12.3 Token-anchored point received; a composition-dependence finding supersedes the "treat as fixed" plan
+
+User reported, same turn: **59.3k tokens, labelled "small"**. This is a third, differently-composed
+token-anchored point (and, as a bonus, a third named band -- "small" -- not seen before):
+
+| Session (composition) | Label | Tokens | `lm-messages.jsonl` | Bytes/token |
+|---|---|---|---|---|
+| This session (light tool use, mostly prose/reading) | "small" | 59,300 | ~79,543 B | ~1.34 |
+| Prior session, mid-round | "medium" | 120,000 | 357,584 B | ~2.98 |
+| Prior session, end of round (heavy tool use) | "very large" | 196,200 | 687,109 B | ~3.50 |
+
+**This is the key finding of this round.** The bytes/token ratio is not a session-wide constant --
+it varies by more than 2.5x across the three points (1.34 to 3.50), and the lowest ratio belongs to
+the *lightest*-tool-use session. This confirms, with cross-session data rather than a single
+session's internal non-linearity (section 11's unexplained ~4.33 incremental ratio), that a fixed
+byte threshold is at best a rough, composition-dependent proxy for the token-based bands RStudio
+itself displays -- not a reliable stand-in. A tool-output-heavy session will cross any given byte
+threshold at a *lower* token count than a prose-heavy session will. Note also that `lm-messages.jsonl`
+at this session's check point (20 lines) was captured slightly before the user's token report (a few
+more tool calls happened in between), so the 1.34 ratio is an upper-bound estimate on the true
+value at exactly 59.3k tokens, if anything making the true ratio even lower and the spread even
+wider than stated.
+
+Given this, the design below deliberately picks a conservative (low) byte threshold rather than
+averaging the three ratios, so that even a tool-output-heavy session doesn't get nudged much later
+than a prose-heavy one would -- erring toward an earlier, cheap, ignorable nudge rather than a
+late, more costly miss (the only false-positive cost is one extra line of `additionalContext`, per
+the "known open risks" carried over from the handoff).
+
+### 12.4 Token-over-time CSVs and a fourth point: the ratio is not composition, it is a fixed offset
+
+Sources: `context-inbox/token-usage-session-rows.csv` / `-totals.csv` (the previous conversation, 153
+requests, 11:56-13:14 UTC; context per request = input + cache_read + cache_write) and this
+session's `usage-events.jsonl` (only 10 `keepalive` rows; read via a copy in `tmp-examples/`, deleted).
+User also reported this session at **~110k tokens** and that RStudio's **small -> medium switch is at
+100k tokens** (first numeric band boundary; "large" boundary still unknown, "very large" <= 196k).
+Same moment: `lm-messages.jsonl` = 341,634 B (144 lines).
+
+Findings:
+- **Fit:** tokens ~= 30.6k + bytes / 4.15 over the three well-anchored points (120k/357,584 B;
+  196.2k/687,109 B; 110k/341,634 B); residuals <= 3.1k tokens (~3%). The fixed ~30k intercept is the
+  system prompt, tool list, skills list and memory, which are in the context but not in
+  `lm-messages.jsonl`. This **replaces the "bytes/token varies 1.3-3.5x by composition" reading of
+  12.3**: the 59.3k "small" point was measured before the token report (file had grown since), so 1.34
+  was a lower bound, not a composition effect. Keepalive rows corroborate the offset (41k tokens very
+  early in this session, before much content existed).
+- **Implied byte thresholds:** medium starts at ~288 KB, 120k at ~371 KB, 196k ("very large") at ~687 KB.
+- **Compaction breaks the proxy.** The previous session's context peaked at 202,157 tokens (request 85)
+  and fell to 63,492 by request 100 (compaction), while `lm-messages.jsonl` never shrinks (docs: compacted
+  messages are kept in the tree, only hidden). After `/compact` the byte size overstates context; a
+  size-based nudge is a false positive there. Mitigated only by nudge-once-per-session.
+- `usage-events.jsonl` has no per-request rows for normal turns (keepalives only) and its
+  `anchorMessageId` does not match `lm-messages.jsonl` ids, so it cannot be joined to byte offsets or
+  used as a live token source. The CSVs come from the UI export, not from any hook-visible file.
+
+Decision: keep `content_growth_threshold_bytes: "350000"` (~125k tokens, just past "medium" start and
+well before "very large"), now justified by the fit rather than a guess. Caveats stay in the nudge
+design: advisory wording, once per session, unreliable after compaction.
+
+Verification done this round: `bash -n`; synthetic matrix (below threshold silent, above nudges,
+second hit writes escalation marker, already-loaded skipped, missing file silent, marker shared with
+prompt-signal channel, PostToolUse regression); `lint_skills()` (only pre-existing accepted warn/info),
+`check_skill_links()`, `check_skill_clashes()`, `check_sync_setup(cfg=)` (hook already registered on
+`UserPromptSubmit`; only expected info/warn: dirty tree, 3 unpushed). Not done: `skills-ref validate`
+(command not found in this shell), a live-session test of the growth nudge, HANDOFF file removal,
+HISTORY.md entry, commit.
+
+### 12.5 Linking the growth nudge to compaction (considered 2026-10-28, not built)
+
+Sources: https://assistant.posit.co/docs/features/hooks/ (re-read; status: read), plus a local grep of
+this session's `conversation.json` / `lm-messages.jsonl` for any compaction marker (status: read).
+
+Facts:
+- **`PreCompact` is not fired** by Posit Assistant (hooks docs: Events table note and Compatibility list). There is
+  no `PostCompact` event and `SessionStart.source` is only `startup`/`resume`, so no hook sees a compaction.
+- **Auto-compaction does not fire `UserPromptSubmit`** (docs, "V1 scope"). Only prompts the user submits do; a typed
+  slash command is stated to fire it, but the payload form of `/compact` is unverified (no live capture).
+- `conversation.json` is a small turn-tree index and `lm-messages.jsonl` holds only text mentions of "compact"
+  (17 hits, all prose) -- no structural compaction marker a hook could stat.
+
+Decision: **do not build.** Value is real but bounded, cost is an untested payload guess:
+- Manual `/compact` could be detected in the `UserPromptSubmit` payload and used to write a baseline marker
+  (`$sid.compactbase` = current `lm-messages.jsonl` size), with `check_growth` comparing `size - baseline` to the
+  threshold. That would remove the false positive only for manual compaction.
+- Auto-compaction (the common case, triggered when fewer than ~30k tokens remain) stays invisible, so the
+  false-positive class survives. The nudge fires at ~125k tokens, before auto-compaction would normally occur (limit
+  minus 30k buffer), so it is usually already spent by then; nudge-once-per-session bounds the harm to one ignorable line.
+- Alternative that needs no compaction signal: nothing; a hook cannot read live token counts (section 2, 12.4).
+
+Open item: if the payload for a typed `/compact` is ever captured (DEBUG switch), the baseline-marker design above
+is a ~10-line change in `check_growth`. Revisit if a `PreCompact`/`PostCompact` event is added to the host.
+
+`research/HANDOFF-content-growth-hook.md` was removed 2026-10-28 once 5.2 was built; its content lives in sections
+9-12 of this ledger (recover the file with `git show HEAD:research/HANDOFF-content-growth-hook.md`).
