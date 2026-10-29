@@ -5,7 +5,8 @@ Pipeline: load DLC keypoints -> outlier removal -> PCA -> AR-HMM -> full model
 -> reindex syllables -> extract results (+ CSV). Resumable: rerun the same
 command after a time-limit kill and it continues from the last checkpoint.
 
-Written against keypoint-moseq 0.6.x-0.8.x docs (modeling tutorial; run on 0.6.6 and 0.8.0). Verify
+Written against the keypoint-moseq 0.8.x modeling tutorial; run on 0.6.6, 0.8.0 and 0.8.3 (fps= and metadata=
+need >= 0.8.0, so pin that or newer). Verify
 signatures against the installed version if anything fails:
     python -c "import keypoint_moseq as k; help(k.fit_model)"
 
@@ -46,6 +47,8 @@ def parse_args():
     p.add_argument("--save-every", type=int, default=25, help="Checkpoint interval; bounds the work lost on a kill")
     p.add_argument("--seed", type=int, default=0, help="Use different seeds for restarts / model selection")
     p.add_argument("--model-name", required=True, help="Checkpoint folder name inside the project (also the resume key)")
+    p.add_argument("--skip-header-check", action="store_true",
+                   help="Do not compare bodypart order across the input csv/h5 headers")
     p.add_argument("--no-csv", action="store_true", help="Skip per-recording CSV export")
     p.add_argument("--prepare-only", action="store_true",
                    help="Create config, outlier-filter and PCA, then exit. Run once before submitting an array "
@@ -64,6 +67,57 @@ def log_phase_timing(phase, n_iters, seconds):
     log(f"{phase} phase: {n_iters} iterations in {seconds:.1f} s ({n_iters / seconds:.3f} iter/s)")
 
 
+def dlc_header_bodyparts(path):
+    """Bodyparts of one DLC csv/h5 in header order (each listed once), or None if unreadable."""
+    import pandas as pd
+
+    try:
+        if path.suffix.lower() == ".csv":
+            head = pd.read_csv(path, header=None, nrows=4, dtype=str)
+            rows = head[head[0] == "bodyparts"]
+            if rows.empty:
+                return None
+            names = rows.iloc[0, 1:].tolist()
+        else:
+            cols = pd.read_hdf(path).columns
+            names = list(cols.get_level_values("bodyparts"))
+    except Exception:
+        return None
+    return list(dict.fromkeys(names))
+
+
+def check_bodypart_order(keypoints_dir):
+    """Fail fast if the DLC files differ in bodyparts or their order.
+
+    keypoint-moseq (checked on 0.8.3) takes the bodyparts from the first file and fills the others
+    by position, so a file with a different column order is loaded without warning but with its
+    keypoints in the wrong slots.
+    """
+    files = sorted(p for p in Path(keypoints_dir).rglob("*") if p.suffix.lower() in {".csv", ".h5", ".hdf5"})
+    # kpms skips DLC's "<stem>_filtered" copies when the raw file is present
+    present = set(files)
+    files = [p for p in files
+             if not (p.stem.endswith("_filtered") and p.with_name(p.stem.removesuffix("_filtered") + p.suffix) in present)]
+    ref_file, ref = None, None
+    bad, unreadable = [], []
+    for p in files:
+        bp = dlc_header_bodyparts(p)
+        if bp is None:
+            unreadable.append(p)
+        elif ref is None:
+            ref_file, ref = p, bp
+        elif bp != ref:
+            bad.append((p, bp))
+    if unreadable:
+        log(f"header check: could not read a bodyparts header in {len(unreadable)} file(s), e.g. {unreadable[0].name}; skipped")
+    if bad:
+        lines = [f"Bodyparts differ from the first file ({ref_file.name}: {ref}):"]
+        lines += [f"  {p.name}: {bp}" for p, bp in bad[:10]]
+        sys.exit("\n".join(lines) + "\nkpms would assign keypoints by position and mislabel them. "
+                 "Fix or split the inputs, or pass --skip-header-check if the mismatch is intended.")
+    log(f"header check: {len(files) - len(unreadable)} file(s) share bodyparts {ref}")
+
+
 def main():
     a = parse_args()
     import jax
@@ -74,6 +128,8 @@ def main():
     log(f"keypoint_moseq {getattr(kpms, '__version__', '?')}, jax backend: {jax.default_backend()}")
 
     # --- project and config -------------------------------------------------
+    if not a.skip_header_check:
+        check_bodypart_order(a.keypoints_dir)
     coordinates, confidences, bodyparts = kpms.load_keypoints(a.keypoints_dir, "deeplabcut")
     log(f"loaded {len(coordinates)} recordings, bodyparts: {bodyparts}")
 
@@ -143,9 +199,10 @@ def main():
     done_iter = 0
     if ckpt.exists():
         model, data, metadata, done_iter = kpms.load_checkpoint(project_dir, a.model_name)
+        done_iter = int(done_iter)  # numpy int64 would break the json summary
         log(f"resuming {a.model_name} at iteration {done_iter}/{total_iters}")
     else:
-        model = kpms.init_model(data, pca=pca, seed=jax.random.PRNGKey(a.seed), **config())
+        model = kpms.init_model(data, metadata=metadata, pca=pca, seed=jax.random.PRNGKey(a.seed), **config())
 
     # Fit-phase timing, for references/hpc-and-troubleshooting.md "Performance versus
     # memory trade-off": this skill has no tested real HPC/GPU numbers yet, so every
@@ -161,10 +218,12 @@ def main():
         model = kpms.fit_model(
             model, data, metadata, project_dir, a.model_name,
             ar_only=True, start_iter=done_iter, num_iters=a.ar_iters, save_every_n_iters=a.save_every,
+            fps=a.fps,
         )[0]
         ar_fit_seconds = time.perf_counter() - t0
         log_phase_timing("AR-HMM", ar_iters_run, ar_fit_seconds)
         model, data, metadata, done_iter = kpms.load_checkpoint(project_dir, a.model_name, iteration=a.ar_iters)
+        done_iter = int(done_iter)
 
     if done_iter < total_iters:
         model = kpms.update_hypparams(model, kappa=a.kappa_full)
@@ -172,6 +231,7 @@ def main():
         model = kpms.fit_model(
             model, data, metadata, project_dir, a.model_name,
             ar_only=False, start_iter=done_iter, num_iters=total_iters, save_every_n_iters=a.save_every,
+            fps=a.fps,
         )[0]
         full_fit_seconds = time.perf_counter() - t0
         log_phase_timing("full-model", full_iters_run, full_fit_seconds)
@@ -180,8 +240,8 @@ def main():
     # Reindexing changes only the checkpoint, so it must precede extract_results.
     kpms.reindex_syllables_in_checkpoint(project_dir, a.model_name)
     model, data, metadata, _ = kpms.load_checkpoint(project_dir, a.model_name)
-    # extract_results appends to an existing results.h5 (and only newer versions accept
-    # overwrite=True), so remove the stale derived file for a clean, version-independent rerun.
+    # extract_results adds to an existing results.h5 and (0.8.x) raises for recordings already in it unless
+    # overwrite=True; removing the stale derived file also drops recordings no longer in the data.
     (Path(project_dir) / a.model_name / "results.h5").unlink(missing_ok=True)
     results = kpms.extract_results(model, metadata, project_dir, a.model_name)
     if not a.no_csv:

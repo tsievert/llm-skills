@@ -1217,3 +1217,15 @@ compares file counts and is deleted after the run (fix, high confidence, own tex
 from `park` rows (note, low confidence). Parked unchanged: CRLF memory files, MCP tools not exposed, GAM band-calibration
 new-skill suggestion. Verified: `skills-ref validate`; `lint_skills()` run below. Not run: clash/link checks (no description or
 link change).
+
+- 2026-10-29: Refreshed `animal-behaviour-tracking-analysis` against keypoint-moseq 0.8.3 (releases 0.6.13 to 0.8.3, docs
+  re-read, install and signature inspection in a uv venv). Added a "Version changes that matter" table to
+  `references/keypoint-moseq-workflow.md`; updated the tutorial snippet (`check_videos`, `init_model(metadata=)`,
+  `fit_model(**config())`), install/Python range, the stale pandas 3 finding (fixed upstream), the `extract_results`
+  `overwrite` note, 0.8.2 definition changes for durations/transitions, and the support-contact note. `kpms_headless_fit.py`
+  now passes `metadata=` and `fps=` (needs >= 0.8.0) and casts the resumed iteration to `int` (numpy int64 broke
+  `run_summary.json` on resume). Tested on CPU, synthetic data: fresh fit, resume, extraction, Python and R readers (both 469
+  bouts), `compute_moseq_df`/`compute_stats_df`/`generate_transition_matrices`. Not tested: multi-animal DLC, `_filtered`
+  handling, `check_videos`, grid movies, `apply_model`, GPU, Slurm. Research: `research/keypoint-moseq-ledger.md`.
+- 2026-10-29 (later): tested 0.8.3 DLC multi-animal loader on synthetic csv (see `research/keypoint-moseq-ledger.md` round 2). Added SKILL.md rule 7 and a workflow-reference note on a silent bodypart-order mismatch across files; `_filtered` skipping, `-1` to NaN and empty-individual dropping confirmed. SLEAP/Lightning Pose/`.h5` loaders still untested.
+- 2026-10-29 (later): `kpms_headless_fit.py` gained a bodypart-order header check across csv/h5 inputs (fails fast, `--skip-header-check` to override); tested on synthetic single/multi-animal csv and h5.

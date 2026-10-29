@@ -59,7 +59,7 @@ between- vs within-animal variance, multiplicity, singular fits, DHARMa) is in `
 
 ## keypoint-MoSeq: what is built in, and why to export instead
 
-Read from the kpms 0.6.6 source (not run on real data; check the current docs, since this can change):
+Read from the kpms 0.6.6 source, with the `run_kruskal` signature rechecked in 0.8.3 (not run on real data; check the current docs, since this can change; 0.8.2 fixed `run_kruskal` reporting syllable labels wrongly, so re-run any 0.8.1 or older built-in tests before trusting the labels):
 
 - `interactive_group_setting` writes `index.csv` with two columns, `name` (recording) and `group`. The `group` label is the only metadata kpms can use.
 - `plot_syll_stats_with_sem` runs `run_kruskal`, a permutation Kruskal-Wallis test per syllable with Benjamini-Hochberg correction across syllables, then Dunn's pairwise tests. This works for more than two groups; `ctrl_group` and `exp_group` only choose which pair's significant syllables are marked on the plot. The plotted error bars are 68% intervals (about one SEM).

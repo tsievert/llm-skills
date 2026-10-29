@@ -6,7 +6,7 @@ Load `hpc-cluster-docs` first for the site's modules, partitions and GPU syntax,
 
 ## Install
 
-- Docs (install page, 2026-10-23): conda env with Python 3.10, then `pip install keypoint-moseq` (CPU) or `pip install keypoint-moseq[cuda]` (GPU, CUDA 12). Supported platforms follow JAX: CPU and GPU on Linux, CPU on macOS and Windows; GPU on WSL2 experimental. The first import after installation can take minutes.
+- Docs (install page, re-read 2026-10-29): supports Python 3.10 to 3.14; the example creates a conda env with Python 3.12, then `pip install keypoint-moseq` (CPU) or `pip install keypoint-moseq[cuda]` (GPU, CUDA 12). Supported platforms follow JAX: CPU and GPU on Linux, CPU on macOS and Windows; GPU on WSL2 experimental. The first import after installation can take minutes.
 - Release 0.8.0 (PyPI and GitHub, 2026-10-23): GPU is now strictly the `[cuda]` extra (Linux, CUDA 12) and a plain `pip install keypoint-moseq` is CPU-only; macOS and Windows get the current release again (earlier releases pulled Linux-only CUDA packages, so pip there silently fell back to 0.6.6). Adds `kpms.check_installation()`, which is worth asking the user to run after every install. Check `pip list` for the actual version, because a silent fallback to an old release is the failure to look for.
 - PyPI metadata (2026-10-22, 0.7.1): `requires_python >=3.10`; the 0.7.0 release notes say Python 3.10-3.14 and that pins on numpy, jax, pandas and others were dropped, so a fresh install gets the newest versions (NumPy 2, pandas 3 on Python 3.11+). The install page still says 3.10; either works per the release notes, but use the version the cluster's JAX wheels support.
 - Install on a login node or in an interactive job, into an environment on shared storage; never inside the batch script. Use `pip install "keypoint-moseq[cuda]"` so JAX brings CUDA 12 wheels; a `module load cuda` is usually not needed but the NVIDIA driver must be new enough (ask the user for `nvidia-smi` output).
@@ -26,7 +26,8 @@ separate terminal sees it, this is usually a stale-PATH issue, not a missing ins
 ### Findings from local testing on Windows (2026-10-23)
 
 - kpms 0.7.x could not be installed on Windows with `uv pip` (it declared the Linux-only `jax-cuda12-pjrt`), so the newest installable was 0.6.6. **Fixed in 0.8.0**, which installed on Windows (Python 3.12, uv, CPU; jax 0.12.0.1, numpy 2.5.4) without problems.
-- `check_nan_proportions` fails with pandas 3 (`Styler` has no `applymap`) in 0.6.6 and still in 0.8.0 (pandas 3.1.0). Install `pandas<3` (2.3.3 worked with 0.8.0). The 0.7.0 notes mention a pandas 3 fix for `plot_syll_stats_with_sem` only; not tested.
+- `check_nan_proportions` failed with pandas 3 (`Styler` has no `applymap`) in 0.6.6 and 0.8.0 (pandas 3.1.0; `pandas<3` worked). **Stale as of 0.8.3** (2026-10-29): it runs under pandas 3.1.0 (jax 0.12.0.1, numpy 2.5.4, Python 3.12), so no pin is needed there; keep `pandas<3` only for 0.8.0 or older. The 0.7.0 pandas 3 fix for `plot_syll_stats_with_sem` was not tested.
+- 0.8.3 installed cleanly on Windows (uv, CPU) and the headless script, resume, `compute_moseq_df`/`compute_stats_df`/`generate_transition_matrices`, the Python summariser and the R reader all ran on its output. jax-moseq 0.3.8 is now required (0.8.2).
 - A CPU fit of 12 iterations on 4 x 1500 frames took roughly 45 s including JIT compilation; useful for smoke tests, not for real data.
 
 ## Job layout
@@ -82,5 +83,6 @@ The next time a real fit runs on the cluster, ask the user to report back the fo
 1. Get the cluster's `keypoint_moseq`, `jax`, `jaxlib` and `jax_moseq` versions (`pip list | grep -i -E "jax|moseq"`) and the first and last lines of the traceback from the user.
 2. Search issues: `gh search issues --repo dattalab/keypoint-moseq "<error text>" --sort updated`. If `gh` is not on PATH (it was not in Git Bash or R on the user's machine), use the API: `https://api.github.com/search/issues?q=repo:dattalab/keypoint-moseq+<terms>`.
 3. Check releases (`https://api.github.com/repos/dattalab/keypoint-moseq/releases`) and `jax-moseq` (https://github.com/dattalab/jax-moseq) for fixes newer than the cluster's version. Recent releases fixed install failures (0.6.11, dynamax dependency) and NumPy 2.3 frequency errors (jax-moseq 0.3.7).
-4. Slack and the docs FAQ: https://keypoint-moseq.readthedocs.io/en/stable/FAQs.html.
+4. Docs FAQ: https://keypoint-moseq.readthedocs.io/en/stable/FAQs.html (it still lists a personal email for persistent NaNs; the repo itself now points support requests at GitHub issues, so open an issue instead) and Slack.
+   Also read the release notes between the cluster's version and the latest: several 0.8.x releases changed outputs silently (see "Version changes that matter" in `keypoint-moseq-workflow.md`), so a behaviour difference may be a release change, not a bug.
 5. Report what was found with links and say whether an issue is confirmed, similar only, or not found. If a fix exists only on `main`, offer pinning an older release, upgrading, or installing from git, and let the user choose; installing from GitHub needs the user's explicit consent in this repo's rules.

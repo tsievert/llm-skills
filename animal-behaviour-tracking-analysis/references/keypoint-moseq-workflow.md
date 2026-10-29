@@ -2,6 +2,7 @@
 
 ## Contents
 
+- [Version changes that matter (0.6.6 to 0.8.3)](#version-changes-that-matter-066-to-083)
 - [Pipeline (interactive Python API, as in the tutorial)](#pipeline-interactive-python-api-as-in-the-tutorial)
 - [Output structure](#output-structure)
 - [Config keys that matter](#config-keys-that-matter)
@@ -11,7 +12,24 @@
 - [Advanced options (from the docs, none run here)](#advanced-options-from-the-docs-none-run-here)
 - [Data requirements (FAQ)](#data-requirements-faq)
 
-Source: kpms stable docs (modeling tutorial, FAQs, advanced topics, io API) read on 2026-10-23, plus runs on 0.6.6 and (2026-10-23, scripts only) 0.8.0. Re-check against the installed version. 0.8.0 adds `fps=` to `fit_model`, `metadata=` to `init_model`, `check_videos` (replaces `check_video_paths`) and `check_installation`; the script does not use them and works without.
+Source: kpms stable docs (modeling tutorial for notebook version "0.8", FAQs, advanced topics, analysis) re-read 2026-10-29 against 0.8.3, plus runs on 0.6.6, 0.8.0 and (2026-10-29, scripts, CPU) 0.8.3. Re-check against the installed version. Since 0.8.0 the tutorial passes `metadata=metadata` to `init_model` and `**config()` (so `fps`) to `fit_model`, validates videos with `check_videos`, and starts with `kpms.check_installation(notebook_version="0.8")`. `scripts/kpms_headless_fit.py` passes `metadata=` and `fps=` (needs >= 0.8.0). Research record: `research/keypoint-moseq-ledger.md`.
+
+## Version changes that matter (0.6.6 to 0.8.3)
+
+| Change | Release | Consequence |
+|---|---|---|
+| `check_video_paths` replaced by `check_videos(coordinates, print_table=True, **config())`; raises for missing videos or keypoints past the video end | 0.8.0 | Update older code; skip when there are no videos |
+| Renamed grid-movie, trajectory and dendrogram args (`pre`, `post`, `min_duration`, `filter_size` became `before_onset_sec`, `after_onset_sec`, `min_instance_duration_sec`, `smoothing_filter_frames`); old names are silently ignored | 0.8.0 | Old code runs with defaults instead of failing; grep for the old names |
+| Velocities and durations use the project `fps` | 0.8.0 | Results at non-30 fps differ from older runs; always set `fps` |
+| `compute_stats_df` no longer takes `project_dir`, `model_name`, `fps` | 0.8.0 | See `downstream-analysis.md` section 6 |
+| Needs jax-moseq >= 0.3.8; Python 3.10-3.14; dependency pins removed | 0.7.0, 0.8.2 | A fresh install pulls NumPy 2 and pandas 3; pin for old environments |
+| `format_data` raises `ValueError` for recordings no longer than `nlags` | 0.8.2 | Drop or merge very short recordings before fitting |
+| `stats_df` durations drop each recording's first and last syllable instance; transition matrices count the transition out of a recording's first syllable; angular velocity no longer spikes at +-pi; `extract_results` keeps inferred labels where segments overlap | 0.8.2 | Numbers differ from earlier runs and from this skill's own summaries (see `downstream-analysis.md`) |
+| `apply_model(ar_only=True)` defaults to one iteration | 0.8.2 | Pass `num_iters` explicitly |
+| `extract_results(overwrite=False)` raises for recordings already in `results.h5` | 0.8.x | The script deletes the file first |
+| `calibration.save_params` takes three values, not a dict | 0.8.2 | Only matters for custom calibration code |
+| Loader fixes: DLC `-1` placeholders become missing, multi-animal `bodyparts` in file order, DLC `_filtered` copies skipped when raw files exist, recordings without keypoints skipped, `.hdf5` loads, DLC 3D loads as 3D, `.slp` loads all its videos | 0.8.3 | Recording keys and keypoint counts can change versus 0.8.2; re-check the `load_keypoints` output after upgrading. Per the loader docstring a glob such as `*_filtered.h5` loads the filtered files if you want those (not run here) |
+| Recordings loaded from a directory are sorted | 0.6.13 | Noise calibration reproducible across machines |
 
 
 ## Pipeline (interactive Python API, as in the tutorial)
@@ -24,11 +42,13 @@ config = lambda: kpms.load_config(project_dir)
 # 1. Load DLC output (csv or h5; folder is searched recursively)
 coordinates, confidences, bodyparts = kpms.load_keypoints("dlc_out/", "deeplabcut")
 kpms.check_nan_proportions(coordinates, bodyparts, breakdown=True)
+kpms.check_installation()   # prints versions and JAX devices (0.8.0+)
 
 # 2. Project + config (setup_project fails if project_dir exists)
 kpms.setup_project(project_dir, deeplabcut_config="dlc/config.yaml")   # or bodyparts=..., skeleton=...
 kpms.update_config(project_dir, use_bodyparts=[...], anterior_bodyparts=["nose"],
                    posterior_bodyparts=["spine4"], fps=30, video_dir="videos/")
+kpms.check_videos(coordinates, print_table=True, **config())   # optional, needs the videos (0.8.0+)
 
 # 3. Preprocess
 coordinates, confidences = kpms.outlier_removal(coordinates, confidences, project_dir,
@@ -42,13 +62,13 @@ kpms.update_config(project_dir, latent_dim=4)
 kpms.update_config(project_dir, sigmasq_loc=kpms.estimate_sigmasq_loc(data["Y"], data["mask"], filter_size=config()["fps"]))
 
 # 5. AR-HMM then full model
-model = kpms.init_model(data, pca=pca, **config())
+model = kpms.init_model(data, metadata=metadata, pca=pca, **config())
 model = kpms.update_hypparams(model, kappa=1e6)
-model, model_name = kpms.fit_model(model, data, metadata, project_dir, ar_only=True, num_iters=50)
+model, model_name = kpms.fit_model(model, data, metadata, project_dir, ar_only=True, num_iters=50, **config())
 model, data, metadata, it = kpms.load_checkpoint(project_dir, model_name, iteration=50)
 model = kpms.update_hypparams(model, kappa=1e4)
 model = kpms.fit_model(model, data, metadata, project_dir, model_name, ar_only=False,
-                       start_iter=it, num_iters=it + 500)[0]
+                       start_iter=it, num_iters=it + 500, **config())[0]
 
 # 6. Reindex (checkpoint only), then extract
 kpms.reindex_syllables_in_checkpoint(project_dir, model_name)
@@ -57,16 +77,20 @@ results = kpms.extract_results(model, metadata, project_dir, model_name)
 kpms.save_results_as_csv(results, project_dir, model_name)
 ```
 
-`scripts/kpms_headless_fit.py` implements this headless and resumable. Findings from running it on 0.6.6:
+`scripts/kpms_headless_fit.py` implements this headless and resumable. Findings from running it on 0.6.6 (the 0.8.3 re-run is noted per bullet and below):
 
 - `fit_model(..., model_name)` accepts a name on the first call, so a chosen name works as the resume key; without it kpms auto-names the folder with a timestamp.
-- `extract_results` appends to an existing `results.h5`; the `overwrite` argument documented in the stable docs does not exist in 0.6.6. The script deletes the derived file first, which works on both.
+- `extract_results` adds to an existing `results.h5`. In 0.6.6 the `overwrite` argument did not exist; in 0.8.3 it does and recordings already in the file raise without it. The script deletes the derived file first, which works on both and also drops recordings no longer in the data.
+- 0.8.3 re-run (CPU, synthetic data): fresh fit, resume and extraction work unchanged. On resume `load_checkpoint` returns a numpy int that broke the script's JSON summary; fixed with `int()`. In a script `check_nan_proportions` prints a Styler repr, not the table, so read NaN fractions another way (for example from `coordinates`) when it matters; it no longer fails under pandas 3.
+- 0.8.3 loader test (2026-10-29, synthetic multi-animal DLC csv, 2 individuals, 3 files): `_filtered` copies are skipped by default and a glob such as `ma/*_filtered.csv` loads them; `-1` placeholders become NaN; an individual with no keypoints in any frame is dropped (the other individual of that file still loads); keys are `<file>_<individual>`; the fit script ran on the result (5 recordings).
+- **Gotcha found in that test: bodyparts are taken from the first file and assigned by position.** A file whose columns were in a different order loaded without any warning, with its keypoints in the wrong slots (nose labelled as spine3 and so on). Files from one DLC network share an order, so this is a risk mainly when merging outputs of different networks or configs. `scripts/kpms_headless_fit.py` now checks every csv/h5 header (DLC format, `_filtered` copies ignored when raw files exist) and exits on a mismatch; tested 2026-10-29 on synthetic csv and h5, single and multi-animal. For other loaders check the headers yourself. Not reported upstream by this skill; the 0.8.3 note "returns bodyparts in file order" does not promise reordering across files.
+- Not run on 0.8.3: SLEAP/Lightning Pose loaders, DLC `.h5`/`.hdf5` and 3D files, `check_videos`, grid movies, `apply_model`, GPU.
 - A custom `setup_project(bodyparts=...)` writes a placeholder skeleton (`BODYPART1`...) that triggers warnings; pass a real `skeleton` (the script builds a chain) or use the DLC config.
 - Resuming works from `checkpoint.h5` (latest iteration); the full-model kappa persists in the checkpoint (checked: 1e4 after a resume).
 
 ## Output structure
 
-`{project_dir}/{model_name}/results.h5`: one group per recording with datasets `syllable` (frames,), `latent_state` (frames, latent_dim), `centroid` (frames, 2 for 2D), `heading` (frames,). Names containing `/` (from `path_in_name=True`) become nested groups. The per-recording CSV export (`save_results_as_csv`) has columns `syllable, centroid x, centroid y, heading, latent_state 0..k`. Verified on 0.6.6: R and h5py readers equal these.
+`{project_dir}/{model_name}/results.h5`: one group per recording with datasets `syllable` (frames,), `latent_state` (frames, latent_dim), `centroid` (frames, 2 for 2D), `heading` (frames,). Names containing `/` (from `path_in_name=True`) become nested groups. The per-recording CSV export (`save_results_as_csv`) has columns `syllable, centroid x, centroid y, heading, latent_state 0..k`. Verified on 0.6.6 and again on 0.8.3 (layout unchanged): R and h5py readers equal these. `compute_moseq_df` output also carries an `fps` column.
 
 ## Config keys that matter
 
@@ -98,7 +122,7 @@ The kappa value is not a config key you edit by hand: it is read at `init_model`
 
 ## Applying a fitted model to new recordings
 
-Load the checkpoint, load and outlier-filter new keypoints, `format_data`, then `kpms.apply_model(model, data, metadata, project_dir, model_name, **config())`. Use `overwrite=True` when re-applying to recordings from the original training set. Refit instead of applying when the new data differ in setup (camera, body size, keypoint set). Syllables absent in some recordings are expected and give zero counts.
+Load the checkpoint, load and outlier-filter new keypoints, `format_data`, then `kpms.apply_model(model, data, metadata, project_dir, model_name, **config())`. Use `overwrite=True` when re-applying to recordings from the original training set (docs recommend applying to both new and original data to control for assignment differences). Pass `num_iters` explicitly with `ar_only=True`; since 0.8.2 the default is one iteration. Refit instead of applying when the new data differ in setup (camera, body size, keypoint set). Syllables absent in some recordings are expected and give zero counts.
 
 ## Advanced options (from the docs, none run here)
 
@@ -111,7 +135,7 @@ Load the checkpoint, load and outlier-filter new keypoints, `format_data`, then 
 ## Data requirements (FAQ)
 
 - A few hours of video (several hundred thousand frames) is the rule of thumb; more data gives more syllables (HDP prior), so rare behaviours need more data.
-- Multiple animals of similar size: one model, one key per individual (`<file>_<individual>` for multi-animal DLC; `exclude_individuals` defaults to `['single']`). Different sizes (adults and pups): separate models.
+- Multiple animals of similar size: one model, one key per individual (`<file>_<individual>` for multi-animal DLC, `<file>_track0` for SLEAP; `exclude_individuals` defaults to `['single']`; set `shared_videos=True` in `check_videos`). Different sizes (adults and pups): separate models.
 - NaNs: `check_nan_proportions`; consider re-running tracking with a lower detection threshold. Test for tracking quality: can you tell what the animal does from the keypoints alone.
 - 3D (anipose) is loadable; grid movies need `keypoints_only=True` or a single camera.
 - License: academic use free (Harvard licence); commercial use needs permission. Citation: Weinreb et al. 2024, Nature Methods (https://www.nature.com/articles/s41592-024-02318-2).
