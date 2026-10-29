@@ -23,9 +23,14 @@ The assistant's R session is blocked from paths outside the project, so copy fir
 bash (gitignored, so lesson text is never committed):
 
 ```bash
+rm -rf .posit/assistant/lessons-work    # a leftover copy re-triages already archived files
 mkdir -p .posit/assistant/lessons-work
 cp -r ~/.posit/lessons/inbox ~/.posit/lessons/usage.tsv .posit/assistant/lessons-work/
+rm -rf .posit/assistant/lessons-work/inbox/processed
+ls ~/.posit/lessons/inbox | wc -l; ls .posit/assistant/lessons-work/inbox | wc -l   # counts must match (minus processed)
 ```
+
+Delete `.posit/assistant/lessons-work` again once the run is archived.
 
 If the user collected files from other machines or projects, they go into the same
 `inbox` copy; names do not collide by design.
@@ -93,7 +98,8 @@ missed, rather than re-deriving the whole triage from scratch.
    script or snippet, and state what was and was not tested. Do not call anything ready
    while errors remain.
 7. **Archive.** Move processed files with bash (`mv ... inbox/processed/`) in the real
-   inbox, not the copy, keeping parked ones in place. A file with a mix of resolved and
+   inbox, not the copy, keeping parked ones in place (build the keep list from the files
+   that contain a `park` row in the triage table, not from memory; reported once, low confidence). A file with a mix of resolved and
    parked entries stays in the inbox whole (do not split it) until every entry in it has a
    disposition other than `park` — the parked entry is what future runs need to see, and
    splitting the file risks losing the resolved entries' context. Never truncate or edit `usage.tsv`;

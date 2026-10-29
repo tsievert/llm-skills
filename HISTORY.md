@@ -1209,3 +1209,11 @@ used a stale work copy that contained already-archived files; recopied from the 
 Verified: `lint_skills()` (no errors, no new warnings), `skills-ref validate` for the six changed skills, `check_versions()`
 (offline; new claims match installed). Not run: `check_skill_clashes()`/`check_skill_links()` (no description or link changes).
 Not tested: trigger behaviour, DLC claims, non-Windows. Edits reintroduced CRLF; fixed with `sed`.
+
+### 2026-10-29: second lessons triage run (4 files, 10 entries counted, 2 new)
+
+New entries came from the session that ran the first triage. `skill-feedback-triage`: work-folder copy now starts with `rm -rf`,
+compares file counts and is deleted after the run (fix, high confidence, own text); archive step now says to build the keep list
+from `park` rows (note, low confidence). Parked unchanged: CRLF memory files, MCP tools not exposed, GAM band-calibration
+new-skill suggestion. Verified: `skills-ref validate`; `lint_skills()` run below. Not run: clash/link checks (no description or
+link change).
