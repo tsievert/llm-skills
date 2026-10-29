@@ -1229,3 +1229,17 @@ link change).
   handling, `check_videos`, grid movies, `apply_model`, GPU, Slurm. Research: `research/keypoint-moseq-ledger.md`.
 - 2026-10-29 (later): tested 0.8.3 DLC multi-animal loader on synthetic csv (see `research/keypoint-moseq-ledger.md` round 2). Added SKILL.md rule 7 and a workflow-reference note on a silent bodypart-order mismatch across files; `_filtered` skipping, `-1` to NaN and empty-individual dropping confirmed. SLEAP/Lightning Pose/`.h5` loaders still untested.
 - 2026-10-29 (later): `kpms_headless_fit.py` gained a bodypart-order header check across csv/h5 inputs (fails fast, `--skip-header-check` to override); tested on synthetic single/multi-animal csv and h5.
+
+### 2026-10-29: third lessons triage run (4 files, 29 entries)
+
+Most entries were already handled by the two earlier runs (NCV notes, `check_sbatch` purge fix re-verified on a synthetic script,
+`int()` cast, bodypart header check, pandas 3 note). New: `gam-mgcv/references/ncv-and-bam-notes.md` gained "Cluster-robust SEs
+and coverage simulations" (vcovCL conditional on sp, too wide in one simulation; pilot of 9 replicates optimistic, report
+Monte Carlo SE; worded "reported, not reproduced"). `agents-md-maintenance`: Windows CRLF memory-file note (2 projects, not
+reproduced; the file itself was CRLF and normalised to LF). Parked again (files stay in the inbox): MCP tools not exposed
+(`openalex`), GAM band-calibration new-skill suggestion (one project). Archived two files. Verified: `lint_skills()` (no errors),
+`skills-ref validate` for both changed skills. Not run: clash/link checks (no description or link change); sandwich and CRLF
+claims not re-tested.
+
+- 2026-10-29: `deeplabcut-hpc` researched against the DLC 3.0.2 docs, release notes and GitHub API (`research/deeplabcut-hpc-ledger.md`). Tuning and sweep sections moved to `references/pytorch-config-tuning.md` and `references/training-sweeps.md` (SKILL.md 239 to 170 lines). Changed the training sketch to `shuffles=` (3.0.2 signature; round 1 wrongly inferred `Shuffles=` was silently ignored, corrected in round 2: it is a renamed-parameter alias). Added: current defaults table, `snapshot_path`/`pytorch_cfg_updates`, the `net_type` list, PR 3148 still open, `gh` absent locally so keyless REST API note. Not tested: any code on a DLC install or cluster, rest of the user-guide page, forum.
+- 2026-10-29 (later): `deeplabcut-hpc` round 2 (`research/deeplabcut-hpc-ledger.md`). Corrected the round 1 `Shuffles=` claim (alias since 3.0.0, from `compat.py`). Added from 3.0.2 source (read, not run): multi-GPU is `DataParallel` via `runner.gpus`; a resumed `fit()` treats `epochs` as additional epochs; benchmarking-guide recipe (`create_training_dataset_from_existing_split`). Corrected the earlier mislabel of the 726 kB page (it was api.jsonl; the user guide is 11.6 kB). Forum fetches returned 403 and search found only TF-era cluster threads. Not tested: any DLC code, multi-GPU, resume semantics.

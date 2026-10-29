@@ -7,7 +7,7 @@ metadata:
 
 # DeepLabCut on HPC
 
-DeepLabCut changes quickly (3.0 made PyTorch the default and is deprecating TensorFlow). **Do not rely on memory for function signatures or config keys.** Verify against the live docs first, then write code.
+DeepLabCut changes quickly (3.0 made PyTorch the default and is deprecating TensorFlow; latest release 3.0.2 on 2026-09-23, checked 2026-10-29). **Do not rely on memory for function signatures or config keys.** Verify against the live docs first, then write code.
 
 ## Where this skill runs
 
@@ -24,7 +24,7 @@ Start at https://deeplabcut.github.io/DeepLabCut/llms.txt. It links to:
 
 - `knowledge/manifest.json`: lists indexed API versions and which is current (`latest-release`).
 - `knowledge/main/docs.jsonl`: one JSON object per doc page/section (`id, title, url, section, summary`). Large (~470 KB); fetch with a specific question, not whole.
-- `knowledge/main/api.jsonl`: API symbols (`name, module, signature, summary`). The `latest-release` path for api.jsonl returned 404 in testing; check the manifest for the real version path (for example `knowledge/3.0.2/api.jsonl`) and fall back to `main`.
+- `knowledge/main/api.jsonl`: API symbols (`name, module, signature, summary`). The `latest-release` path for api.jsonl returned 404 in testing; use the version from the manifest instead (`knowledge/3.0.2/api.jsonl` worked on 2026-10-29) and fall back to `main`.
 - API reference pages at `/dev/latest-release/reference/deeplabcut/`. The top-level page only indexes submodules; signatures live in `pose_estimation_pytorch/apis/training/` and `.../apis/videos/` (PyTorch) or `pose_estimation_tensorflow/...` (TF).
 
 Useful doc pages: `docs/installation.html`, `docs/pytorch/pytorch_config.html`, `docs/pytorch/user_guide.html`, `docs/recipes/BatchProcessing.html`, `docs/docker.html`.
@@ -38,7 +38,7 @@ Match the docs to the cluster's DLC version. The docs do not cover Slurm/HPC; th
 
 This skill only adds DLC specifics.
 
-## Environment (as of the 3.0 docs; re-check)
+## Environment (3.0.2 docs, re-checked 2026-10-29: unchanged)
 
 - Python 3.10-3.12.
 - Headless install: plain `pip install deeplabcut` (no `[gui]` extra). Use `[gui]` only on a workstation for labeling. Extras: `[modelzoo]` for SuperAnimal models, `[tf]` for TensorFlow.
@@ -66,86 +66,18 @@ Copy the whole project folder (config.yaml, `dlc-models*`, `training-datasets`, 
 4. **Training length is in epochs for PyTorch.** Control it via `train_network(..., epochs=...)` or `train_settings.epochs` in `pytorch_config.yaml`. Other keys documented in `pytorch_config.yaml`: `train_settings.batch_size` (default 1), `train_settings.dataloader_workers` (default 0), `runner.snapshots.save_epochs` (25), `runner.snapshots.max_snapshots` (5), `runner.gpus` (list), top-level `device` (`auto`), top-level `resume_training_from` (path to a `snapshot-NNN.pt`). Verify against the docs for the installed version.
 5. **Dataloader workers.** The default is 0, which starves the GPU. Raise `dataloader_workers` to at most `--cpus-per-task` (leave one core free). Use `parallelly`-style logic from `hpc-python-code` to read the Slurm allocation, not `os.cpu_count()`.
 6. **Batch size.** Raise `batch_size` to use the GPU's memory; confirm with `nvidia-smi`/job monitoring rather than guessing. Out-of-memory errors on the GPU are fixed by reducing batch size or image size, not by requesting more host memory.
-7. **Checkpoint and resume.** Snapshots are saved every `save_epochs`. Set `save_epochs` low enough that a time-limit kill loses little, and resume with `resume_training_from` pointing to the last snapshot. Write the resume logic so a requeued job continues instead of restarting (see `hpc-job-scripts` for requeue and `--signal`).
-8. **Multiple shuffles/projects.** One GPU per training run unless the docs for the installed version describe multi-GPU. Use job arrays with one shuffle or project per task, each with isolated output (the BatchProcessing recipe uses a `sys.argv[1]` index per GPU). Start shuffle numbering at 1, not 0: DLC's own API defaults (`train_network`, `evaluate_network`, `analyze_videos`) and GUI behavior both treat 1 as the practical floor, and a custom orchestrator that picks 0 for its first/baseline run has been reported to cause downstream confusion (reported 2026-10-26).
+7. **Checkpoint and resume.** Snapshots are saved every `save_epochs`. Set `save_epochs` low enough that a time-limit kill loses little, and resume with `resume_training_from` (config) or `train_network(..., snapshot_path=...)` pointing to the last snapshot. In the 3.0.2 runner source a resumed `fit()` treats the epoch count as additional epochs (`starting_epoch + epochs`), so set `epochs` to the remaining number in a requeue script and check the log after the first resume (read from source, not run). Write the resume logic so a requeued job continues instead of restarting (see `hpc-job-scripts` for requeue and `--signal`).
+8. **Multiple shuffles/projects.** One GPU per training run by default. `runner.gpus: [0, 1]` in `pytorch_config.yaml` enables multi-GPU training, which in 3.0.2 is `torch.nn.DataParallel` on one node with `device: cuda` (no DistributedDataParallel; read from the source, not run; the config docs give no scaling advice), so request `--gres=gpu:N` on one node and treat scaling as untested. Use job arrays with one shuffle or project per task, each with isolated output (the BatchProcessing recipe uses a `sys.argv[1]` index per GPU). Start shuffle numbering at 1, not 0: DLC's own API defaults (`train_network`, `evaluate_network`, `analyze_videos`) and GUI behavior both treat 1 as the practical floor, and a custom orchestrator that picks 0 for its first/baseline run has been reported to cause downstream confusion (reported 2026-10-26).
 9. **`analyze_videos` caching.** Already-analyzed videos are skipped, so reruns after a failure are cheap and safe. Use `destfolder` to write results to scratch/project storage. Per-video work parallelizes well as an array (one video or folder per task).
 10. **Video I/O.** Decoding is CPU-bound; request enough CPUs for analysis jobs. Stage large videos to node-local scratch when the shared filesystem is slow (see `hpc-job-scripts/references/arrays-and-scratch.md`).
-11a. **Re-split and evaluation (reported by 2 sessions, not yet confirmed on a cluster).** After `create_training_dataset` or any re-split, `metadata.yaml` can record another engine, and `evaluate_network` then falls back to TensorFlow (`ModuleNotFoundError: tensorflow` on a PyTorch project). Check the engine entries in `metadata.yaml`, pass the engine explicitly in headless evaluation (`engine=Engine.PYTORCH`, from `deeplabcut.core.engine`), and treat evaluation results older than the shuffle's `Documentation_data` pickle as stale (compare mtimes). Also, evaluation writes some files (the combined results CSV) outside the per-shuffle folder; a name-glob sync-back from node-local scratch loses them. Sync each job's outputs into a job-specific path (one writer per path) and let downstream checks fall back to the per-snapshot CSVs.
+11a. **Re-split and evaluation (reported by 2 sessions, not yet confirmed on a cluster).** After `create_training_dataset` or any re-split, `metadata.yaml` can record another engine, and `evaluate_network` then falls back to TensorFlow (`ModuleNotFoundError: tensorflow` on a PyTorch project). Check the engine entries in `metadata.yaml`, pass the engine explicitly in headless evaluation (`engine=Engine.PYTORCH`, from `deeplabcut.core.engine`); the argument is `shuffles=[n]` in 3.0.2, and the old `Shuffles=` still works as a renamed-parameter alias since 3.0.0 (read from `compat.py`, so prefer `shuffles=`); extra PyTorch options such as `snapshotindex` pass through `**torch_kwargs`, and treat evaluation results older than the shuffle's `Documentation_data` pickle as stale (compare mtimes). Also, evaluation writes some files (the combined results CSV) outside the per-shuffle folder; a name-glob sync-back from node-local scratch loses them. Sync each job's outputs into a job-specific path (one writer per path) and let downstream checks fall back to the per-snapshot CSVs.
 11. **Model downloads.** Pretrained backbones and SuperAnimal weights are downloaded on first use, which fails on compute nodes without internet. Run one short training or model-creation step on a login node (or pre-download weights) before submitting, and point the cache to shared storage if the home quota is small.
 
-## Tuning `pytorch_config.yaml`: optimizer, scheduler, augmentation
+## Tuning `pytorch_config.yaml` and designing sweeps
 
-`pytorch_config.yaml` is DLC's own abstraction over PyTorch, not raw PyTorch code. It exposes
-a curated subset of `torch.optim`, `torch.optim.lr_scheduler` and the `albumentations` library.
-Re-verify the exact keys against `docs/pytorch/pytorch_config.html` for the installed version
-before editing — the defaults below are as documented on 2026-10-26 and have drifted from the
-code before (see the gap on `rotation`/`translation` symmetry below).
+Optimizer, scheduler, augmentation keys with their documented defaults, and what DLC does not expose (training mixed precision, gradient clipping, EMA, an open PR for arbitrary `albumentations` transforms) are in [references/pytorch-config-tuning.md](references/pytorch-config-tuning.md). Re-verify against the docs for the installed version before editing; keys drift. Training-script overrides go through `train_network(...)` arguments or `pytorch_cfg_updates`.
 
-**Optimizer** (`runner.optimizer`): `type` accepts any class from `torch.optim` (the docs show
-`SGD`, `AdamW`); `params` passes through as kwargs (`lr`, `momentum`, etc.). The docs advise
-against changing the optimizer type unless experienced.
-
-**Scheduler** (`runner.scheduler`, optional): `type` accepts any `torch.optim.lr_scheduler`
-class. The documented default is `LRListScheduler` (DLC-specific: `lr_list`, `milestones`).
-`StepLR` (`step_size`, `gamma`), `SequentialLR` (nested `schedulers` + `milestones`) and
-`ChainedScheduler` are also named as usable. Set `runner.load_scheduler_state_dict: false`
-when editing the scheduler and resuming from a snapshot, or the old schedule state silently
-overrides the new config.
-
-**Augmentation** (`data.train` / `data.inference`): backed by `albumentations`, not `torchvision.transforms`
-or `imgaug` — confirmed in the DLC user guide ("PyTorch Engine: Albumentations is used for
-data augmentation"). Documented keys: `affine` (`p`, `rotation`, `scaling`, `translation`),
-`covering` (coarse dropout), `crop_sampling` (`height`, `width`, `max_shift`, `method`:
-`uniform`/`keypoints`/`density`/`hybrid`), `gaussian_noise`, `motion_blur`, `hflip` (`p`,
-`symmetries` for symmetric keypoint pairs), `hist_eq`, `resize`, and `auto_padding`. The
-`collate` block (`ResizeFromDataSizeCollate`/`ResizeFromListCollate`) controls batch-level
-rescaling (`max_shift`, `max_size`, `min_scale`, `max_scale`, `multiple_of`, `to_square`).
-
-**Where DLC's abstraction stops short of what the underlying libraries offer** (check these
-before writing a feature request, since the gap may have closed):
-
-- **Augmentation library coverage.** DLC exposes a fixed list of named augmentations, not
-  arbitrary `albumentations` transforms (no direct access to e.g. `ColorJitter`, `RandomRain`,
-  `ElasticTransform`, blur/weather families — see https://albumentations.ai/docs/ for the full
-  set). `gh search issues --repo DeepLabCut/DeepLabCut "albumentations"` and
-  `gh search prs --repo DeepLabCut/DeepLabCut "albumentations"` turn up
-  https://github.com/DeepLabCut/DeepLabCut/pull/3148, an **open, unmerged** PR (checked
-  2026-10-26) adding a `transform` list that passes any `albumentations` class through by name.
-  If the user needs an augmentation outside the documented list, point them at that PR (and its
-  linked issue) rather than inventing a workaround, and re-check its merge status — this is a
-  natural feature request to upvote/comment on, not re-file.
-- **Config/code drift.** https://github.com/DeepLabCut/DeepLabCut/issues/2753 documents a real
-  case where the docs' `fliplr` key didn't match the code's `hflip`, and `rotation` is applied
-  symmetrically (`(-rotation, rotation)`) while `translation` is not — a clamping asymmetry not
-  mentioned in the docs. Treat config keys in older doc snapshots or tutorials with suspicion;
-  confirm against `deeplabcut.pose_estimation_pytorch.data.transforms.build_transforms` in the
-  installed version if an augmentation behaves unexpectedly.
-- **No raw PyTorch access.** Things you'd control in a hand-written PyTorch training loop —
-  gradient clipping, mixed precision (`torch.cuda.amp`), gradient accumulation, weight averaging
-  (EMA), `torch.compile`, or a custom loss/backbone — aren't exposed as `pytorch_config.yaml`
-  keys at all (see https://docs.pytorch.org/docs/stable/optim.html and
-  https://docs.pytorch.org/docs/stable/notes/amp_examples.html for what the raw API offers). If
-  the user needs one of these, it means writing or patching DLC's training code directly, not a
-  config change — confirm that's really what they want before going down that path, since it
-  forks them off DLC's maintained training loop.
-
-When a documented option and the live behavior disagree, or a desired option genuinely isn't
-exposed, follow "When something fails: search upstream before improvising" below before
-concluding it's missing — confirm via issues/PRs, then report to the user with links so they can
-decide whether to file or upvote a feature request upstream.
-
-## Designing a multi-candidate training sweep: which axis to vary first
-
-When asked to broaden an orchestrator/sweep (several `train_network` jobs with varying settings)
-beyond its first candidates, **exhaust the model architecture (`net_type`) axis before reusing
-secondary tuning knobs** (dataloader settings, augmentation on/off, etc.) just to inflate candidate
-count — if the project's own prior benchmark data or the official architecture docs list untested
-`net_type` options, those are higher-value candidates than a second variant of a knob already
-covered. Reported once (2026-10-26): the assistant twice defaulted to re-using an already-exhausted
-tuning knob to add sweep breadth before checking whether untested architectures were available, and
-the user had to correct the prioritization twice. Check both sources before proposing a sweep:
-the project's benchmark results (if one exists) and the current architectures doc page, then order
-candidates architecture-first, deferring secondary-knob variants to a later round.
+For a multi-candidate sweep, **exhaust the `net_type` axis before secondary knobs** (reported once, the user corrected this twice). The current architecture list, how to print it with `available_models()`, and orchestrator checks are in [references/training-sweeps.md](references/training-sweeps.md).
 
 ## Job script skeleton (training, one GPU)
 
@@ -176,7 +108,7 @@ ap.add_argument("--shuffle", type=int, default=1)
 a = ap.parse_args()
 
 deeplabcut.train_network(a.config, shuffle=a.shuffle)  # add epochs/batch_size etc. per docs
-deeplabcut.evaluate_network(a.config, Shuffles=[a.shuffle], plotting=False)
+deeplabcut.evaluate_network(a.config, shuffles=[a.shuffle], plotting=False)
 ```
 
 ## When something fails: search upstream before improvising
@@ -184,7 +116,7 @@ deeplabcut.evaluate_network(a.config, Shuffles=[a.shuffle], plotting=False)
 DLC moves fast, so an unexpected error is often a known bug, a regression in the installed version, or already fixed on `main`. Before inventing a workaround:
 
 1. Get from the user the cluster's DLC version (`deeplabcut.__version__`), the engine, the PyTorch/CUDA versions, and the exact error message (first and last lines of the traceback). The searches below run locally, where the internet is available.
-2. Search issues, open and closed, for the error text or function name (the `gh` CLI is preferred over web fetching):
+2. Search issues, open and closed, for the error text or function name (the `gh` CLI is preferred when installed; it was not on PATH on the maintainer machine, where the keyless REST API worked: `https://api.github.com/repos/DeepLabCut/DeepLabCut/releases`, `/pulls/<n>`, `/issues/<n>`):
    - `gh search issues --repo DeepLabCut/DeepLabCut "<error text>" --sort updated`
    - `gh issue view <number> --repo DeepLabCut/DeepLabCut --comments`
 3. Search pull requests for fixes in progress or merged:
@@ -214,7 +146,7 @@ install can itself indicate the install didn't pick up recent `main` commits.
 
 ## Not verified
 
-This skill was written from the official docs only. Nothing here has been run on a real cluster. If a command or key fails on the cluster, trust the live docs and the cluster version's `help()` output (ask the user to paste it) over this file, and tell the user which part was wrong.
+This skill was written from the official docs only (re-checked against the 3.0.2 docs and release notes on 2026-10-29; see `research/deeplabcut-hpc-ledger.md` in the llm-skills repo). Nothing here has been run on a real cluster. If a command or key fails on the cluster, trust the live docs and the cluster version's `help()` output (ask the user to paste it) over this file, and tell the user which part was wrong.
 
 **Real-use evidence (2026-10-24, user project, two independent sessions):** diagnosing a
 multi-animal-to-single-animal project split that produced fewer annotated frames than expected
