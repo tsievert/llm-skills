@@ -212,6 +212,7 @@ per skill):
 | `hpc-resource-allocation` | `'OUT_OF_MEMORY\|\boom-kill\b\|\bsacct\b\|\bseff\b'` |
 | `hpc-python-code` | `'\bSIGUSR1\b\|signal\.signal\(signal\.SIGTERM'` |
 | `hpc-r-code` | `'parallelly::availableCores\|future\.batchtools\|\bR_LIBS_USER\b'` |
+| `keypoint-moseq` (added 2026-10-29) | `'import keypoint_moseq\|from keypoint_moseq\|\bjax_moseq\b\|\bkpms\.[a-z_]+\('` — any top-level `kpms.<fn>(` call plus the imports; synthetic-payload tested (`kpms.fit_model(...)`, `import keypoint_moseq as kpms` nudge; `fit_model_in_stan()` silent), not tested in a live turn |
 
 ### The prompt-signal channel (added 2026-10-28)
 
