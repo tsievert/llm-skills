@@ -71,7 +71,9 @@ and say what it would change.
    the installed and current CRAN/PyPI versions. "Claim older than latest" is not an error
    ("tested with X" is a valid statement); it means re-test or reword. Plain-text names of
    packages that are not installed are skipped on purpose, and `deeplabcut` is only found
-   when written as `deeplabcut <version>`. Treat it as a candidate list.
+   when written as `deeplabcut <version>`. Treat it as a candidate list. It returns a data frame
+   with a `file` column covering the whole repo (hundreds of rows): assign it and filter to the
+   changed skill's files instead of printing it all (reported 2026-10-28).
 4. **Sync and hook setup.** Read-only audit of settings, the sync hook, the lessons hooks
    (PostToolUse `skill` and Stop), the skill-trigger hook (UserPromptSubmit, PostToolUse
    `skill`, Stop) and the file-signal hook (PostToolUse `skill` and `read|grep|bash`; see

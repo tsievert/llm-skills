@@ -40,7 +40,15 @@ heading `## <main-skill>: use case (<outcome>)`, `type: use-case`, `symptom` = o
 generic sentences on the task ("fit a zero-inflated GLMM to repeated-measures counts,
 40 animals x 3 sessions"), `context` = all skills used, `resolution` = outcome
 (`worked`, `worked-with-workaround`, `partly-worked`, `failed`, `abandoned`), `evidence` =
-friction or "none". Same privacy rules as lessons. If the hook reminder names a file,
+friction or "none". Same privacy rules as lessons. `usecase_add()` does **not** take the
+`lesson_add()` field names; passing `symptom=` or `context=` fails with "formal argument ...
+matched by multiple actual arguments" (reported by one project). Real signature and a call:
+
+```r
+usecase_add(skills = c("gam-mgcv", "gam-interpretation"),
+            summary = "fit a bam GAM to 40 animals x 3 sessions of continuous data",
+            outcome = "worked", friction = "none", file = "<path from the hook message, if any>")
+``` If the hook reminder names a file,
 write the use-case entry first, then any lesson entries into the same file.
 
 ## Privacy (hard rules)

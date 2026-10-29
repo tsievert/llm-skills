@@ -96,7 +96,7 @@ Plotting, partial effects, simultaneous intervals, group comparisons, derivative
 
 ## Large data
 
-`bam(..., method = "fREML", discrete = TRUE, nthreads = n)` for tens of thousands of rows or more. Use `gam()` for smaller data; `bam()` smoothing selection differs slightly. Under `discrete = TRUE`, `select = TRUE` and some families behave differently; check `?bam`. On clusters, set `nthreads` from the job allocation (see the `hpc-r-code` skill).
+`bam(..., method = "fREML", discrete = TRUE, nthreads = n)` for tens of thousands of rows or more. Use `gam()` for smaller data; `bam()` smoothing selection differs slightly. Under `discrete = TRUE`, `select = TRUE` and some families behave differently; check `?bam`. For `method = "NCV"` (model comparison, cheap refits at fixed smoothing parameters, failure reporting, checking `select = TRUE`) see [references/ncv-and-bam-notes.md](references/ncv-and-bam-notes.md). On clusters, set `nthreads` from the job allocation (see the `hpc-r-code` skill).
 
 ## Reporting
 

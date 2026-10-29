@@ -94,6 +94,8 @@ draw(cd)
 ```
 
 - Accumulated local effects (`ale()`, verified in 0.11.2-64 and 0.11.2.73): `a <- ale(m, focal = "x1"); draw(a)`, with `interval = "simultaneous"`, `scale = "response"` available. ALE combines all terms involving the covariate and averages over the reference data; it is a different quantity from a partial effect or a conditional prediction, so label it "ALE".
+- Rejoining covariates after `response_derivatives()`: with `uncertainty = "simulation"` a covariate that enters the model only through `sz` smooths is dropped from the output, while `delta` keeps it, so a `left_join()` on `.row` gives `.x`/`.y` columns under one method and none under the other. Restore only the columns that are missing, from the input data by `.row` (for example `nd[x$.row, setdiff(names(nd), names(x)), drop = FALSE]`). Reported from one project (two sessions), not re-run here.
+- Sampling-argument names differ per function (reported, check `?fn` for the installed gratia): `fitted_samples(n =)` errors and `n_draws` works; `response_derivatives(n_sim =)` works and `n_draws` errors.
 - Shape-only: `difference_smooths(m, select = "s(x)", interval = "simultaneous")`.
 - Never compare by overlaying bands and eyeballing overlap.
 

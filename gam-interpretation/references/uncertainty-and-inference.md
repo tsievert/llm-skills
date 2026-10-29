@@ -57,6 +57,7 @@ By default intervals are conditional on the estimated smoothing parameters. `unc
 ## Random effects and held-fixed covariates
 
 - Setting a random effect to zero (via `exclude = "s(g)"` and a dummy level) gives predictions for a typical (zero-deviation) group. With a nonlinear link this is not the population-average response. Say "typical group".
+- Excluding or zeroing a covariate smooth that is nearly collinear with a group factor shifts predictions for the groups unequally. Because the smooth is additive on the link scale, the group contrast at an equal covariate value is unaffected, and the distortion is a constant link-scale shift f(x_B) - f(x_A) across all other covariates. Report that shift, and the contrast under group-specific covariate values, as a sensitivity check. It does not fix identifiability: when covariate and group are confounded the contrast is not identified by the data (see concurvity below). Reported from one project, algebra only.
 - Prediction bands for expected values exclude observation noise; prediction intervals for new observations need `posterior_samples()` or simulation including response noise.
 - Choose held-fixed values deliberately (mean/mode defaults in `data_slice()` are conventions). Results for interacting terms depend on them.
 - `data_slice()` fills unspecified covariates with typical values; for derived or interaction factors, set them explicitly. `data_slice(.by = )` restricts each covariate's marginal range per group but not the joint support across several continuous covariates.

@@ -1191,3 +1191,21 @@ Changed: `gam-mgcv/references/gamlss-and-extra-families.md` (correlated-slope, e
 ledger (Round 3). Verified: `lint_skills()`. Not run this round: `check_skill_clashes()`, `check_skill_links()`,
 `skills-ref validate` (no description or link change; validated earlier the same day). Not tested: nested or multiple grouping
 levels in `re()`, `correlation =` under real autocorrelation, held-out scoring.
+
+### 2026-10-29: lessons triage run (13 inbox files, 33 entries)
+
+Coverage: 33 entries (13 use-case, 2 worked-well, 17 actionable, 1 malformed worked-well file without a heading). First attempt
+used a stale work copy that contained already-archived files; recopied from the real inbox and discarded that table. Outcomes:
+- `gam-mgcv`: new `references/ncv-and-bam-notes.md` (fixed-sp refit via fREML discrete; select = TRUE check). Reproduced on
+  synthetic data (mgcv 1.9-4): NCV with `sp` fixed took 0.86 s vs 0.05 s for the fREML refit, identical coefficients, empty `$sp`;
+  select snippet runs. NCV2 `eigen` failures and parallel `R_Calloc` errors are worded "reported, not reproduced".
+- `gam-interpretation`: confounded-covariate shift note, `response_derivatives` rejoin and sampling-argument notes (not re-run).
+- `hpc-job-scripts/scripts/check_sbatch.sh`: purge check now accepts `module --force purge` and `ml purge`; reproduced and
+  fixed, tested on three synthetic scripts.
+- `skill-lessons`: tested `usecase_add()` call with real argument names. `deeplabcut-hpc`: engine fallback / combined-file
+  sync-back pitfall (reported, not confirmed on a cluster). `github-skill-maintenance`: filter `check_versions()` by `file`.
+- Parked: CRLF memory-file note (`agents-md-maintenance`), MCP tools not exposed (`openalex`), new-skill suggestion for GAM band
+  calibration simulation (one report; overlaps `gam-mgcv`), stale-deadline pre-sort (`job-opportunity-watch`).
+Verified: `lint_skills()` (no errors, no new warnings), `skills-ref validate` for the six changed skills, `check_versions()`
+(offline; new claims match installed). Not run: `check_skill_clashes()`/`check_skill_links()` (no description or link changes).
+Not tested: trigger behaviour, DLC claims, non-Windows. Edits reintroduced CRLF; fixed with `sed`.

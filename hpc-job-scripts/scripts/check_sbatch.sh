@@ -69,7 +69,7 @@ if has '--requeue' && ! has '--open-mode[ =]append'; then
 fi
 
 # --- environment and Python ---
-if bhas 'module[[:space:]]+load' && ! bhas 'module[[:space:]]+purge'; then
+if bhas '(module|ml)[[:space:]]+(--[a-z]+[[:space:]]+)*(load|add)[[:space:]]' && ! bhas '(module|ml)[[:space:]]+(--[a-z]+[[:space:]]+)*purge'; then
   info "module load without a preceding module purge"
 fi
 if bhas '(^|[[:space:]])(srun[[:space:]]+)?python3?[[:space:]]' \
