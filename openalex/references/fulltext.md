@@ -23,8 +23,12 @@ help.openalex.org/data/works/attributes. Re-check there before relying on prices
 3. Read `fulltext/manifest.tsv`. Statuses: `downloaded`, `already_present`, `available_via_openalex_content_api_not_fetched`
    (ask before paying), `oa_but_no_direct_pdf` (OA exists but a script cannot reach a PDF; give the user `oa_url`),
    `no_open_access_copy`, `not_found_in_openalex`.
-4. For abstracts-only screening, do not download; abstracts come with the metadata.
-5. Report which papers were obtained and from where; never claim to have read a paper that was not retrieved.
+4. Biomedical paper with no usable PDF, or when sections matter: `fetch_epmc_xml(dois, outdir)` looks the DOI up in Europe PMC and saves
+   the JATS XML as `<PMCID>.xml` plus `manifest_epmc.tsv`. Statuses: `downloaded`, `already_present`, `not_in_pmc`,
+   `not_found_in_europepmc`, `pmc_no_fulltext_xml`. Only PMC records have XML (open-access subset and author manuscripts); other
+   papers (most non-biomedical, older paywalled ones) return `not_in_pmc`. Same `max_files` guard; no payment involved.
+5. For abstracts-only screening, do not download; abstracts come with the metadata.
+6. Report which papers were obtained and from where; never claim to have read a paper that was not retrieved.
 
 ## Downloads are opt-in (rule)
 
@@ -33,16 +37,20 @@ asks for specific papers or approves a stated count ("N works, M with a free PDF
 enforces this: `fetch_fulltext()` stops above `max_files` (default 20) unless called with `confirmed = TRUE` after user approval, and
 it never spends metered calls unless `allow_paid = TRUE`. Do not wrap it in a loop that runs after every search.
 
-## PDF to text: screening and searching downloaded papers
+## Text from PDFs and XML: screening and searching downloaded papers
 
-`ft_text(dir)` converts each PDF in the folder to a cached `.txt` with `pdftools::pdf_text()` (pages separated by a form feed;
-skipped if the `.txt` exists). `ft_grep(pattern, dir)` runs a case-insensitive regex over those texts and returns file, page and a
+`oa_ft_text(dir)` converts each PDF in the folder to a cached `.txt` with `pdftools::pdf_text()` (pages separated by a form feed;
+skipped if the `.txt` exists). `oa_ft_grep(pattern, dir)` runs a case-insensitive regex over those texts and returns file, page and a
 snippet, so claims can be checked against the actual wording (for example a method term or sample size) with a page to cite.
+
+Europe PMC `.xml` files in the same folder are converted too: one "page" per section (title, abstract, each top-level body section), so
+the `page` column is a section number there. The helpers are prefixed `oa_` because attaching the GitHub `fulltext` package masks a bare
+`ft_text()` (found 2026-10-29).
 
 ```r
 source("openalex/scripts/fetch_fulltext.R")
 res <- fetch_fulltext(c("10.1038/nature12373"), outdir = "fulltext", email = "you@example.org")
-ft_grep("sensitiv\\w+ .{0,30}mK", "fulltext")
+oa_ft_grep("sensitiv\\w+ .{0,30}mK", "fulltext")
 ```
 
 Limits: scanned PDFs return little or no text (no OCR; `pdftools::pdf_ocr_text()` needs tesseract, not tested); two-column layouts
@@ -57,7 +65,7 @@ not evidence of a finding. Reference lists and abstracts also match, so check th
 | `europepmc` 0.4.3 | Europe PMC search and full-text XML for PMC open-access papers | Good for biomedical OA |
 | `rcrossref` 1.2.1 | Crossref metadata and licence/full-text links | Links often paywalled |
 | `openalexR` 3.1.2 | Metadata; no content download wrapper known | Use httr2 for `content_urls` |
-| `fulltext` | Not on CRAN (rOpenSci, GitHub only) | Needs user permission to install (non-CRAN rule) |
+| `fulltext` 2.0 | Not on CRAN (rOpenSci, GitHub only; installed here with user permission) | `ft_links()` works; `ft_get()` writes to fixed cache dirs outside the assistant's permitted paths (blocked on Windows, untested). Masks `ft_text()` |
 
 ## Paywalled papers: what not to do and what to do
 
@@ -81,5 +89,10 @@ Legal routes for a paper with `no_open_access_copy`:
 Windows, R 4.6.0, httr2. Three inputs: a paper with an arXiv copy (downloaded via an OpenAlex OA location, valid PDF), a PLOS ONE paper
 (OA, but no script-reachable PDF: status `oa_but_no_direct_pdf`), a bogus DOI (`not_found_in_openalex`). Not tested: the Unpaywall step
 returning a hit, the metered content API download (`allow_paid = TRUE`), the CLI, bulk runs, Linux/macOS. Also tested: the
-`max_files` guard (25 inputs stop with an error before any request), `ft_text()` (50k characters from a downloaded arXiv PDF, with a
-harmless poppler xref warning) and `ft_grep()` (hits with page numbers). Not tested: OCR, multi-column layouts, many files.
+`max_files` guard (25 inputs stop with an error before any request), `oa_ft_text()` (50k characters from a downloaded arXiv PDF, with a
+harmless poppler xref warning) and `oa_ft_grep()` (hits with page numbers). Not tested: OCR, multi-column layouts, many files.
+
+Added 2026-10-29: `fetch_epmc_xml()` (eLife and Genome Biology papers downloaded as XML; a 1970 Science paper gave `not_in_pmc`; a bogus
+DOI gave `not_found_in_europepmc`; rerun gave `already_present`; the `max_files` guard stops 24 inputs). `oa_ft_text()`/`oa_ft_grep()`
+on a mixed PDF + XML folder (hits with section numbers). Unpaywall step: API and PDF links verified in isolation, but never the
+winning step in a natural run. Not tested: `fulltext::ft_get()`, Europe PMC records with embargoed or non-XML full text.

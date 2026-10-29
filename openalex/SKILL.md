@@ -82,8 +82,8 @@ joins across multiple fetches).
 OpenAlex caches PDFs and Grobid XML for 50M+ open-access works (`has_content`, `content_urls`, `content.openalex.org`; metered, about
 $0.01 per file, free key covers roughly 100 per day). It does not cover paywalled papers. To retrieve full texts, follow
 [references/fulltext.md](references/fulltext.md) and use `scripts/fetch_fulltext.R` (OA locations, then Unpaywall, then the metered
-API only if the user agrees). Searches never download full texts on their own: download only for papers the user names or an
-approved count (the script stops above 20 files without `confirmed = TRUE`). `ft_text()`/`ft_grep()` turn downloaded PDFs into
+API only if the user agrees); `fetch_epmc_xml()` pulls structured full-text XML for biomedical papers in PMC. Searches never download full texts on their own: download only for papers the user names or an
+approved count (the script stops above 20 files without `confirmed = TRUE`). `oa_ft_text()`/`oa_ft_grep()` turn downloaded PDFs and Europe PMC XML into
 searchable text. Do not use Sci-Hub or similar shadow libraries; the reference lists legal alternatives for paywalled
 papers.
 

@@ -98,23 +98,67 @@ fetch_fulltext <- function(ids, outdir = "fulltext", email = Sys.getenv("UNPAYWA
 
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
-# --- PDF to text, for screening and keyword search of already downloaded files ---
-# Text is cached next to each PDF as .txt (pages separated by a form feed). Scanned PDFs give
-# empty text (no OCR here).
-ft_text <- function(dir = "fulltext") {
-  stopifnot(requireNamespace("pdftools", quietly = TRUE))
-  pdfs <- list.files(dir, pattern = "\\.pdf$", full.names = TRUE)
-  txts <- sub("\\.pdf$", ".txt", pdfs)
-  for (i in seq_along(pdfs)) if (!file.exists(txts[i])) {
-    pages <- tryCatch(pdftools::pdf_text(pdfs[i]), error = function(e) character())
+# --- Europe PMC: full-text XML (JATS) for biomedical open-access papers ---
+# Complements fetch_fulltext(): structured sections, no PDF layout problems. Only works for records
+# in PMC (open-access subset or author manuscripts); others get status "not_in_pmc". Needs the CRAN
+# packages europepmc and xml2. Writes <PMCID>.xml plus manifest_epmc.tsv.
+# Usage: fetch_epmc_xml(c("10.7554/eLife.04711"), outdir = "fulltext")
+fetch_epmc_xml <- function(dois, outdir = "fulltext", pause = 0.5, max_files = 20, confirmed = FALSE) {
+  stopifnot(requireNamespace("europepmc", quietly = TRUE), requireNamespace("xml2", quietly = TRUE))
+  if (length(dois) > max_files && !confirmed)
+    stop(length(dois), " works requested (> max_files = ", max_files, "). Get approval, then rerun with ",
+         "confirmed = TRUE.", call. = FALSE)
+  dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
+  rows <- lapply(dois, function(d) {
+    Sys.sleep(pause)
+    d <- sub("^https?://(dx\\.)?doi\\.org/", "", d)
+    row <- function(status, pmcid = NA_character_, file = NA_character_)
+      data.frame(doi = d, pmcid = pmcid, status = status, file = file)
+    hit <- tryCatch(suppressMessages(europepmc::epmc_search(paste0("DOI:", d), limit = 1)),
+                    error = function(e) NULL)
+    if (is.null(hit) || nrow(hit) == 0) return(row("not_found_in_europepmc"))
+    # Records outside PMC have no pmcid column, or an NA value
+    pmcid <- if ("pmcid" %in% names(hit)) hit$pmcid[1] else NA_character_
+    if (is.na(pmcid)) return(row("not_in_pmc"))
+    dest <- file.path(outdir, paste0(pmcid, ".xml"))
+    if (file.exists(dest)) return(row("already_present", pmcid, dest))
+    x <- tryCatch(europepmc::epmc_ftxt(pmcid), error = function(e) NULL)
+    if (is.null(x)) return(row("pmc_no_fulltext_xml", pmcid))
+    xml2::write_xml(x, dest)
+    row("downloaded", pmcid, dest)
+  })
+  out <- do.call(rbind, rows)
+  write.table(out, file.path(outdir, "manifest_epmc.tsv"), sep = "\t", row.names = FALSE, quote = FALSE)
+  out
+}
+
+# --- Text from downloaded files, for screening and keyword search ---
+# Prefixed oa_ because attaching the fulltext package masks a bare ft_text().
+# PDFs: text cached next to each file as .txt, pages separated by a form feed. Scanned PDFs give
+# empty text (no OCR here). Europe PMC XML: one "page" per section (title, abstract, then each
+# top-level body section), so the page column of oa_ft_grep() is a section number there.
+oa_ft_text <- function(dir = "fulltext") {
+  src <- c(list.files(dir, pattern = "\\.pdf$", full.names = TRUE),
+           list.files(dir, pattern = "\\.xml$", full.names = TRUE))
+  txts <- sub("\\.(pdf|xml)$", ".txt", src)
+  for (i in seq_along(src)) if (!file.exists(txts[i])) {
+    pages <- if (grepl("\\.pdf$", src[i])) {
+      stopifnot(requireNamespace("pdftools", quietly = TRUE))
+      tryCatch(pdftools::pdf_text(src[i]), error = function(e) character())
+    } else {
+      stopifnot(requireNamespace("xml2", quietly = TRUE))
+      x <- xml2::read_xml(src[i])
+      c(xml2::xml_text(xml2::xml_find_first(x, "//article-title")),
+        xml2::xml_text(xml2::xml_find_all(x, "//abstract | //body/sec")))
+    }
     writeLines(paste(pages, collapse = "\f"), txts[i], useBytes = TRUE)
   }
-  data.frame(pdf = pdfs, txt = txts, chars = file.size(txts))
+  data.frame(source = src, txt = txts, chars = file.size(txts))
 }
 
 # Case-insensitive regex search over cached texts; returns file, page, and a context snippet
-ft_grep <- function(pattern, dir = "fulltext", width = 80) {
-  ft_text(dir)
+oa_ft_grep <- function(pattern, dir = "fulltext", width = 80) {
+  oa_ft_text(dir)
   res <- lapply(list.files(dir, pattern = "\\.txt$", full.names = TRUE), function(t) {
     pages <- strsplit(paste(readLines(t, warn = FALSE, encoding = "UTF-8"), collapse = "\n"), "\f", fixed = TRUE)[[1]]
     do.call(rbind, lapply(seq_along(pages), function(i) {
