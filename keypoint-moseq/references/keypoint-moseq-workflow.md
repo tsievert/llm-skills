@@ -7,12 +7,13 @@
 - [Output structure](#output-structure)
 - [Config keys that matter](#config-keys-that-matter)
 - [Kappa (stickiness) and syllable duration](#kappa-stickiness-and-syllable-duration)
+- [Preparing the data: still periods, filtering, trimming](#preparing-the-data-still-periods-filtering-trimming)
 - [Checking the fit](#checking-the-fit)
 - [Applying a fitted model to new recordings](#applying-a-fitted-model-to-new-recordings)
 - [Advanced options (from the docs, none run here)](#advanced-options-from-the-docs-none-run-here)
 - [Data requirements (FAQ)](#data-requirements-faq)
 
-Source: kpms stable docs (modeling tutorial for notebook version "0.8", FAQs, advanced topics, analysis) re-read 2026-10-29 against 0.8.3, plus runs on 0.6.6, 0.8.0 and (2026-10-29, scripts, CPU) 0.8.3. Re-check against the installed version. Since 0.8.0 the tutorial passes `metadata=metadata` to `init_model` and `**config()` (so `fps`) to `fit_model`, validates videos with `check_videos`, and starts with `kpms.check_installation(notebook_version="0.8")`. `scripts/kpms_headless_fit.py` passes `metadata=` and `fps=` (needs >= 0.8.0). Research record: `research/keypoint-moseq-ledger.md`.
+Source: kpms stable docs (modeling tutorial for notebook version "0.8", FAQs, advanced topics, analysis) re-read 2026-10-29 against 0.8.3, plus runs on 0.6.6, 0.8.0 and (2026-10-29, scripts, CPU) 0.8.3. Re-check against the installed version. Since 0.8.0 the tutorial passes `metadata=metadata` to `init_model` and `**config()` (so `fps`) to `fit_model`, validates videos with `check_videos`, and starts with `kpms.check_installation(notebook_version="0.8")`. `scripts/kpms_headless_fit.py` passes `metadata=` and `fps=` (needs >= 0.8.0). Research record: `research/keypoint-moseq-ledger.md` in the llm-skills repo.
 
 ## Version changes that matter (0.6.6 to 0.8.3)
 
@@ -110,8 +111,18 @@ The kappa value is not a config key you edit by hand: it is read at `init_model`
 
 - Kappa controls how long syllables last. Higher gives longer, fewer transitions. Tune it by the **median syllable duration**: docs give about 400 ms (12 frames at 30 fps) as a target for rodents. Adjust by factors of 10 or more and refit.
 - AR-HMM stage needs a higher kappa than the full model for similar durations. Docs example: 1e6 for the AR stage and 1e4 for the full model (starting values, not recommendations for your data).
+- The target is a duration in frames, so it depends on fps and species: `duration_s x fps` (about 400 ms is the rodent rule of thumb: 12 frames at 30 fps, 10 at 25, 8 at 20). Published studies chose kappa by matching 400 ms or a median of 10 frames and by checking grid movies; their values span 1e-6 to 1e10 (see `use-cases-and-literature.md`), and the docs scan stops at 1e7, which a maintainer called typically high enough but not always at 100-200 fps. Never reuse a kappa from another setup.
 - Fit until duration stabilises: under 10 iterations for AR-only, 10-50 for the full model, then run 200-500 iterations (defaults in the script: 50 AR + 500 full).
 - Automatic scan from the docs: `kappas = np.logspace(3, 7, 5)`; per kappa fit AR (50 iters) at kappa and the full model (200 iters) at kappa/10, then `kpms.plot_kappa_scan(kappas, project_dir, prefix)`. Run as an array, one kappa per task (adapt the fit script: it already takes `--kappa-ar` and `--kappa-full`, set the latter to a tenth of the former and name models by kappa).
+
+## Preparing the data: still periods, filtering, trimming
+
+Collected from upstream issues (#237, #186, #169, #188; not reproduced here, see `common-problems.md`):
+
+- **Long still periods** (sleep, inactivity) are hard for the autoregressive model and can end in NaNs. Build a mask from smoothed centroid speed and a minimum duration, and model the active periods (slice coordinates and confidences, keep the frame index offsets).
+- **Odd duration distribution** (many very short syllables although the median is right): drop unreliable keypoints and pre-filter the keypoints (median filter or a short Gaussian) before modelling.
+- **Trimming** (animal absent, shelter, start and end of a video): trim `coordinates` and `confidences` after loading and pass `video_frame_indexes` to calibration, grid movies, `overlay_keypoints_on_video` and (0.8.0+) `check_videos`.
+- **Jitter**: leave at the default unless NaNs appear; then raise one step at a time and inspect trajectory plots (rule 10 in `SKILL.md`).
 
 ## Checking the fit
 

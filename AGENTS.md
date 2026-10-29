@@ -66,7 +66,7 @@ skills verbatim (may contain personal data); anonymise any lesson drawn from it.
 ### Standing rules for all skills (added 2026-10-23)
 
 - **HPC skills run locally.** Every HPC-related skill (`hpc-*`, `deeplabcut-hpc`, and any skill that ships sbatch/cluster
-  scripts such as `animal-behaviour-tracking-analysis`) must state in a "Where this skill runs" section that the assistant
+  scripts such as `keypoint-moseq`) must state in a "Where this skill runs" section that the assistant
   is NOT intended to run on the cluster. It works locally on the user's computer and adapts scripts for the cluster.
   Information that only the cluster has (versions, partitions, `sacct`, logs, modules) is obtained by prompting the user to
   run the specific command in their own console/shell and paste back the output; never guess. New HPC skills must include
@@ -157,7 +157,8 @@ anything) is still open. Before starting a new one: follow the working rules abo
 | Skill | Status | Scope / still open |
 |---|---|---|
 | `mixed-models-glmm` | done | lme4/glmmTMB/DHARMa/performance/emmeans for repeated-measures trials |
-| `animal-behaviour-tracking-analysis` | partial | DLC metrics + keypoint-MoSeq done; open: validate immobility/freezing thresholds against manual scoring, real-data tests. SimBA/B-SOiD/VAME out of scope |
+| `animal-behaviour-tracking-analysis` | partial | DLC metrics and their statistics (kpms split out 2026-10-29); open: validate immobility/freezing thresholds against manual scoring, real-data tests. SimBA/B-SOiD/VAME out of scope |
+| `keypoint-moseq` | done, split from `animal-behaviour-tracking-analysis` 2026-10-29 | kpms fitting, kappa, known user problems (calibration table, NaNs, apply_model), species and frame-rate checks, syllable statistics, literature/use cases (`research/keypoint-moseq-ledger.md`). Open: GPU/Slurm runs, real data, `apply_model`, grid movies, calibration widget on 0.8.3, non-rodent use not found in the literature |
 | `reproducible-research-data` | done | FAIR data deposits, data dictionaries, renv/uv lockfiles, Quarto manuscripts |
 | `manuscript-figures-ggplot` | done | journal-ready ggplot2 figures (CVD-safe palettes, sizing, export) |
 | `stats-reporting-and-review` | done | Effect sizes/CIs (`effectsize`), power/sample size (`pwr` closed-form, `simr` for GLMMs via `lme4` with the `glmmTMB` refit seam flagged), pre-registration (`prereg` CRAN templates — `preregr` was archived from CRAN 2026-07-28, do not use), multiplicity (`stats::p.adjust`/`emmeans(adjust=)`, no gap), reviewer-response drafting (guidance only, no tool). `report()` output is documented as a scaffold only, never pasted in as finished prose, matching `manuscript-writing-quarto`'s rule; both skills now link to each other. The GAM results-prose convention (edf buckets, simultaneous-CI wording) reported 2026-10-24 was deliberately **not** duplicated here per the research ledger's recommendation — it stays a candidate addition to `gam-interpretation`, not yet made. Lints clean, no clash/link findings, `skills-ref validate` passes. |

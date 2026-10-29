@@ -1,6 +1,6 @@
 ---
 name: deeplabcut-hpc
-description: Sets up and runs DeepLabCut (DLC) pose estimation on HPC clusters and headless GPU machines - environment install (PyTorch/CUDA, no GUI), training and video-analysis batch scripts, pytorch_config.yaml settings, and DLC-specific failure modes. Use when the user mentions DeepLabCut, DLC, deeplabcut.train_network, analyze_videos, pose_cfg.yaml, pytorch_config.yaml, or markerless pose estimation, especially together with Slurm, a cluster, or GPUs. Also use when asked to retrain, resubmit, or build an orchestrator/sweep over existing DLC training or video-analysis submission scripts (shuffles, iterations, model variants, training-set fractions), even if the request itself does not say "DeepLabCut" or "Slurm" - check whether the scripts or project files import deeplabcut or call pytorch_config.yaml/pose_cfg.yaml before ruling this out. Combine with the generic hpc-* skills. For metrics or statistics on the tracked output use animal-behaviour-tracking-analysis.
+description: Sets up and runs DeepLabCut (DLC) pose estimation on HPC clusters and headless GPU machines - environment install (PyTorch/CUDA, no GUI), training and video-analysis batch scripts, pytorch_config.yaml settings, and DLC-specific failure modes. Use when the user mentions DeepLabCut, DLC, deeplabcut.train_network, analyze_videos, pose_cfg.yaml, pytorch_config.yaml, or markerless pose estimation, especially together with Slurm, a cluster, or GPUs. Also use when asked to retrain, resubmit, or build an orchestrator/sweep over existing DLC training or video-analysis submission scripts (shuffles, iterations, model variants, training-set fractions), even if the request itself does not say "DeepLabCut" or "Slurm" - check whether the scripts or project files import deeplabcut or call pytorch_config.yaml/pose_cfg.yaml before ruling this out. Combine with the generic hpc-* skills. For metrics or statistics on the tracked output use animal-behaviour-tracking-analysis; for behavioural syllables use keypoint-moseq.
 metadata:
   file_signals: 'import deeplabcut|pytorch_config\.yaml|pose_cfg\.yaml'
 ---
@@ -159,7 +159,8 @@ needed). Still not run on a real cluster.
 
 ## Related skills
 
-- `animal-behaviour-tracking-analysis`: what to do with the DLC output (likelihood masking, distance, speed, ROI time, keypoint-MoSeq syllables).
+- `animal-behaviour-tracking-analysis`: what to do with the DLC output (likelihood masking, distance, speed, ROI time).
+- `keypoint-moseq`: unsupervised behavioural syllables from the DLC keypoints.
 
 ## Explain the reasoning (teaching rule)
 

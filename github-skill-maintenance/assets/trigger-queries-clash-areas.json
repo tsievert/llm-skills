@@ -136,6 +136,24 @@
       "should_trigger": true,
       "split": "train",
       "observed_2026_10_23": "data-repository-readme (3/3)"
+    },
+    {
+      "id": 16,
+      "area": "kpms vs DLC metrics",
+      "query": "I fitted keypoint-MoSeq on my DLC mouse videos but the median syllable duration is far too short. How do I tune kappa?",
+      "expected": "keypoint-moseq",
+      "should_trigger": true,
+      "split": "train",
+      "observed_2026_10_29": "keypoint-moseq (3/3), no other domain skill"
+    },
+    {
+      "id": 17,
+      "area": "DLC metrics vs kpms",
+      "query": "From my DLC h5 files I need time spent immobile and distance travelled per mouse in an open field.",
+      "expected": "animal-behaviour-tracking-analysis",
+      "should_trigger": true,
+      "split": "validation",
+      "observed_2026_10_29": "animal-behaviour-tracking-analysis (3/3), no keypoint-moseq"
     }
   ]
 }

@@ -35,7 +35,8 @@ advice) or the wrong one loads. Duplicated advice inside bodies is the second ri
 | HPC | `hpc-gpu-jobs` | GPU directives, torchrun, ratios, monitoring | `hpc-resource-allocation` (sizing from measurements) |
 | HPC | `hpc-python-code` / `hpc-r-code` | code inside a job, per language | pipeline skills for multi-step workflows |
 | DLC | `deeplabcut-hpc` | training and video analysis | `animal-behaviour-tracking-analysis` |
-| DLC | `animal-behaviour-tracking-analysis` | metrics, kpms, statistics on tracked output | `deeplabcut-hpc` (the network itself) |
+| DLC | `animal-behaviour-tracking-analysis` | hypothesis-driven metrics (distance, speed, immobility, ROI) and statistics on tracked output | `deeplabcut-hpc` (the network itself), `keypoint-moseq` (syllables) |
+| DLC | `keypoint-moseq` | keypoint-MoSeq (kpms) fitting, kappa, known user problems, species and frame-rate checks, results.h5, syllable usage/bout/transition statistics | `animal-behaviour-tracking-analysis` (basic metrics, general statistics path), `deeplabcut-hpc` (tracking), `mixed-models-glmm` (GLMM workflow), generic `hpc-*` skills for jobs |
 | Deposit | `reproducible-research-data` | the deposit for one paper: contents, layout, repository and journal rules and timing, licences, staging and pre-upload checks, availability statement | `data-repository-readme` (README), `git-for-research-projects` (Git side), pipeline skills (workflow) |
 | Deposit | `data-repository-readme` | README, data dictionary, repository README pages | `reproducible-research-data` (where and what to deposit), `git-for-research-projects` |
 | Deposit | `git-for-research-projects` | gitignore, secrets, tags, CITATION, manifest of server data | `reproducible-research-data` (the deposit), `data-repository-readme` |

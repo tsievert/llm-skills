@@ -24,3 +24,11 @@ recipe-notes-formatter	r-reproducible-pipeline	no-backlink	The pipeline skill is
 web-fetching-r	openalex	no-backlink	openalex is the standing literature tool (user memory rule) and uses its own API client, not HTML scraping; it should not collect a pointer from every skill that merely distinguishes itself from it	2026-10-24
 stats-reporting-and-review	openalex	no-backlink	openalex is the standing literature tool (user memory rule), not a per-skill pointer	2026-10-26
 stats-reporting-and-review	gam-mgcv	no-backlink	gam-mgcv is the fitting-stage skill; reporting/effect-size/power concerns surface at the interpretation stage, where gam-interpretation already carries the backlink	2026-10-26
+keypoint-moseq	hpc-cluster-docs	no-backlink	Generic HPC skills should not list every domain skill; the kpms script and sbatch template are domain-specific	2026-10-29
+keypoint-moseq	hpc-job-scripts	no-backlink	Same: generic job-script skill stays free of domain links	2026-10-29
+keypoint-moseq	hpc-python-code	no-backlink	Same: generic language skill	2026-10-29
+keypoint-moseq	gam-mgcv	no-backlink	GAM users rarely need kpms; the pointer is for peri-stimulus syllable time courses only	2026-10-29
+keypoint-moseq	manuscript-figures-ggplot	no-backlink	Figure skill already points to animal-behaviour-tracking-analysis for behavioural summaries; kpms figures are one case of that	2026-10-29
+keypoint-moseq	mixed-models-glmm	no-backlink	mixed-models-glmm points to animal-behaviour-tracking-analysis, which points to keypoint-moseq; syllable models are a special case	2026-10-29
+keypoint-moseq	openalex	no-backlink	openalex is the standing literature tool (user memory rule), not a per-skill pointer	2026-10-29
+keypoint-moseq	python-reproducible-pipeline	no-backlink	Pipeline skill names animal-behaviour-tracking-analysis as its example workflow; kpms is the same workflow with one more step	2026-10-29

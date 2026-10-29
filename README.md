@@ -38,7 +38,7 @@ while building a skill, kept separate from the skills themselves.
 | Skill | Purpose |
 |---|---|
 | [agents-md-maintenance](agents-md-maintenance) | Audits and trims bloated `AGENTS.md`/`CLAUDE.md`/`DATABOT.md` project-memory files |
-| [animal-behaviour-tracking-analysis](animal-behaviour-tracking-analysis) | DeepLabCut pose output → behavioural metrics; keypoint-MoSeq syllable analysis |
+| [animal-behaviour-tracking-analysis](animal-behaviour-tracking-analysis) | DeepLabCut pose output → behavioural metrics (distance, speed, immobility, ROI) and their statistics |
 | [codebase-map](codebase-map) | Self-updating file inventory/dependency map for a large project |
 | [data-repository-readme](data-repository-readme) | READMEs and data dictionaries for research data deposits (Dryad, Zenodo, Figshare, OSF) |
 | [deeplabcut-hpc](deeplabcut-hpc) | DeepLabCut training/inference on HPC clusters and headless GPU machines |
@@ -53,6 +53,7 @@ while building a skill, kept separate from the skills themselves.
 | [hpc-r-code](hpc-r-code) | R batch jobs on HPC: parallelism, RNG, renv, job arrays |
 | [hpc-resource-allocation](hpc-resource-allocation) | Sizing CPU/memory/GPU/time requests; diagnosing OOM/TIMEOUT kills |
 | [job-opportunity-watch](job-opportunity-watch) | Periodic check of job-portal links against a personal profile |
+| [keypoint-moseq](keypoint-moseq) | keypoint-MoSeq behavioural syllables from DLC/SLEAP keypoints: fitting, known problems, species checks, syllable statistics |
 | [manuscript-figures-ggplot](manuscript-figures-ggplot) | Journal-ready ggplot2 figures (colour-blind-safe, sized, exported) |
 | [mixed-models-glmm](mixed-models-glmm) | Mixed models with glmmTMB/lme4, DHARMa diagnostics, emmeans contrasts |
 | [openalex](openalex) | Literature search, citation counts and alerts via the OpenAlex API |

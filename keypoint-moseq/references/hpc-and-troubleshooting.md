@@ -51,15 +51,15 @@ Environment variables in the template: `MPLBACKEND=Agg` (no display), `PYTHONUNB
 | Symptom | Fix |
 |---|---|
 | GPU out of memory, or kernel/job dies | One JAX process per GPU. Fit on a subset then `apply_model`; `parallel_message_passing=False`; `set_mixed_map_iters(4)`; lower `latent_dim`. On Windows a dead kernel is often OOM |
-| NaNs during fitting | Check `jax.config.read('jax_enable_x64')`; raise `jitter` from 1e-3 to 1e-2 or 1e-1; `parallel_message_passing=True`; check NaN proportions of the input; calibrate noise on a workstation |
+| NaNs during fitting | Check `jax.config.read('jax_enable_x64')`; raise `jitter` one step at a time from 1e-3 (1e-1 is the maximum and produced odd coordinates and plots in upstream thread #153; look at trajectory plots after each change, see rule 10 in `SKILL.md`); `parallel_message_passing=True`; check NaN proportions of the input; calibrate noise on a workstation |
 | "no kernel image is available" | `jax.default_backend()` is not `gpu`: check CUDA wheels, driver, and that the right env is active |
 | Many NaNs in some recordings | `check_nan_proportions(coordinates, bodyparts, breakdown=True)`; re-track with a lower threshold |
 | `libcudart` / `ptxas` not found | Seen in upstream issue #155 (older pip install on an HPC); use the `[cuda]` extra in a clean env, check driver |
 | Noise calibration errors | Interactive step; upstream issues #220 (calibration failing, skipping may cause NaNs) and #232 (frame outside video bounds) are related. Skipping it is what the headless script does; if NaNs appear, calibrate on a workstation and copy the resulting `slope`/`intercept` into `config.yml` |
-| Multi-GPU | Upstream issue #236 reports mixed multi-GPU fitting failing; prefer one GPU per task |
-| `apply_model` gives more syllables | Upstream issue #176 discusses this; expect syllable counts to depend on data |
+| Multi-GPU | Upstream issue #236: turn off parallel message passing, raise `mixed_map_iters` (maximum about n_recordings / n_gpus), or fit a subset and apply; otherwise one GPU per task |
+| `apply_model` gives more syllables | Upstream issue #176: apply in batches; csv/h5 hold all syllables, grid movies and plots only those above `min_frequency`. See `common-problems.md` |
 
-Issue numbers come from a GitHub search on 2026-10-23 (titles and gists only; resolutions were not read). Treat them as leads, not confirmed fixes.
+The first issue numbers above come from a GitHub search on 2026-10-23 (titles and gists only). Maintainer answers read on 2026-10-29 for calibration, NaNs, `apply_model`, trimming and multi-GPU are in [common-problems.md](common-problems.md). Treat all of them as leads, not confirmed fixes.
 
 ## Performance versus memory trade-off
 
