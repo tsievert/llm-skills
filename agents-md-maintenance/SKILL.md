@@ -88,6 +88,12 @@ sections below are ways of applying it systematically.
   ~50 to ~200 lines depending on the file's role (global vs. project) and the source; treat these
   as a prompt to look harder when well exceeded, not a hard limit to enforce mechanically.
 
+- **Windows CRLF memory files.** The edit tool can fail with "string not found" on CRLF files (reported in
+  2 projects, not reproduced here). Check first (`file AGENTS.md`); then either normalise to LF
+  (`sed -i 's/\r$//'`) before editing, or do a splice rewrite. Keep a backup outside the repo, archive pruned
+  sections verbatim into the history file before overwriting, and re-attach hook-owned blocks (for example
+  the codemap section) verbatim by their line markers.
+
 ## The subagent-delegation rule
 
 Every `AGENTS.md` this skill writes or reviews should carry some form of this standing rule, but

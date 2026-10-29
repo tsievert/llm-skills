@@ -40,6 +40,17 @@ include sp uncertainty.
   allocation errors in about 10 percent of fits; the same seeds succeeded when retried with less contention.
   Budget memory per worker, retry allocation errors once, and keep the error text per seed.
 
+## Cluster-robust SEs and coverage simulations (reported, not reproduced)
+
+- `sandwich::bread()` on a `bam`/`gam` returns the penalised bread (`n * Vp / scale`) while `estfun()` is
+  unpenalised, so `vcovCL()` is conditional on the smoothing parameters. In one synthetic simulation
+  (repeated sessions within animals, 50 data sets) it was too wide by session (SE about twice the empirical
+  SD) and about 1.14 times by animal with poor simultaneous coverage; a bootstrap by the clustering unit
+  with fixed `sp` (fREML refit above) was best calibrated (about 0.93). One design only; treat as a caution.
+- A 9-data-set pilot looked well calibrated (SE ratio 1.04 to 1.14); 50 data sets gave 0.83 to 0.93. Report
+  the Monte Carlo SE of a coverage estimate (about `sqrt(p * (1 - p) / n)`) and avoid conclusions from
+  fewer than about 30 replicates.
+
 ## Checking that select = TRUE penalised a term out
 
 ```r
