@@ -48,7 +48,9 @@ matched by multiple actual arguments" (reported by one project). Real signature 
 usecase_add(skills = c("gam-mgcv", "gam-interpretation"),
             summary = "fit a bam GAM to 40 animals x 3 sessions of continuous data",
             outcome = "worked", friction = "none", file = "<path from the hook message, if any>")
-``` If the hook reminder names a file,
+```
+
+If the hook reminder names a file,
 write the use-case entry first, then any lesson entries into the same file.
 
 ## Privacy (hard rules)
