@@ -145,3 +145,9 @@ Keep the published version (journal/conference `type == "article"`, not
   also work in the non-exact `title_and_abstract.search` and `title.search` (no wildcards there).
 - OpenAlex's `type` and `is_paratext` fields are coarse — see conference
   papers above.
+
+## Finding use cases among citing works
+
+- `filter=cites:<W-id>,fulltext.search:<term>` returns citing works whose full text mentions the term; page with `cursor` to get all.
+  A full-text mention is not proof of use (reference lists and background text match), and some works lack abstracts, so read the
+  methods before claiming a paper used the method.

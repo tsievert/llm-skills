@@ -22,8 +22,11 @@ library(httr2)
       req_error(is_error = \(r) FALSE)
     if (length(query)) req <- do.call(req_url_query, c(list(req), query))
     resp <- req_perform(req, path = dest)
-    resp_status(resp) == 200 && .ft_is_pdf(dest)
-  }, error = function(e) FALSE)
+    ok <- resp_status(resp) == 200 && .ft_is_pdf(dest)
+    # req_perform(path =) writes whatever came back (often an HTML landing page); never leave it as .pdf
+    if (!ok) unlink(dest)
+    ok
+  }, error = function(e) { unlink(dest); FALSE })
 }
 
 # Resolve DOIs / OpenAlex IDs to metadata needed for retrieval
@@ -138,8 +141,11 @@ fetch_epmc_xml <- function(dois, outdir = "fulltext", pause = 0.5, max_files = 2
 # empty text (no OCR here). Europe PMC XML: one "page" per section (title, abstract, then each
 # top-level body section), so the page column of oa_ft_grep() is a section number there.
 oa_ft_text <- function(dir = "fulltext") {
-  src <- c(list.files(dir, pattern = "\\.pdf$", full.names = TRUE),
-           list.files(dir, pattern = "\\.xml$", full.names = TRUE))
+  pdfs <- list.files(dir, pattern = "\\.pdf$", full.names = TRUE)
+  bad <- pdfs[!vapply(pdfs, function(p) identical(readBin(p, "raw", 5), charToRaw("%PDF-")), NA)]
+  if (length(bad)) warning("Skipping ", length(bad), " .pdf file(s) without a %PDF- signature (HTML?): ",
+                           paste(basename(bad), collapse = ", "), call. = FALSE)
+  src <- c(setdiff(pdfs, bad), list.files(dir, pattern = "\\.xml$", full.names = TRUE))
   txts <- sub("\\.(pdf|xml)$", ".txt", src)
   for (i in seq_along(src)) if (!file.exists(txts[i])) {
     pages <- if (grepl("\\.pdf$", src[i])) {

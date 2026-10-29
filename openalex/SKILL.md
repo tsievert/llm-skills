@@ -31,6 +31,9 @@ code or a local data frame:
 | `read_docs` | Pull the canonical OpenAlex documentation (OQL syntax, API quick reference, curation API) instead of guessing syntax from memory. |
 | `get_my_account` / `claim_author_profile` / `find_candidate_works` / `submit_curations` / `list_my_curations` | Managing the *user's own* author profile — only relevant if the user asks to fix their own OpenAlex record. |
 
+If no `openalex` tools appear in your tool list (reported in two sessions), do not
+retry them: go straight to the R path below.
+
 The server needs the user to sign in once (OAuth) before these tools work;
 if it shows as "Sign in required" in the Session/MCP panel, tell the user to
 sign in there rather than attempting to route around it. Every `search_works`

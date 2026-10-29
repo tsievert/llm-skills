@@ -104,7 +104,9 @@ missed, rather than re-deriving the whole triage from scratch.
    disposition other than `park` — the parked entry is what future runs need to see, and
    splitting the file risks losing the resolved entries' context. Never truncate or edit `usage.tsv`;
    instead record the watermark with `triage_watermark_set(max(U$time))` (only once the
-   user has seen the triage table; skip it if `U` is empty). The next run then counts
+   user has seen the triage table; skip it if `U` is empty). Do this before deleting the
+   work folder, since `U` is read from its `usage.tsv` copy; if already deleted, take the
+   last timestamp from the real `~/.posit/lessons/usage.tsv` with bash. The next run then counts
    only newer rows, so months-apart runs do not double-count. Add a Log entry to `HISTORY.md`
    (counts, outcomes, what was not verified) with generic wording only. Commit skill
    edits, never lesson files.
