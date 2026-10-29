@@ -2,6 +2,7 @@
 name: keypoint-moseq
 description: Fits and interprets keypoint-MoSeq (kpms), unsupervised behavioural syllables from DeepLabCut, SLEAP or other 2D/3D keypoint tracking. Covers headless resumable fitting on GPU/HPC, kappa and syllable-duration tuning, species and frame-rate checks, noise calibration and other known user problems, grid movies, apply_model to new data, results.h5, and syllable usage, bout and transition analysis in R or Python. Use when the user mentions keypoint-MoSeq, kpms, MoSeq, behavioural syllables, kappa, results.h5, jax-moseq or syllable transitions. Not for depth-camera MoSeq (moseq2), B-SOiD, VAME or SimBA. For distance, speed, zone time or freezing from DLC output use animal-behaviour-tracking-analysis; for DLC tracking itself use deeplabcut-hpc.
 metadata:
+  prompt_signals: '\bkpms\b|keypoint[-_]moseq|\bjax[-_]moseq\b|\bkappa\b[^.?!\n]{0,60}\bsyllable'
   file_signals: 'import keypoint_moseq|from keypoint_moseq|\bjax_moseq\b|\bkpms\.[a-z_]+\('
 ---
 

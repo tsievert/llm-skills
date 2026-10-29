@@ -2,6 +2,7 @@
 name: hpc-job-scripts
 description: 'Writes, reviews, and debugs HPC batch submission scripts (primarily Slurm sbatch; translates to PBS/LSF/SGE using site docs). Covers #SBATCH directives, log file and console output setup, job arrays, dependencies, requeue and signal handling, and a bundled linter that catches silent failures such as CRLF line endings or a missing output directory. Use when the user asks for a submission script, job script, sbatch file, array job, an orchestrator or wrapper that submits a batch, sweep, or range of training/analysis runs with varying parameters instead of hand-editing one script each time, or asks why a cluster job failed to start, produced no output, or lost its log. Also applies when an existing script the user points to already contains #SBATCH lines or an sbatch/srun call, even if their request does not name Slurm or HPC. For OUT_OF_MEMORY or TIMEOUT kills use hpc-resource-allocation; for logging and signal handling inside Python code use hpc-python-code.'
 metadata:
+  prompt_signals: '#SBATCH|\bsbatch\b|\bsrun\b'
   file_signals: '#SBATCH|\bsbatch\b|\bsrun\b'
 ---
 

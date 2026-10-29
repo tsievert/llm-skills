@@ -378,3 +378,28 @@ whether naming the skill in the escalated block's reason actually steers the ass
 model loaded `skill-lessons` for an explicit request that named `deeplabcut-hpc` in free text
 but the escalation path draws the name from a controlled marker file, not free text — but this
 is a hypothesis, not yet observed).
+
+### Prompt signals declared on tool/code-vocabulary skills (added 2026-10-29)
+
+Besides `staged-assistant-workflow`, `prompt_signals` is now declared on skills whose users typically paste code or
+error text into the prompt, using distinctive tokens only. Where a skill already had `file_signals`, the prompt pattern
+mirrors it (plus a few prompt-only terms).
+
+| Skill | `prompt_signals` |
+|---|---|
+| `keypoint-moseq` | `'\bkpms\b\|keypoint[-_]moseq\|\bjax[-_]moseq\b\|\bkappa\b[^.?!\n]{0,60}\bsyllable'` |
+| `deeplabcut-hpc` | `'deeplabcut\|DeepLabCut\|\banalyze_videos\b\|\btrain_network\b\|pytorch_config\.yaml\|pose_cfg\.yaml'` |
+| `hpc-job-scripts` | `'#SBATCH\|\bsbatch\b\|\bsrun\b'` |
+| `hpc-resource-allocation` | `'OUT_OF_MEMORY\|\boom-kill\b\|DUE TO TIME LIMIT\|\bseff\b\|\bsacct\b'` |
+| `mixed-models-glmm` | `'\b(glmmTMB\|glmer\|lmer\|lmerTest\|DHARMa)\b\|boundary \(singular\) fit'` |
+| `gam-mgcv` | `'\bmgcv\b\|\bgam\.check\b\|\bbam\(\|\bgratia\b'` |
+| `r-reproducible-pipeline` | `'_targets\.R\|\btar_make\b\|\btar_target\b\|\bcrew\.cluster\b'` |
+| `python-reproducible-pipeline` | `'\bsnakemake\b\|\bSnakefile\b\|\buv\.lock\b'` |
+
+Deliberately not added: `hpc-gpu-jobs`, `hpc-python-code`, `hpc-r-code` (a pasted Slurm message would nudge four HPC
+skills at once; the nudge budget is per skill, so noise multiplies), `animal-behaviour-tracking-analysis` (no distinctive
+token, its vocabulary is generic: "distance", "freezing"), and skills defined by task rather than vocabulary
+(`openalex`, `manuscript-*`, `data-repository-readme`). Caveat: the scan covers the whole raw payload, so a `cwd` path
+containing a signal word also matches. Tested with synthetic `UserPromptSubmit` payloads (kpms code, glmmTMB singular
+fit, oom-kill, `analyze_videos` nudge; "what is a mean" silent; a repeat kpms match escalates silently). `weekly` in an
+unrelated prompt still nudges `staged-assistant-workflow` (the known calibration gap above). Not tested live.

@@ -1,6 +1,8 @@
 ---
 name: python-reproducible-pipeline
 description: 'Builds reproducible multi-step analysis pipelines around Python with uv (pyproject.toml, uv.lock, pinned Python) and Snakemake, including R or shell steps, parameters and seeds in config, logs and benchmarks, Snakemake reports, and re-running the whole chain on Slurm with the Slurm executor plugin. Compares Snakemake with pytask, Nextflow, DVC, Prefect and Dagster. Ships a tested project template and a static checker. For an R-centred project (targets, renv) use r-reproducible-pipeline; for the code inside one cluster job use hpc-python-code. Use when the user wants to turn scripts into a re-runnable workflow, pin or lock a Python environment, rerun only changed steps, run a pipeline on a cluster, or asks about Snakemake, uv lock, workflow managers or reproducible Python analysis.'
+metadata:
+  prompt_signals: '\bsnakemake\b|\bSnakefile\b|\buv\.lock\b'
 ---
 
 # Reproducible Python pipelines (uv + Snakemake)

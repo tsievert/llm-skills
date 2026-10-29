@@ -3,6 +3,7 @@ name: gam-mgcv
 description: Fits and checks generalized additive models (GAMs) and generalized additive mixed models (GAMMs) in R with mgcv and related packages (gratia, gamm4, scam, DHARMa, brms). Covers choice of smooths and basis dimension k, REML, families, random-effect smooths and hierarchical GAMs, by-variables and interactions, autocorrelation, bam for large data, and diagnostics (gam.check, appraise, concurvity). Use when the user mentions GAM, GAMM, mgcv, gam(), bam(), s(), te(), ti(), smooths, splines, edf, or modelling non-linear effects. For plotting, interpreting or reporting a fitted GAM use gam-interpretation; for mixed models without smooth terms use mixed-models-glmm.
 license: MIT
 metadata:
+  prompt_signals: '\bmgcv\b|\bgam\.check\b|\bbam\(|\bgratia\b'
   author: tsievert
   version: "1.0"
 ---

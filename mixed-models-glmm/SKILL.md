@@ -2,6 +2,7 @@
 name: mixed-models-glmm
 description: Fits, checks, compares and reports linear and generalized linear mixed models in R with glmmTMB, lme4/lmerTest, DHARMa, performance and emmeans. Covers repeated-measures and nested designs (animals, trials, sessions), choice of family (Gamma, binomial, beta-binomial, negative binomial, zero-inflated, Gaussian on log scale), offsets, random intercepts and slopes, singular fits and convergence, overdispersion, simulated-residual diagnostics, LRT/AIC model comparison, repeatability (ICC), post hoc contrasts on the response scale, and multiplicity. Use when the user mentions GLMM, LMM, glmmTMB, lme4, lmer, random effects, repeated measures, pseudoreplication, overdispersion, zero inflation, DHARMa, emmeans, or ICC. For smooth non-linear effects use gam-mgcv instead.
 metadata:
+  prompt_signals: '\b(glmmTMB|glmer|lmer|lmerTest|DHARMa)\b|boundary \(singular\) fit'
   version: "1.0"
 ---
 

@@ -2,6 +2,7 @@
 name: hpc-resource-allocation
 description: Chooses and corrects HPC job resource requests (CPUs, memory, GPUs, wall time, nodes, array size) using a measure-then-size workflow with sacct/seff, and diagnoses jobs that were killed for memory or time, stayed pending, or wasted resources. Use when the user asks how much memory, time, cores, or GPUs to request, how to tune an sbatch script, why a job hit OUT_OF_MEMORY or TIMEOUT, why it is slow or stuck pending, or how to batch many short jobs. GPU launch syntax is in hpc-gpu-jobs and script structure in hpc-job-scripts.
 metadata:
+  prompt_signals: 'OUT_OF_MEMORY|\boom-kill\b|DUE TO TIME LIMIT|\bseff\b|\bsacct\b'
   file_signals: 'OUT_OF_MEMORY|\boom-kill\b|\bsacct\b|\bseff\b'
 ---
 

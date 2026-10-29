@@ -1,6 +1,8 @@
 ---
 name: r-reproducible-pipeline
 description: 'Builds reproducible multi-step R analysis pipelines with the targets package, renv lockfiles and Quarto reports (tarchetypes::tar_quarto), including Python steps through uv, YAML config, seeds, dynamic branching per sample or animal, and re-running the whole chain on a Slurm cluster with crew.cluster. Compares targets with Snakemake and other tools. For a Python-centred or mixed non-R workflow use python-reproducible-pipeline; for a plain Rscript job use hpc-r-code. Ships a tested project template and a static checker (check_targets_project.R). Use when the user wants to turn R scripts into a re-runnable pipeline, rerun only what changed, pin R packages with renv, make a Quarto report depend on analysis results, run targets on a cluster, or asks about targets, _targets.R, tar_make, renv.lock, crew or reproducible R analysis.'
+metadata:
+  prompt_signals: '_targets\.R|\btar_make\b|\btar_target\b|\bcrew\.cluster\b'
 ---
 
 # Reproducible R pipelines (targets + renv + Quarto)
