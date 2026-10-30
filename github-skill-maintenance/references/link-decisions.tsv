@@ -32,3 +32,5 @@ keypoint-moseq	manuscript-figures-ggplot	no-backlink	Figure skill already points
 keypoint-moseq	mixed-models-glmm	no-backlink	mixed-models-glmm points to animal-behaviour-tracking-analysis, which points to keypoint-moseq; syllable models are a special case	2026-10-29
 keypoint-moseq	openalex	no-backlink	openalex is the standing literature tool (user memory rule), not a per-skill pointer	2026-10-29
 keypoint-moseq	python-reproducible-pipeline	no-backlink	Pipeline skill names animal-behaviour-tracking-analysis as its example workflow; kpms is the same workflow with one more step	2026-10-29
+application-style-coach	manuscript-writing-quarto	no-backlink	Manuscript structure and linting concern papers, not application documents; the coach already points to it for spelling/grammar tooling	2026-10-30
+application-style-coach	stats-reporting-and-review	no-backlink	Reviewer-response drafting is a different genre; coach names it only to mark the boundary	2026-10-30

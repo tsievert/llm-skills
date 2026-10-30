@@ -63,6 +63,13 @@ earlier conversation did: the run folder, `summary.md` and `jw_status()` are the
 - **The profile decides**; the defaults in `classification.md` apply only where it is silent. Hard rules
   (FTE, language, geography) stay applied; a near-miss shows what relaxing one would cost, and relaxing it is the
   user's call.
+- **Check the local-language page.** Even when this skill's material and the English ad are in English, the
+  version in the language of the target country (for example the Finnish, Swedish or German ad, department
+  page or funder guide) is often more detailed than the English translation: extra requirements, dates,
+  language requirements, application documents, contact persons. When verifying a shortlisted vacancy, look for
+  the local-language version (a "suomeksi", "på svenska" or "Deutsch" switch, or search the title in that language)
+  and say which language you read; if you cannot read it, ask the user to check it. Do not treat the English
+  text as complete.
 - **Nobody edits state files by hand.** Change links and profile only through the R functions (below).
 - **Delegation.** The bulk title skim of s4 on a baseline week (about 1,000 tier-2 titles) may go to a
   lower-effort subagent; on later, small queues do it inline. Details in the s4 reference.
@@ -95,6 +102,7 @@ read first, not what is relevant. Findings are as current as the last successful
   for the one-off, non-recurring "pull a table off a page" case instead, use that skill directly.
 - `social-research-search`: social discovery in stage s5 with the tag ledger.
 - `openalex`: checking a group or PI publication record when judging scientific fit.
+- `application-style-coach`: once the user has picked a vacancy, chat-only style and layout feedback on the cover letter, CV, statement or portfolio.
 
 ## Explain the reasoning (teaching rule)
 

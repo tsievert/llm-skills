@@ -37,6 +37,7 @@ duplicating it here.
   blocked, search, meta, not researched), short **facts** with the source URL, **open research items**, and a dated **log**.
   Before searching again, read the ledger and do not repeat a search that has a row. Never record tokens or secrets. Mention
   the ledger path in the reply so the user can find it.
+- **Source-quality rules for all research (standing rule, added 2026-10-30).** (1) Ignore commercial sites (resume/CV services, paid coaching, editing or grant-writing companies, product blogs): they often sell something and their advice is often snake oil. Prefer funders, universities, learned bodies, regulators, primary documents and peer-reviewed work. (2) Ignore sites with clear signs of LLM-generated text (stock phrasing, generic filler, templated sample letters, invented-looking examples). (3) Ignore guidance tuned for a US audience (US-specific norms, funders, systems); general-purpose guidance is fine. Record any source skipped for these reasons in the ledger with status 'skipped: commercial/LLM-like/US'. Skill-specific scope limits (e.g. postdoc and tenure track only) sit in that skill's `SKILL.md` and ledger.
 - Conventions: one dated section per research round; record sources fetched, local test results, bugs/gotchas found, open
   questions. R run from the assistant cannot write to the assistant scratch dir; use the git-ignored `tmp-examples/` for tests
   and delete afterwards.
@@ -174,6 +175,7 @@ anything) is still open. Before starting a new one: follow the working rules abo
 | `python-reproducible-pipeline` | mostly done | uv + Snakemake, HPC via Slurm executor plugin |
 | `codebase-map` | done | per-project inventory/codemap/depends files, self-updating hook (hook deliberately not registered globally — needs per-project opt-in) |
 | `staged-assistant-workflow` | done, unproven | stage table/status-function/file-hand-off/gate pattern for recurring or long assistant-judgment workflows that can't run headless as a `targets`/Snakemake DAG; built from one real workflow (`job-opportunity-watch`'s refactor) on a `new-skill-suggestion` with only one report — promoted early at the user's explicit request rather than waiting for a second case. Open: everything, since it has not yet been applied to a second workflow. |
+| `application-style-coach` | done (drafted 2026-10-30), unproven | Chat-only style/framing/layout coaching for academic applications (English): TENK CV checks, cover letter, research statement/plan, teaching portfolio, publication list; read-only `scripts/style_flags.R`; research in `research/application-style-coach-ledger.md`. Open: live-conversation trigger test, real applications, PDF reader path, Helsinki ad only via page summary, optional OpenAlex pass on proposal language (O12). |
 
 ## History
 
