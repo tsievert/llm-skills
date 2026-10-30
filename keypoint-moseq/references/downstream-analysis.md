@@ -54,13 +54,13 @@ Short version here; syllable-specific tests and models are in [syllable-statisti
 
 ```r
 library(glmmTMB); library(emmeans)
-fit_one <- function(d) {
+fit_syllable_usage <- function(d) {
   m <- glmmTMB(n_bouts ~ group + offset(log(total)) + (1 | animal), family = nbinom2, data = d)
   as.data.frame(pairs(emmeans(m, ~ group), reverse = TRUE, type = "response"))   # rate ratios
 }
 # usage must contain `total` = total bouts (or frames) per recording
 res <- do.call(rbind, lapply(split(usage, usage$syllable),
-                             \(d) cbind(syllable = d$syllable[1], fit_one(d))))
+                             \(d) cbind(syllable = d$syllable[1], fit_syllable_usage(d))))
 res$p_adj <- p.adjust(res$p.value, "BH")
 ```
 

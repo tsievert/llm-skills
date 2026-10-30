@@ -86,7 +86,7 @@ test_that("html text drops scripts and styles", {
 })
 
 # ---- stage functions with injected network -------------------------------------------------------
-new_root <- function() { r <- tempfile("jwroot"); dir.create(r); r }
+new_tmp_root <- function() { r <- tempfile("jwroot"); dir.create(r); r }
 WK1 <- "2026-W43"; WK2 <- "2026-W44"
 LINKS <- data.frame(n = 1:4, id = c("a1", "b2", "c3", "d4"), section = "s", url = paste0("https://", c("a", "b", "c", "c"), ".example/jobs"),
                     type = c("portal", "portal", "search_engine", "portal"), dup_of = c(NA, NA, NA, 3L), stringsAsFactors = FALSE)
@@ -97,7 +97,7 @@ fake_probe <- function(texts) function(links, ...) list(
   sources = data.frame(id = c("a1", "c3"), n = c(1L, 3L), status = c("ok", "search_engine"), http = c(200L, NA), final_url = NA,
                        text_hash = NA, n_anchors = c(length(texts), 0L), note = c(NA, "some query")),
   anchors = anc(texts), links = links)
-dir_with_profile <- function() { r <- new_root(); dir.create(file.path(r, "runs"))
+dir_with_profile <- function() { r <- new_tmp_root(); dir.create(file.path(r, "runs"))
   yaml::write_yaml(PROFILE, file.path(r, "job_profile.yml")); r }
 
 test_that("s1: one row per unique link, lost probes become error rows, anchors side file, expected_n", {

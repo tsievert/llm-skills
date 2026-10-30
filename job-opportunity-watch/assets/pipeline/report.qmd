@@ -37,7 +37,7 @@ d <- jw_summary_data(params$week, params$root, as.Date(params$today))
 esc_html <- function(v) { v <- ifelse(is.na(v), "", as.character(v)); v <- gsub("&", "&amp;", v, fixed = TRUE)
   v <- gsub("<", "&lt;", v, fixed = TRUE); v <- gsub(">", "&gt;", v, fixed = TRUE); v }
 link_col <- function(v) ifelse(is.na(v) | !nzchar(v), "", sprintf('<a href="%s" target="_blank">open</a>', esc_html(v)))
-tbl <- function(x, url_col = "url") {
+report_table <- function(x, url_col = "url") {
   if (is.null(x) || !nrow(x)) return(htmltools::p("none"))
   if (url_col %in% names(x)) x[[url_col]] <- link_col(x[[url_col]])
   for (col in setdiff(names(x), url_col)) if (is.character(x[[col]])) x[[col]] <- esc_html(x[[col]])
@@ -62,13 +62,13 @@ parquet files directly with `arrow` for anything that needs filtering.
 ## New opportunities (best class first)
 
 ```{r}
-tbl(d$new[, c("class", "status", "employer", "title", "country", "track", "deadline", "notes", "url")])
+report_table(d$new[, c("class", "status", "employer", "title", "country", "track", "deadline", "notes", "url")])
 ```
 
 ## Closing within 14 days
 
 ```{r}
-tbl(d$soon[, c("class", "status", "employer", "title", "deadline", "url")])
+report_table(d$soon[, c("class", "status", "employer", "title", "deadline", "url")])
 ```
 
 ## Near-misses
@@ -76,7 +76,7 @@ tbl(d$soon[, c("class", "status", "employer", "title", "deadline", "url")])
 Items that fail exactly one hard rule.
 
 ```{r}
-tbl(d$near_miss[, c("employer", "title", "near_miss_rule", "why", "weakest_dimension", "evidence_url")], url_col = "evidence_url")
+report_table(d$near_miss[, c("employer", "title", "near_miss_rule", "why", "weakest_dimension", "evidence_url")], url_col = "evidence_url")
 ```
 
 ## Sources
@@ -84,7 +84,7 @@ tbl(d$near_miss[, c("employer", "title", "near_miss_rule", "why", "weakest_dimen
 Flag and status per source.
 
 ```{r}
-tbl(d$sources[, c("section", "type", "status", "flag", "n_anchors", "n_job_like", "note", "url")])
+report_table(d$sources[, c("section", "type", "status", "flag", "n_anchors", "n_job_like", "note", "url")])
 ```
 
 ## Discovery
@@ -92,7 +92,7 @@ tbl(d$sources[, c("section", "type", "status", "flag", "n_anchors", "n_job_like"
 Social and web leads.
 
 ```{r}
-tbl(d$s5[, c("platform", "query", "query_type", "lead_status", "text", "url", "note")])
+report_table(d$s5[, c("platform", "query", "query_type", "lead_status", "text", "url", "note")])
 ```
 
 ## Run log
@@ -100,11 +100,11 @@ tbl(d$s5[, c("platform", "query", "query_type", "lead_status", "text", "url", "n
 ### Stages
 
 ```{r}
-tbl(data.frame(stage = names(d$stage_status), status = unname(d$stage_status)))
+report_table(data.frame(stage = names(d$stage_status), status = unname(d$stage_status)))
 ```
 
 ### Problems recorded this week (generic wording)
 
 ```{r}
-tbl(d$problems[, c("stage", "severity", "code", "message", "n", "reported")])
+report_table(d$problems[, c("stage", "severity", "code", "message", "n", "reported")])
 ```

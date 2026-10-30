@@ -71,13 +71,13 @@ usage$total <- ave(usage$n_bouts, usage$recording, FUN = sum)
 usage$syllable <- factor(usage$syllable)
 
 # 4a. one model per syllable (count with exposure offset), then adjust over syllables
-fit_one <- function(d) {
+fit_syllable_demo <- function(d) {
   m <- glmmTMB(n_bouts ~ group + day + sex + offset(log(total)) + (1 | animal), family = nbinom2, data = d)
   p <- unname(anova(update(m, . ~ . - group), m)$`Pr(>Chisq)`[2])          # overall group effect for this syllable
   ct <- as.data.frame(contrast(emmeans(m, ~ group), "trt.vs.ctrl", type = "response"))   # rate ratios vs control
   data.frame(syllable = d$syllable[1], lrt_p = p, ct[, c("contrast", "ratio", "SE")])
 }
-res <- do.call(rbind, lapply(split(usage, usage$syllable), fit_one))
+res <- do.call(rbind, lapply(split(usage, usage$syllable), fit_syllable_demo))
 sp <- unique(res[, c("syllable", "lrt_p")])      # adjust over syllables, not over contrast rows
 sp$p_adj <- p.adjust(sp$lrt_p, "BH")
 res <- merge(res, sp[, c("syllable", "p_adj")], by = "syllable")
