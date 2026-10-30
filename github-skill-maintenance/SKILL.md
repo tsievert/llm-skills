@@ -26,7 +26,12 @@ and say what it would change.
    lint_skills()                     # or lint_skills(skills = "gam-mgcv")
    ```
    Errors break the spec or a standing rule, warnings are likely problems, info is for
-   judgement. Output columns: skill, level, check, message.
+   judgement. Output columns: skill, level, check, message. The `shadowed-name` check parses each
+   `.R` file under `scripts/` and `assets/` and flags top-level functions named like an export of base R's
+   default packages (warn) or of a common installed package (info), because sourcing such a script
+   silently replaces the original (e.g. a test helper called `pf` masks `stats::pf`). Rename to a
+   skill prefix or a more specific verb; `%||%` is exempt, and code blocks in `.md` files and
+   non-function objects are not checked.
 1b. **Cross-skill links.** Skills should point to each other where a user would plausibly need the
    neighbour, and links should go both ways unless there is a reason not to:
    ```r

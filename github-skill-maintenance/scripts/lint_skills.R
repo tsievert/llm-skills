@@ -52,6 +52,44 @@ split_frontmatter <- function(lines) {
        body = lines[(end + 1):length(lines)], body_start = end + 1)
 }
 
+# Top-level `name <- function(...)` definitions in an R script that share a name with an export
+# of base R's default packages ("warn": breaks calls in every session) or of another installed
+# package from `shadow_pkgs` ("info": only matters when that package is attached). Sourcing such a
+# script into the global environment silently replaces the original. `%||%` is exempt (identical
+# semantics in base R >= 4.4, purrr and rlang). Only installed packages are checked; non-function
+# objects are ignored because R skips them when looking up a function call.
+shadow_pkgs <- c("dplyr", "tidyr", "readr", "stringr", "purrr", "tibble", "ggplot2", "lubridate",
+                 "forcats", "httr2", "httr", "rvest", "xml2", "jsonlite", "gh", "yaml", "cli",
+                 "rlang", "withr", "fs", "glue", "knitr", "quarto", "targets", "tarchetypes",
+                 "testthat", "devtools", "usethis", "patchwork", "glmmTMB", "lme4", "mgcv",
+                 "gratia", "DHARMa", "emmeans", "performance", "effectsize", "openalexR")
+.shadow_cache <- new.env(parent = emptyenv())
+shadowed_names <- function(path) {
+  if (!exists("exports", envir = .shadow_cache, inherits = FALSE)) {
+    pk <- c(base = c("base", "stats", "utils", "graphics", "grDevices", "methods", "tools"),
+            other = intersect(shadow_pkgs, rownames(utils::installed.packages())))
+    ex <- lapply(pk, function(p) tryCatch(getNamespaceExports(p), error = function(e) character()))
+    names(ex) <- pk
+    .shadow_cache$exports <- ex
+    .shadow_cache$core <- c("base", "stats", "utils", "graphics", "grDevices", "methods", "tools")
+  }
+  exprs <- tryCatch(parse(path, keep.source = FALSE), error = function(e) NULL)
+  hits <- list()
+  for (e in exprs) {
+    if (!is.call(e) || !as.character(e[[1]])[1] %in% c("<-", "=") ||
+        !(is.name(e[[2]]) || is.character(e[[2]])) ||
+        !(is.call(e[[3]]) && identical(e[[3]][[1]], as.name("function")))) next
+    nm <- as.character(e[[2]])
+    if (nm == "%||%") next
+    where <- names(.shadow_cache$exports)[vapply(.shadow_cache$exports, function(x) nm %in% x, NA)]
+    if (!length(where)) next
+    core <- any(where %in% .shadow_cache$core)
+    hits[[length(hits) + 1]] <- list(name = nm, level = if (core) "warn" else "info",
+      where = paste0(paste0(where, "::", nm), collapse = ", "))
+  }
+  hits
+}
+
 lint_one_skill <- function(dir) {
   skill <- basename(dir)
   f <- new_findings()
@@ -231,6 +269,10 @@ lint_one_skill <- function(dir) {
     if (grepl("\\.(sh|sbatch)$", p) && nzchar(Sys.which("bash"))) {
       st <- suppressWarnings(system2("bash", c("-n", shQuote(path)), stdout = FALSE, stderr = FALSE))
       if (!identical(st, 0L)) add("error", "scripts", sprintf("%s fails `bash -n` syntax check.", p))
+    }
+    if (grepl("\\.[Rr]$", p)) {
+      for (h in shadowed_names(path))
+        add(h$level, "shadowed-name", sprintf("%s defines top-level function `%s`, which masks %s; rename it (a skill prefix or a more specific verb) so sourcing the script cannot break other code.", p, h$name, h$where))
     }
     if (any(grepl("(api[_-]?key|token|secret|password)\\s*[:=]\\s*['\"][A-Za-z0-9_\\-]{16,}['\"]", txt, ignore.case = TRUE, perl = TRUE)))
       add("error", "secrets", sprintf("%s looks like it contains a literal credential.", p))

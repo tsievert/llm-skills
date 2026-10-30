@@ -7,7 +7,7 @@ for (f in c("jw_contracts.R", "jw_pipeline.R", "jw_checks.R", "jw_stage_fns.R", 
 
 TODAY <- as.Date("2026-10-27"); WK <- "2026-W44"
 new_root <- function() { r <- tempfile("jwroot"); dir.create(r); r }
-done <- function(root, ...) for (s in c(...)) jw_manifest_update(jw_run_dir(WK, root), s, status = "done")
+mark_stages_done <- function(root, ...) for (s in c(...)) jw_manifest_update(jw_run_dir(WK, root), s, status = "done")
 
 s1_ok <- function(n = 3) data.frame(source_id = paste0("src", seq_len(n)), url = paste0("https://x", seq_len(n), ".example"),
   section = "a", type = "html", status = "ok", http = 200L, n_anchors = 10L, n_job_like = 5L, flag = "fine", note = NA, checked = TODAY)
@@ -23,7 +23,7 @@ s4_ok <- function() data.frame(item_id = c("i1", "i3", "i4"), decision = c("clas
   near_miss = c(FALSE, TRUE, NA), near_miss_rule = c(NA, "fte", NA), notes = NA)
 
 build_to_s3 <- function(root) {
-  done(root, "s0")
+  mark_stages_done(root, "s0")
   jw_stage_begin("s1", WK, root, expected_n = 3); jw_write_stage(s1_ok(), "s1", WK, root); jw_stage_close("s1", WK, root, TODAY)
   jw_stage_begin("s2", WK, root); jw_write_stage(s2_ok(), "s2", WK, root); jw_stage_close("s2", WK, root, TODAY)
   jw_stage_begin("s3", WK, root); jw_write_stage(s3_ok(), "s3", WK, root); jw_stage_close("s3", WK, root, TODAY)
@@ -82,7 +82,7 @@ test_that("schema drift in a file is caught", {
 })
 
 test_that("life cycle: dependency refusal, lock, stale lock, failed stage recorded and lock released", {
-  r <- new_root(); done(r, "s0")
+  r <- new_root(); mark_stages_done(r, "s0")
   expect_error(jw_stage_begin("s3", WK, r), "needs s2")
   jw_stage_begin("s1", WK, r, expected_n = 1)
   expect_error(jw_stage_begin("s1", WK, r), "locked")
@@ -156,7 +156,7 @@ test_that("summary says INCOMPLETE until discovery is run or skipped", {
   jw_write_summary(WK, r, TODAY); s <- readLines(file.path(jw_run_dir(WK, r), "summary.md"))
   expect_true(any(grepl("INCOMPLETE", s))); expect_true(any(grepl("Postdoc x", s)))
   expect_error(jw_stage_skip("s4", "no"), "not optional")
-  jw_stage_skip("s5", "not requested this week", WK, r); done(r, "s0")
+  jw_stage_skip("s5", "not requested this week", WK, r); mark_stages_done(r, "s0")
   jw_write_summary(WK, r, TODAY)
   s <- readLines(file.path(jw_run_dir(WK, r), "summary.md")); expect_false(any(grepl("INCOMPLETE", s)))
 })

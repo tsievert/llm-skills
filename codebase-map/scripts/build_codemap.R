@@ -10,7 +10,7 @@ norm_slashes <- function(p) gsub("\\\\", "/", p)
 
 # ---- project root -----------------------------------------------------------
 
-find_project_root <- function(start = ".") {
+find_codemap_root <- function(start = ".") {
   start <- norm_slashes(suppressWarnings(normalizePath(start, mustWork = FALSE)))
   cur <- start
   for (i in 1:12) {
@@ -304,7 +304,7 @@ write_state <- function(root, n_files, max_lines, total_lines, qualifies, first_
 #'   references/triggering-and-updating.md).
 build_codemap <- function(root = ".", file_count_threshold = 15, max_lines_threshold = 300,
                            quiet = FALSE) {
-  found_root <- find_project_root(root)
+  found_root <- find_codemap_root(root)
   root <- if (!is.null(found_root)) found_root else norm_slashes(normalizePath(root, mustWork = FALSE))
 
   # Opt-out: a project that doesn't want this (e.g. one that already has its own

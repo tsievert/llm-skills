@@ -18,7 +18,7 @@ PROFILE <- list(career_search_profile = list(
   search_synonyms = list(small_mammals = "rodent|\\bvoles?\\b|small mammal", Insects = "insect|beetle|\\bbees?\\b",
                          Neuroscience = "neuroscien")))
 TERMS <- jw_profile_terms(PROFILE)
-pf <- function(...) { x <- data.frame(text = c(...)); x$job_like <- FALSE; jw_prefilter(x, TERMS) }
+prefilter_df <- function(...) { x <- data.frame(text = c(...)); x$job_like <- FALSE; jw_prefilter(x, TERMS) }
 
 test_that("job-like flag: menu text is not a vacancy, vacancy words and hits are", {
   expect_equal(jw_anchor_job_like(c("Apply to our programmes", "Postdoctoral fellow in x", "About us", "x"),
@@ -50,7 +50,7 @@ test_that("profile terms never contain an empty alternative (would match everyth
 })
 
 test_that("prefilter: tiers, exclusions and reasons", {
-  x <- pf("Postdoctoral researcher in vole ecology", "Postdoc on birds", "PhD student in rodent biology",
+  x <- prefilter_df("Postdoctoral researcher in vole ecology", "Postdoc on birds", "PhD student in rodent biology",
           "Full Professor of ecology", "Assistant professor of ecology", "Postdoc working on beetles", "Postdoc on beetles and voles",
           "Postdoc in neuroscience of birds", "Welcome to our news page", "Research assistant")
   expect_equal(x$tier, c(1L, 1L, NA, NA, 2L, NA, 1L, NA, NA, 2L))
