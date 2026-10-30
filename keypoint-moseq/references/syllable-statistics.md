@@ -15,7 +15,7 @@ Syllable-specific statistics. The generic path (unit of analysis, tidy layout, w
 
 ## What is built in, and why to export instead
 
-Read from the kpms 0.6.6 source, with the `run_kruskal` signature rechecked in 0.8.3 (not run on real data; 0.8.2 fixed `run_kruskal` reporting syllable labels wrongly, so re-run any 0.8.1 or older built-in tests before trusting the labels):
+Read from the kpms 0.6.6 source, with the `run_kruskal` signature rechecked in 0.8.3 (not run on real data; 0.8.2 fixed `run_kruskal` reporting syllable labels wrongly, so re-run any 0.8.1 or older built-in tests before trusting the labels). Per the 0.8.4 release notes (the NaN warning and 3 vs 3 permutation p-value of about 0.10 were reproduced on synthetic data), `run_kruskal` ignores NaN instead of counting them as 0, skips syllables that are constant or lack values in a group, warns when a group has fewer than 3 recordings, and counts tied permutations (0.8.3 p-values were too small, e.g. 0.0001 for non-overlapping groups regardless of group size), so results from 0.8.3 and older over-flag syllables for small groups:
 
 - `interactive_group_setting` writes `index.csv` with two columns, `name` (recording) and `group`. The `group` label is the only metadata kpms can use.
 - `plot_syll_stats_with_sem` runs `run_kruskal`, a permutation Kruskal-Wallis test per syllable with Benjamini-Hochberg correction across syllables, then Dunn's pairwise tests. This works for more than two groups; `ctrl_group` and `exp_group` only choose which pair's significant syllables are marked on the plot. The plotted error bars are 68% intervals (about one SEM). The maintainers confirmed the test and the FDR step in upstream issues #226 and #260 (and added them to the FAQ).

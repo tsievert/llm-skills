@@ -2,7 +2,7 @@
 
 ## Contents
 
-- [Version changes that matter (0.6.6 to 0.8.3)](#version-changes-that-matter-066-to-083)
+- [Version changes that matter (0.6.6 to 0.8.4)](#version-changes-that-matter-066-to-084)
 - [Pipeline (interactive Python API, as in the tutorial)](#pipeline-interactive-python-api-as-in-the-tutorial)
 - [Output structure](#output-structure)
 - [Config keys that matter](#config-keys-that-matter)
@@ -15,7 +15,9 @@
 
 Source: kpms stable docs (modeling tutorial for notebook version "0.8", FAQs, advanced topics, analysis) re-read 2026-10-29 against 0.8.3, plus runs on 0.6.6, 0.8.0 and (2026-10-29, scripts, CPU) 0.8.3. Re-check against the installed version. Since 0.8.0 the tutorial passes `metadata=metadata` to `init_model` and `**config()` (so `fps`) to `fit_model`, validates videos with `check_videos`, and starts with `kpms.check_installation(notebook_version="0.8")`. `scripts/kpms_headless_fit.py` passes `metadata=` and `fps=` (needs >= 0.8.0). Research record: `research/keypoint-moseq-ledger.md` in the llm-skills repo.
 
-## Version changes that matter (0.6.6 to 0.8.3)
+## Version changes that matter (0.6.6 to 0.8.4)
+
+0.8.4 rows come from the release notes (read 2026-10-30). Locally run on 0.8.4 (2026-10-30, Windows, uv venv Python 3.12, CPU, synthetic DLC csv, 6 recordings): headless fit and resume, `compute_stats_df` full recording x syllable grid (498 rows = 6 x 83 at `min_frequency=0`), circular heading columns present, `run_kruskal` warning for groups with fewer than 3 values, and a 3 vs 3 non-overlapping test giving an adjusted p of about 0.10 (not 0.0001). Not run: grid movies, `overlay_keypoints_on_video`, `update_hypparams`, `update_config`, `location_aware`.
 
 | Change | Release | Consequence |
 |---|---|---|
@@ -30,6 +32,14 @@ Source: kpms stable docs (modeling tutorial for notebook version "0.8", FAQs, ad
 | `extract_results(overwrite=False)` raises for recordings already in `results.h5` | 0.8.x | The script deletes the file first |
 | `calibration.save_params` takes three values, not a dict | 0.8.2 | Only matters for custom calibration code |
 | Loader fixes: DLC `-1` placeholders become missing, multi-animal `bodyparts` in file order, DLC `_filtered` copies skipped when raw files exist, recordings without keypoints skipped, `.hdf5` loads, DLC 3D loads as 3D, `.slp` loads all its videos | 0.8.3 | Recording keys and keypoint counts can change versus 0.8.2; re-check the `load_keypoints` output after upgrading. Per the loader docstring a glob such as `*_filtered.h5` loads the filtered files if you want those (not run here) |
+| `compute_stats_df` gives every recording a row for each syllable passing `min_frequency` (frequency 0, duration and kinematics NaN where unused); frequency plots average over all recordings; `order="diff"` can change | 0.8.4 | Row counts and kinematic means of `stats_df` differ from 0.8.3; use `skipna` means or filter NaN rows; do not pool 0.8.3 and 0.8.4 tables |
+| `run_kruskal` skips NaN (0.8.3 counted them as 0), skips syllables constant across recordings or with a group lacking values, warns when a group has < 3 values; permutation p-values now count ties (0.8.3 gave 0.0001 for non-overlapping groups whatever the sizes) | 0.8.4 | Fewer significant syllables with groups up to about 8 recordings; re-run earlier built-in tests and do not compare with 0.8.3 stars |
+| `heading_mean`/`heading_std` in `stats_df` are circular statistics | 0.8.4 | 0.8.3 heading means near +-pi were wrong |
+| `overlay_keypoints_on_video` honours `video_frame_indexes` (pass one recording's array, `video_frame_indexes[name]`, not the dict); errors before writing if keypoints need frames past the video end | 0.8.4 | Fixes wrong overlays for trimmed or downsampled data (#300); the trimming checks in `common-problems.md` now work |
+| Density-sampled grid movies use 0.167 s before and 0.5 s after onset at the project fps (0.8.3: 5 and 15 frames) | 0.8.4 | Only differs from before at non-30 fps |
+| `init_model(location_aware=True)` uses the given `allo_hypparams` (0.8.3 replaced them with defaults) | 0.8.4 | Refit if you set custom ones |
+| `update_hypparams` raises for `num_states`, `latent_dim`, `nlags`, `S_0_scale`, `K_0_scale` | 0.8.4 | Set these in the config and initialise a new model; 0.8.3 silently changed only the stored value |
+| `update_config` writes numpy values as plain numbers/lists and keeps settings without a default | 0.8.4 | A `config.yml` broken by `fps=np.float64(30)` under 0.8.3 needs a manual fix |
 | Recordings loaded from a directory are sorted | 0.6.13 | Noise calibration reproducible across machines |
 
 

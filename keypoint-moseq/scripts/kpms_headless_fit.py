@@ -5,7 +5,7 @@ Pipeline: load DLC keypoints -> outlier removal -> PCA -> AR-HMM -> full model
 -> reindex syllables -> extract results (+ CSV). Resumable: rerun the same
 command after a time-limit kill and it continues from the last checkpoint.
 
-Written against the keypoint-moseq 0.8.x modeling tutorial; run on 0.6.6, 0.8.0 and 0.8.3 (fps= and metadata=
+Written against the keypoint-moseq 0.8.x modeling tutorial; run on 0.6.6, 0.8.0, 0.8.3 and 0.8.4 (fps= and metadata=
 need >= 0.8.0, so pin that or newer). Verify
 signatures against the installed version if anything fails:
     python -c "import keypoint_moseq as k; help(k.fit_model)"

@@ -62,4 +62,4 @@ A 2025 benchmark (Patterns, W4409654348) compared B-SOiD, BFA, VAME and kpms on 
 - Use outside neuroscience (ethology, wildlife, agriculture) was not found; different wording ("autoregressive hidden Markov", "switching linear dynamical system") or species-specific tracking terms might find it.
 - Closed-access papers (marmoset, killifish, early life stress preprint) were not read.
 - The Nature Protocols paper (Motion Sequencing, 2024) was not read; it is probably the depth-camera version.
-- Whether kpms 0.8.3 changed the calibration widget or fixed the jitter and NaN behaviour in issue #153 is untested.
+- Whether kpms 0.8.3 and 0.8.4 changed the calibration widget or fixed the jitter and NaN behaviour in issue #153 is untested.

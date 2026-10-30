@@ -215,3 +215,16 @@ Log: 2026-10-29 round 7 as above. Another sighting of the earlier lesson: `fetch
 ## Round 8 (2026-10-29): skill split done
 
 Requirement 6 (2026-10-29): create the `keypoint-moseq` skill with the corrected jitter caution, the calibration table and a "species and frame-rate checks" section; trim `animal-behaviour-tracking-analysis` to metrics. Done: findings from rounds 3-7 are in `keypoint-moseq/references/common-problems.md`, `use-cases-and-literature.md`, `syllable-statistics.md`, `SKILL.md` (rule 10, species section). The existing "jitter 1e-1" advice in `hpc-and-troubleshooting.md` was corrected. No new searches this round.
+
+## Round 9 (2026-10-30): release 0.8.4 notes
+
+Source: `gh api repos/dattalab/keypoint-moseq/releases` (0.8.4, published 2026-10-29; read, not run locally; `gh release view` failed, use the api route).
+- Result-changing: `compute_stats_df` rows for every recording x syllable (frequency 0, NaN otherwise, #306); `run_kruskal` ignores NaN, skips constant/empty-group syllables, tied permutations counted (p-values were too small in 0.8.3); circular `heading_mean/std` (#314); density-sampled grid movie windows in seconds (#315); `overlay_keypoints_on_video` honours `video_frame_indexes` (#300); `init_model(location_aware)` keeps `allo_hypparams` (#304).
+- Fixes: `update_hypparams` raises for structural params (#310); `plot_syllable_frequencies` sorting; `update_config` numpy values and unknown keys (#313); pandas 3 `syll_info.csv` (#324).
+- Skill updated: workflow version table, syllable-statistics, downstream-analysis, SKILL.md. Open: run 0.8.4 locally (headless script, `compute_stats_df` row counts, `run_kruskal`), check `kpms_summarise_results.py` comment about `frequency`.
+
+Local test 0.8.4 (2026-10-30, Windows, uv venv Python 3.12, CPU, synthetic DLC csv 6 x 1500 frames x 5 bodyparts, in git-ignored `tmp-examples/k084`, to delete):
+- `kpms_headless_fit.py` fresh and resumed fine (resume reported only the remaining 2 of 6 iterations). `check_nan_proportions` still prints a Styler repr in scripts.
+- `compute_stats_df(min_frequency=0)`: 498 rows = 6 recordings x 83 syllables; 294 rows frequency 0; 298 NaN duration (4 more: only first/last instance). Heading columns `heading_mean/std/min/max`. Velocity columns are `velocity_px_s_*`. Default `min_frequency` 0.005.
+- `run_kruskal` returns a tuple (DataFrame, DataFrame, dict); prints a warning when most syllables have a group with < 3 values; 3 vs 3 non-overlapping gave p_adj 0.10.
+- Not run: grid movies, overlay, update_hypparams/update_config, location_aware.
