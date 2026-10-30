@@ -9,7 +9,7 @@ the fix, measuring whether the loop works.
 |---|---|
 | Reproduced on synthetic data, or error text clearly names a skill claim as wrong | `fix`, even from one report |
 | Same issue in 2 or more independent projects, not reproduced | `fix` or `add-note`, worded as "reported, not reproduced" |
-| One report, `confidence: low`, `generality: unsure` | `park` |
+| One report, `confidence: low`, `generality: unsure` | `park` (but a `bug` entry naming a script is reproduced first; one quick test, not code reading) |
 | `generality: likely-user-specific` and no second report | `reject` or `park` |
 | Needs a cluster, GPU or the user's data to check | `needs-info`: give the exact command and ask for the pasted output |
 | `use-case` | not a defect: count per skill, list friction notes, compare with `usage.tsv` and `reminders.tsv` to judge whether capture triggers reliably (loads vs. reminders vs. entries) |

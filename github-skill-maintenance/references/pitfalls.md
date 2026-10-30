@@ -66,3 +66,8 @@ Contents: YAML description traps, CRLF line endings, links, hooks, naming, front
   2026-10-27). Write multi-line Markdown or R with the `write`/`edit` tools instead of a bash
   heredoc; if a heredoc is unavoidable, keep it to one file per `bash` call and check `wc -l`
   plus a `tail` of the result afterwards. Keep `sed` to single-line changes only.
+
+- **Environment caches in skill scripts must not inherit.** `exists("x", envir = cache)` on a
+  `new.env()` also searches the parent chain, so a global object with the same name gives a false hit
+  and a check silently finds nothing (hit once in the shadowed-name check, 2026-10-30). Use
+  `new.env(parent = emptyenv())` and `exists(..., inherits = FALSE)`.

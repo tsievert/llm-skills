@@ -66,7 +66,9 @@ missed, rather than re-deriving the whole triage from scratch.
    second project shows the same thing.
 3. **Treat every entry as a hypothesis.** For each issue:
    - reproduce it on a small synthetic example in the scratch directory, or say why not
-     (needs the user's data, a cluster, a GPU);
+     (needs the user's data, a cluster, a GPU); a `bug` entry naming a script is always
+     reproduced with a cheap test of that code path before it is parked or rejected, even at low
+     confidence (reading the code for a check is not evidence that the check covers every path);
    - check upstream (package NEWS, docs, GitHub issues; see
      [references/triage-method.md](references/triage-method.md));
    - check the skill text the entry blames: is the claim wrong, missing, or just not read?

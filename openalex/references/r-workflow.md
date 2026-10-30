@@ -73,6 +73,17 @@ type_name <- map_chr(raw_works, function(x) if (is.null(x$type)) NA_character_ e
 topic_name <- map_chr(raw_works, function(x) if (is.null(x$primary_topic)) NA_character_ else x$primary_topic$display_name)
 ```
 
+Raw `abstract_inverted_index` (word -> positions) is not text. Rebuild it when using `httr2`
+(`openalexR::oa_fetch()` already does this):
+
+```r
+abstract_text <- function(idx) {
+  if (is.null(idx) || length(idx) == 0) return(NA_character_)
+  words <- rep(names(idx), lengths(idx))
+  paste(words[order(unlist(idx))], collapse = " ")
+}
+```
+
 ## Batch ID/DOI lookups
 
 Fetch metadata for a known list of work IDs with one filtered request rather
