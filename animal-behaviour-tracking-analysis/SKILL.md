@@ -59,6 +59,7 @@ Basic-metrics scripts: tested on synthetic DLC-format CSV/h5 (single and multi-a
 - `hpc-python-code` and `hpc-r-code`: code that runs the metrics or analyses inside cluster jobs.
 - `manuscript-figures-ggplot`: journal-ready figures from the summaries and model results.
 - `data-repository-readme`: README and data dictionary for depositing the tracking data and metrics.
+- `tidy-data-wrangling`: reshaping, cleaning and joining the metric tables before analysis (wide to long, missing codes, keys).
 - `python-reproducible-pipeline`: wrapping DLC output, metrics and statistics into one re-runnable, pinned workflow (Snakemake + uv).
 
 ## Explain the reasoning (teaching rule)

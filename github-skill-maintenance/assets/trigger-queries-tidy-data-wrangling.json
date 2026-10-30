@@ -1,0 +1,137 @@
+{
+  "skill": "tidy-data-wrangling",
+  "queries": [
+    {
+      "id": 1,
+      "query": "Here's a CSV export from our plate reader where the columns are wk1 to wk8. Can you turn it into long format so I can plot it?",
+      "expected": "tidy-data-wrangling",
+      "should_trigger": true
+    },
+    {
+      "id": 2,
+      "query": "My left_join doubled the number of rows and I have no idea why.",
+      "expected": "tidy-data-wrangling",
+      "should_trigger": true
+    },
+    {
+      "id": 3,
+      "query": "Can you clean this dataset for me? Check the column names, duplicates and any weird values.",
+      "expected": "tidy-data-wrangling",
+      "should_trigger": true
+    },
+    {
+      "id": 4,
+      "query": "Audit my data frame for outliers, data-entry errors and inconsistent casing, then tell me what I should fix.",
+      "expected": "tidy-data-wrangling",
+      "should_trigger": true
+    },
+    {
+      "id": 5,
+      "query": "The Excel sheet has two header rows with merged cells and a totals row at the bottom. How do I read that into R?",
+      "expected": "tidy-data-wrangling",
+      "should_trigger": true
+    },
+    {
+      "id": 6,
+      "query": "Some weights are coded -99 and others say n/a. How should I deal with those in R?",
+      "expected": "tidy-data-wrangling",
+      "should_trigger": true
+    },
+    {
+      "id": 7,
+      "query": "pivot_wider gives me list-columns and a warning, what is wrong?",
+      "expected": "tidy-data-wrangling",
+      "should_trigger": true
+    },
+    {
+      "id": 8,
+      "query": "I have dates like 03/04/2026 mixed with 2026-03-04 in one column. Make them proper dates.",
+      "expected": "tidy-data-wrangling",
+      "should_trigger": true
+    },
+    {
+      "id": 9,
+      "query": "Split the column holding values like ctrl_12_A into group, number and site.",
+      "expected": "tidy-data-wrangling",
+      "should_trigger": true
+    },
+    {
+      "id": 10,
+      "query": "I pulled nested JSON from an API and need it as a tibble with one row per record.",
+      "expected": "tidy-data-wrangling",
+      "should_trigger": true
+    },
+    {
+      "id": 11,
+      "query": "gam.check says the k-index for my s(day) is low and edf is close to k. Raise k?",
+      "expected": "gam-mgcv",
+      "should_trigger": false
+    },
+    {
+      "id": 12,
+      "query": "My glmmTMB model with a random slope for animal gives a singular fit warning.",
+      "expected": "mixed-models-glmm",
+      "should_trigger": false
+    },
+    {
+      "id": 13,
+      "query": "Compute distance travelled and time in zone from my DeepLabCut csv files.",
+      "expected": "animal-behaviour-tracking-analysis",
+      "should_trigger": false
+    },
+    {
+      "id": 14,
+      "query": "Write a README and data dictionary for my Zenodo data deposit.",
+      "expected": "data-repository-readme",
+      "should_trigger": false
+    },
+    {
+      "id": 15,
+      "query": "Make a publication figure of weight by group at 85 mm column width with colour-blind-safe colours.",
+      "expected": "manuscript-figures-ggplot",
+      "should_trigger": false
+    },
+    {
+      "id": 16,
+      "query": "Turn my six R scripts into a pipeline where only changed steps rerun.",
+      "expected": "r-reproducible-pipeline",
+      "should_trigger": false
+    },
+    {
+      "id": 17,
+      "query": "Fit a random forest to this table to predict the outcome and compare it to a lasso.",
+      "expected": "predictive-modeling-r",
+      "should_trigger": false
+    },
+    {
+      "id": 18,
+      "query": "In pandas, how do I reshape this dataframe from wide to long?",
+      "expected": "none",
+      "should_trigger": false
+    },
+    {
+      "id": 19,
+      "query": "Find recent papers on data cleaning practices in ecology.",
+      "expected": "openalex",
+      "should_trigger": false
+    },
+    {
+      "id": 20,
+      "query": "Run a t-test comparing weights between control and treated and report the effect size with a confidence interval.",
+      "expected": "stats-reporting-and-review",
+      "should_trigger": false
+    },
+    {
+      "id": 21,
+      "query": "Write a Slurm job array that runs my cleaning script on 100 input files.",
+      "expected": "hpc-job-scripts",
+      "should_trigger": false
+    },
+    {
+      "id": 22,
+      "query": "Show me the weight by group as a quick boxplot with ggplot2.",
+      "expected": "none",
+      "should_trigger": false
+    }
+  ]
+}

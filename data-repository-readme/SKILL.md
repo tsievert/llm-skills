@@ -112,6 +112,7 @@ template against each repository's own template files.
 - `python-reproducible-pipeline`: a pinned, re-runnable workflow (uv lock, Snakemake) to deposit with the data so the results can be regenerated.
 - `r-reproducible-pipeline`: the R counterpart (targets, renv lockfile, Quarto report) to deposit with the data.
 - `reproducible-research-data`: the deposit as a whole: what to deposit, which repository and journal rules apply (and when), licences and identifiers, a checksummed staging copy and pre-upload checks.
+- `tidy-data-wrangling`: tidying and checking the processed table itself before its dictionary is written.
 - `git-for-research-projects`: the repository side of a deposit: what stays out of Git, a checksum manifest of server-held data, tagging a version and CITATION.cff.
 
 ## Explain the reasoning (teaching rule)

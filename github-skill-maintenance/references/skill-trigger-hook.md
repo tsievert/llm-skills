@@ -403,3 +403,24 @@ token, its vocabulary is generic: "distance", "freezing"), and skills defined by
 containing a signal word also matches. Tested with synthetic `UserPromptSubmit` payloads (kpms code, glmmTMB singular
 fit, oom-kill, `analyze_videos` nudge; "what is a mean" silent; a repeat kpms match escalates silently). `weekly` in an
 unrelated prompt still nudges `staged-assistant-workflow` (the known calibration gap above). Not tested live.
+
+### Wrangling signals on `tidy-data-wrangling` (added 2026-10-30)
+
+Both channels are declared, because wrangling shows up as function names in prompts (`pivot_longer`, `clean_names`) and
+in scripts the assistant reads. Alternatives are tidyr/janitor/readxl/tidyxl/unpivotr function names, `library(tidyr)`,
+`library(janitor)`, `library(readxl)`, `tidyr::`, `janitor::` (file channel), and the phrases `wide to long`, `long to wide`,
+`messy data`, `tidy data` (prompt channel). `library(dplyr)`, `library(tidyverse)`, `mutate`, `filter` and joins were left out on
+purpose: they appear in almost every R script, so every analysis session would be nudged. Tested with synthetic payloads
+(`pivot_longer` prompt nudges, a second match escalates silently, `fit a gam` silent, `library(janitor)` file read nudges,
+`library(dplyr)` file read silent, `wide to long` nudges). Regex probes: `read_excel(path)` matches; "my tidy plot", "use dplyr
+filter" do not. Known over-match: `tidy data` in a README or deposit request nudges this skill too (cost: one ignorable line).
+Not tested live.
+
+Round 2 (2026-10-30, same day): added wording triggers for the word "wrangling" and for cleaning phrases in the prompt channel
+(`wrangl*`, "data cleaning", "data tidying", "reshaping", "clean my/the/this data", "clean up (my|this) data"), and section-header
+and script-banner wording in the file channel for `.qmd`, `.Rmd` and `.R` files read by the assistant (`## Data wrangling`,
+`# ---- Clean data ----`, `### Import data`, `## Tidy ...`, `## Reshape ...`, `## Join tables`, `## Missing values`, plus
+"data cleaning", "data preparation"). Patterns avoid `^` anchors because the scan runs over the tool response as one string,
+and avoid groups containing `|` because the linter splits naively on every `|`. Synthetic payloads: a qmd with `## Data wrangling`
+and an R script with `# ---- Clean data ----` nudge; `## Results` / `## Figure 1` stay silent; "help me wrangle this table" nudges.
+Over-match risk: a README or methods section titled "Data cleaning" in a non-R project also nudges; cost is one ignorable line.

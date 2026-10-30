@@ -65,7 +65,7 @@ Compare `nbinom2` with and without `ziformula`. Then say which quantity you repo
 
 ## Related skills
 
-`gam-mgcv` and `gam-interpretation` for non-linear time courses; `animal-behaviour-tracking-analysis` for DLC metrics and the matching statistics examples; `manuscript-figures-ggplot` for journal-ready figures of model results; `hpc-r-code` for glmmTMB or lme4 fits that run on a cluster; `openalex` for literature on methods; `stats-reporting-and-review` for standardized effect sizes/CIs, power analysis, and multiplicity correction once a model is fit.
+`gam-mgcv` and `gam-interpretation` for non-linear time courses; `animal-behaviour-tracking-analysis` for DLC metrics and the matching statistics examples; `manuscript-figures-ggplot` for journal-ready figures of model results; `hpc-r-code` for glmmTMB or lme4 fits that run on a cluster; `openalex` for literature on methods; `stats-reporting-and-review` for standardized effect sizes/CIs, power analysis, and multiplicity correction once a model is fit.; `tidy-data-wrangling` for getting repeated-measures data into long, clean form before fitting.
 
 ## Explain the reasoning (teaching rule)
 

@@ -34,3 +34,6 @@ keypoint-moseq	openalex	no-backlink	openalex is the standing literature tool (us
 keypoint-moseq	python-reproducible-pipeline	no-backlink	Pipeline skill names animal-behaviour-tracking-analysis as its example workflow; kpms is the same workflow with one more step	2026-10-29
 application-style-coach	manuscript-writing-quarto	no-backlink	Manuscript structure and linting concern papers, not application documents; the coach already points to it for spelling/grammar tooling	2026-10-30
 application-style-coach	stats-reporting-and-review	no-backlink	Reviewer-response drafting is a different genre; coach names it only to mark the boundary	2026-10-30
+tidy-data-wrangling	gam-mgcv	no-backlink	GAM users need modelling guidance here; wrangling is reached through mixed-models-glmm and the general data skills	2026-10-30
+tidy-data-wrangling	r-reproducible-pipeline	no-backlink	Pipeline skill is about orchestration; a cleaning script is just one target and generic skills should not collect domain pointers	2026-10-30
+tidy-data-wrangling	reproducible-research-data	no-backlink	Deposit planning starts from data that already exist; data-repository-readme carries the cleaning pointer instead	2026-10-30
