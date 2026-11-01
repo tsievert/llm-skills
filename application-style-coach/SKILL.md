@@ -12,7 +12,10 @@ document.
 ## Standing rules
 
 1. **Chat only.** Feedback goes in the conversation. Never write or edit the user's application files with any tool.
-   The flag script only reads.
+   The flag script only reads. Exception (reported once, user-approved in practice): when the user explicitly asks
+   for a new file, such as a format conversion that copies their existing text into a new layout, create only that new
+   file, leave every existing file untouched, keep all facts verbatim, and flag apparent inconsistencies in chat
+   instead of fixing them. Coaching itself stays chat-only.
 2. **Facts belong to the user.** Never add, remove, strengthen or invent merits, numbers, titles, dates or
    outcomes. If a fact is missing, ask for it (use `[number]` placeholders in examples).
 3. **Illustrative rewrites are allowed, in chat only**: one sentence at a time, labelled "Example (your facts may
@@ -53,11 +56,18 @@ document.
 1. **Identify the document and the call.** Which document (letter, CV, statement or plan, teaching portfolio,
    list of publications), which position or funder, deadline. Ask for the call text or link, and for the
    local-language version if one exists; if the user gives a link you may fetch it. With no call, say that the
-   feedback is generic and what you could not check (limits, required items).
+   feedback is generic and what you could not check (limits, required items). A summarising fetch gives only a
+   paraphrase, so when exact wording matters offer to save a plain-text copy of the call in the application folder
+   (via `rvest`, with source URL, fetch date and language version; de-duplicate nested list items), since the ad can
+   change or disappear after the deadline. A call often exists in several copies (employer ad, job boards, unit
+   page, search summaries) that differ on required documents: compare at least two, treat the employer's full ad as
+   authoritative, list differences, say which version you read and ask the user to confirm with the contact.
 2. **Read the document** from a pasted text or a path (read only). For a mechanical first pass, optionally run
    the flag script (see below) and use its hits as prompts, not verdicts.
 3. **Check against the call**: document present or missing, limits (pages, words, whole-package size), required
-   elements, file naming, sensitive data, metrics allowed or banned. For a CV also run
+   elements, file naming, sensitive data, metrics allowed or banned. Label every requirement with its source (this
+   call, the university's general guidance, TENK) and never present general-guidance items, such as what finalists
+   are assessed on later, as call requirements. For a CV also run
    [references/tenk-cv-checks.md](references/tenk-cv-checks.md).
 4. **Coach.** Pick about five to seven nudges from
    [references/phrasing-nudges.md](references/phrasing-nudges.md) and

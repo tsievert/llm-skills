@@ -85,6 +85,15 @@ any file in it. Registration:
 }
 ```
 
+## Document-only projects
+
+Reported once: a project with only office documents and PDFs (plus a large reference-manager cache, about
+20k files) has no scanned files (`.R .py .sh .md .qmd .Rmd`), so `build_codemap()` has nothing to map. Say so
+instead of generating empty files, and offer a manual per-folder ledger in markdown: counts by extension,
+notes on sensitive folders, and a line naming cache or third-party data folders as not to be listed. Point to the
+ledger from the project's memory file. The built-in exclusion list does not cover such caches (they are only skipped
+because their extensions are not scanned); the `.codemapignore` file is all-or-nothing, not a pattern list.
+
 ## Manual use
 
 To generate or force-refresh the map for a project without waiting for the hook (e.g. a

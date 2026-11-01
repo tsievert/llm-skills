@@ -57,7 +57,15 @@ Raise these as observations or questions; the user fixes them.
 4. **Facts instead of adjectives.** Counts, amounts, durations, roles. "Extensive teaching experience" becomes a
    number of courses, levels and years (the user supplies them).
 5. **Own role.** Headings 8 and 10: is the user's role stated (applicant, co-applicant, PI named)? Supervision:
-   principal or co-supervisor, number of supervisees by programme, no names.
+   principal or co-supervisor, number of supervisees by programme, no names (the template's update note of 21 May 2021
+   removed "names and graduation dates" on GDPR grounds; page read 2026-11-01).
+   - Heading 8 covers received significant funding. The template and, per one report, the Research Council CV
+     guidelines do not mention unsuccessful applications; whether to show them is the user's decision, so check the
+     call and the level-specific criteria (a university may ask for evidence of active efforts to obtain funding at
+     assistant level, of obtaining it at associate level) and suggest the letter or a career-break line if a place
+     is needed.
+   - Heading 10: informal mentoring is not "officially appointed supervision"; it fits under leadership experience
+     with a short job description.
 6. **Part-time and breaks.** Part-time work stated; breaks in months if included.
 7. **Heading 9.** Database named if citation counts are given; publication list as a separate appendix; publications
    marked published, accepted, submitted or planned with the same words throughout (no unaccepted manuscripts in a
