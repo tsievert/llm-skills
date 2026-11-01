@@ -31,7 +31,9 @@ m <- gam(y ~ s(x1) + s(x2) + f,      # f: factor
 - Offsets: `offset(log(exposure))` in the formula for rates.
 - Factors must be real `factor`s (not character) for `by =` and `bs = "re"`.
 - Do not hand-tune `sp` or `fx = TRUE` unless there is a reason; let REML estimate smoothness.
-- Consider `select = TRUE` (double-penalty shrinkage, can remove terms) when many candidate smooths exist.
+- Consider `select = TRUE` (double-penalty shrinkage, can remove terms) when many candidate smooths exist. With `select = TRUE` every smooth has two penalties, so a fixed `sp` inside `s()` needs one value per penalty, e.g. `s(x, sp = c(10, -1))` (`-1` = estimate; a scalar errors with "incorrect number of smoothing parameters"; reproduced). Reported, one project: for cumulative or strongly autocorrelated outcomes `select = FALSE` let a time smooth saturate at `k`, so test it on a subset before recommending it.
+- To test or extend an existing model, read formula, family and data from the saved model object or script (`formula(m)`, `family(m)`, `m$model`), never rebuild them from prose notes.
+- For `bam()` fits the estimated dispersion is `m$sig2`; `m$scale` is a placeholder of 1 (reproduced; `summary(m)$scale` is right). Do not report `m$scale`.
 
 ## Basis dimension k
 
@@ -98,6 +100,8 @@ Plotting, partial effects, simultaneous intervals, group comparisons, derivative
 ## Large data
 
 `bam(..., method = "fREML", discrete = TRUE, nthreads = n)` for tens of thousands of rows or more. Use `gam()` for smaller data; `bam()` smoothing selection differs slightly. Under `discrete = TRUE`, `select = TRUE` and some families behave differently; check `?bam`. For `method = "NCV"` (model comparison, cheap refits at fixed smoothing parameters, failure reporting, checking `select = TRUE`) see [references/ncv-and-bam-notes.md](references/ncv-and-bam-notes.md). On clusters, set `nthreads` from the job allocation (see the `hpc-r-code` skill).
+
+Before queueing several expensive fits, time one: run a 2 to 3 step row ladder (for example 640, 1,280, 2,560 rows) with a short guard (`callr` timeout), extrapolate, and only then queue larger fits; kill queued background fits when the first one times out. Reported: `gam()` with `bs = "fs"` or large `sz` terms took 100 s at 640 rows and over 300 s at 1,280, while `bam(discrete = TRUE)` fit the same structure on 40,000 rows in about 5 minutes. Location-scale and other general families are `gam()` only (details in [references/gamlss-and-extra-families.md](references/gamlss-and-extra-families.md)), so probe scale models on a lean mean model (random intercept and slope instead of `fs` terms) or consider two-stage variance weights in `bam()`.
 
 ## Reporting
 
