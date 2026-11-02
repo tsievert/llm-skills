@@ -95,6 +95,7 @@ Plotting, partial effects, simultaneous intervals, group comparisons, derivative
 - Smooths are centred, so partial-effect plots show effects relative to the intercept, not the response scale.
 - Whole-response predictions: `predict(m, newdata, type = "link", se.fit = TRUE)`, then back-transform with `family(m)$linkinv`, which gives valid intervals on the response scale.
 - Exclude random effects from predictions with `exclude = "s(g)"` (and supply a dummy level); hold other covariates at typical values.
+- Excluding random effects gives a typical-unit curve, not the group mean. Under a log link with heterogeneous units or zeros this can differ several-fold (synthetic Gamma(log) test: 2.5 vs raw mean 7.5). Ask early whether the user wants the typical unit or the group mean, and overlay raw group means on response-scale curves before interpreting contrasts. For group-mean contrasts, an animal-level bootstrap of raw means is the simplest route; a marginal model is an option, but its parameters depend on the fixed effects and are not automatically population averages. "Population-level" is ambiguous (brms uses it for fixed effects), so confirm the meaning first (see the `gam-interpretation` skill, phrasing reference).
 - Do not extrapolate outside the data.
 
 ## Large data

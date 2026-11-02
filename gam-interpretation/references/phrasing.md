@@ -8,6 +8,7 @@
 - Group comparisons
 - Derivatives and turning points
 - Model-level statements
+- The word "population"
 - Limitations paragraph
 - Pre-send checklist
 
@@ -75,6 +76,20 @@ Weak or ambiguous result:
 - edf: "the term uses about [edf] effective degrees of freedom" (not "[edf] bends").
 - Deviance explained / R-sq: descriptive of fit to this dataset; does not validate the shape.
 - Model comparison by AIC or REML: "AIC favours ... by [Δ]; AIC with smoothing-parameter uncertainty is approximate".
+
+## The word "population"
+
+"Population" has at least three meanings in this work, and mixing them up changes which estimate answers the question (one reported project spent a long detour building a marginal estimate when group-level contrasts were meant). Ask which is meant before choosing an estimand, and write the estimand out in words.
+
+| Sense | What it refers to | Estimate that answers it |
+|---|---|---|
+| "Population-level" effects (brms and Bayesian usage; also loosely elsewhere) | The fixed effects, as opposed to group-level (random, varying) effects. It does not mean averaged over units. | Fixed-effect or group-level contrasts, typically conditional on a typical unit |
+| Statistical population ("population average", marginal) | The distribution of units a sample was drawn from; an average over unit-to-unit heterogeneity, usually on the response scale | Group mean over units: raw group means with a unit-level bootstrap, or a marginalised prediction |
+| Ecological population | A real group of organisms (strain, colony, wild population). The sampled animals support inference only to what they were drawn from. | Wording: name the strain or source population, not "the population" |
+
+- Under a non-identity link, typical-unit and group-mean summaries can differ a lot (see `uncertainty-and-inference.md`), so the choice is not cosmetic.
+- "Marginal" and "population-averaged" are not interchangeable with "unconditional". For non-normal outcomes a marginal model's parameters are marginal only with respect to unmodelled cluster differences and depend on the fixed effects in the model, so avoid reading them loosely as population averages (Muff et al. 2016, Methods in Ecology and Evolution, doi 10.1111/2041-210x.12623; abstract read only; ledger `research/population-terminology-ledger.md` in the llm-skills repo).
+- Write: "typical animal (random effects at zero)", "group mean over the sampled animals", or "fixed-effect (group-level) contrast" as appropriate; avoid bare "population-level".
 
 ## Limitations paragraph (adapt)
 

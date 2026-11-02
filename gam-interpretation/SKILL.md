@@ -52,6 +52,7 @@ gratia changes quickly; code from memory is often outdated. Before writing code:
 
 ## Interpretation rules (short form)
 
+- "Population-level" is ambiguous (fixed effects in brms usage, a marginal mean over units, or a real ecological population). Ask which the user means before choosing typical-unit vs group-mean summaries; see "The word population" in `references/phrasing.md`.
 - Smooth terms are centred; they show shape relative to the model's other terms, not the expected response.
 - Intervals are approximate and conditional on the model and, by default, on the estimated smoothing parameters. Pointwise 95% intervals are not simultaneous bands over the whole curve.
 - A smooth's p-value in `summary()` tests whether that term is exactly zero (approximate); it does not tell you the effect is large, linear, or the shape is right.

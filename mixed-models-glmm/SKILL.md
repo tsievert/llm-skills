@@ -40,6 +40,7 @@ Tested, runnable templates for every pattern below: [scripts/glmm_templates.R](s
 
 ## Random effects
 
+- Wording: "population-level" is ambiguous (brms: fixed effects; elsewhere: a marginal mean over units; also an ecological population). Predictions with random effects at zero are for a typical unit, not the group mean, and under a log or logit link the two can differ a lot. Ask which the user wants, and say it in words (see `gam-interpretation` skill, phrasing reference, section "The word population").
 - Random slopes `(1 + trial | animal)` need enough repeated observations per animal (here 12 trials; with 2 sessions they are not estimable). A correlation of exactly -1/1 or `check_singularity()` = TRUE (seen in tests) means the structure is too rich: try `(1 | animal) + (0 + trial | animal)`, or drop the slope and say so.
 - Compare structures with AIC and the LRT (conservative for variance components on the boundary). Keep intercepts that reflect the design even when their variance estimate is small.
 - Random intercepts alone do not control pseudoreplication for effects that vary within animals when animals differ in their response: add random slopes for within-animal predictors where the data can support them (Schielzeth & Forstmeier 2009).

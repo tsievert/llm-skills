@@ -65,6 +65,9 @@ The `by = of` smooths are differences from the reference smooth. For all pairwis
 
 ## Practical tips
 
+- Before including both a unit-level and a session-level random term, tabulate sessions per unit: if most units have one session the two terms fit the same rows, only their sum is identified and the split comes from repeated units alone (reported, design reasoning, not reproduced). Also tabulate which factor levels co-occur within units: contrasts between levels that never share a unit are purely between-unit and move with the random-effect structure.
+- Simulating random effects from the fitted prior: divide each smoothing parameter by `smooth$S.scale` before combining with `smooth$S` (prior covariance of a block is `sig2 * solve(sum(sp / S.scale * S))`), as `gam.vcomp(rescale = TRUE)` does. Verified on synthetic data: an fs term had `S.scale` 17.6, rescaled sd 1.375 (equal to `gam.vcomp`) vs 0.33 unscaled. For fs terms use `predict(type = "lpmatrix")`; `PredictMat()` on an fs smooth needs both term variables (the covariate and the factor), otherwise it errors with "'names' attribute [2] must be the same length as the vector [1]".
+
 - Start simple (model G or GS), add complexity only when diagnostics or the question call for it.
 - Few levels per group (< 5) or few observations per group: random effects and factor smooths are poorly estimated; treat the group as fixed.
 - Report between-group variability using `gratia::variance_comp()`.
