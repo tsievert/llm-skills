@@ -55,8 +55,11 @@ Record every attempt, continue, never stop the run for one link:
   item has a date (`pubDate`/`updated`); (4) each item links to the vacancy page, not a category page; (5) any
   filter in the original search is honoured by the feed, or can be applied locally after fetching (test with
   and without the filter: a feed can look valid yet ignore it). A feed with items but none a vacancy, or an
-  empty category feed, fails the checklist and is not added. Feed sources are not built into the probe yet, so
-  a verified feed is read with `webfetch`/`xml2`, not `jw_probe_one()`.
+  empty category feed, fails the checklist and is not added. `jw_probe_one()` reads RSS 2.0, Atom and RDF
+  feeds (any XML body whose root is `rss`, `feed` or `RDF`): one anchor per item with title and link, note
+  `feed: N items`. Items are not filtered by the probe; the job-like flag and profile prefilter do that, and
+  dates are not kept, so check the dates by hand (item 3 of the checklist). Tested live on one aggregator feed
+  (100 items) and on synthetic RSS and Atom.
 
 ## Dead or moved links (`http_error`, `error`)
 

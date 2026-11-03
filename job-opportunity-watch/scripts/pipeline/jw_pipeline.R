@@ -121,6 +121,14 @@ jw_problems_append <- function(add, week, root) {
   cur <- if (file.exists(p)) as.data.frame(.read_pq(p)) else NULL
   jw_write_parquet(rbind(cur, add), p, jw_problem_cols)
 }
+.problems_drop_stage <- function(stage, week, root) {
+  p <- file.path(jw_run_dir(week, root), "problems.parquet")
+  if (!file.exists(p)) return(invisible(0L))
+  cur <- as.data.frame(.read_pq(p)); keep <- cur$stage != stage
+  if (all(keep)) return(invisible(0L))
+  jw_write_parquet(cur[keep, , drop = FALSE], p, jw_problem_cols)
+  invisible(sum(!keep))
+}
 jw_problems_read <- function(week = jw_week_id(), root = jw_root()) {
   p <- file.path(jw_run_dir(week, root), "problems.parquet")
   if (file.exists(p)) as.data.frame(.read_pq(p)) else as.data.frame(jw_coerce(data.frame()[0, ], jw_problem_cols))

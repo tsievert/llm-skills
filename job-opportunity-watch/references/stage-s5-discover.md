@@ -49,6 +49,10 @@ next s4 batch, never straight into the ledger.
 
 ## Skip or close
 
+Gotchas from use: the argument order is `jw_write_stage(df, "s5")` (data frame first); `bsky_search()` returns a
+0-row frame when nothing matches, so check `nrow()` before `cbind()` (a scalar column errors on 0 rows);
+`jw_tags_record()` has no way to leave hits at 0, so use its `note` argument for per-run remarks.
+
 Not requested this week: `jw_stage_skip("s5", "<reason>")`. Otherwise write the file with `jw_write_stage()`
 and `jw_stage_close("s5")`, write the lessons, `jw_lessons_mark_reported()`, and add one `usecase_add()` (skills
 used include `social-research-search`).

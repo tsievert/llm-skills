@@ -203,3 +203,12 @@ test_that("summary shows the s4 note next to Expired when the listed deadline is
   jw_write_summary(WK, r, TODAY)
   expect_true(any(grepl("Expired [(]page marked expired[)]", readLines(file.path(jw_run_dir(WK, r), "summary.md")))))
 })
+
+test_that("an s0 re-run drops earlier s0 problem rows and keeps other stages' rows", {
+  r <- new_root(); rd <- jw_run_dir(WK, r); dir.create(rd, recursive = TRUE)
+  jw_problem("s0", "pkg_missing", "missing packages: foo", "error", 1L, WK, r)
+  jw_problem("s1", "other", "keep me", "warn", 1L, WK, r)
+  expect_equal(.problems_drop_stage("s0", WK, r), 1L)
+  p <- jw_problems_read(WK, r); expect_equal(p$stage, "s1")
+  expect_equal(.problems_drop_stage("s0", WK, r), 0L)
+})

@@ -33,6 +33,41 @@ new links and 1 to 2 queue items. So the diff works; a few failures are transien
   aggregator-noise note). Not built: a share-of-noise metric or an excluded-system title stop-word pass, so
   budget time for opening plausible tier-2 titles from any field-category aggregator.
 
+## Links that redirect to a changing Google Sheet
+
+Some community job boards are a stable URL that redirects to a new public Google Sheet each year, with one
+tab per job type. A plain probe sees a redirect and no anchors. Do not replace the link by the resolved
+sheet or per-tab CSV export URLs: the sheet id changes yearly, so they go stale (a user correction). Keep the
+stable link and resolve at run time with `jw_resolve_gsheet(url, tabs = "postdoc|faculty")`: it reads the
+redirect target without fetching it, the tab names and gids from the public `/htmlview` page, and downloads
+each chosen tab as CSV (`/export?format=csv&gid=`). Tested live on one board (400 and 194 rows; banner in
+row 1, headers in row 2, duplicate header names made unique with `make.unique`); the function stops with a
+clear message if the link is not a sheet redirect, the sheet is not public, or the tab list is not found
+(Google may change the page).
+
+In the probe: a link with the word `resolver` in its `note` column gets `type = resolver`, and a portal link
+whose redirect ends on a sheet is resolved the same way without the flag. `jw_probe_one` then returns one
+anchor per sheet row that has a URL (text from institution, subject, rank or PI, location; href from the
+URL column), so rows flow through s1 to s3 like any other listing. Tabs come from
+`options(jobwatch.gsheet_tabs = "<regex>")`, default `postdoc|faculty|permanent`. Rows carry no per-row
+status or date in the anchors: the profile's geography rules do the filtering (such boards are often
+US-heavy, so expect many rejected titles) and the deadline check reads the target pages. Tested live on one
+board: 594 rows, 593 with a link, identical result by flag and by redirect; a non-sheet link under
+`resolver` gives `status = error` with a clear note. Not tested: a sheet that stops being public mid-run,
+tab names that match no pattern (returns zero anchors), `jw_probe()` end to end over a whole links file.
+
+## Sources that failed in one weekly run (checked 2026-11-03)
+
+- RSS feed read as "unparseable html": fixed, see `stage-s1-probe.md` (XML bodies are no longer sent to the HTML parser).
+- A Cloudflare "Just a moment" challenge (HTTP 403, also on `sitemap.xml` and `/rss`): the site's
+  `robots.txt` allows crawling and lists sitemaps, but the challenge blocks scripted requests. Do not
+  bypass; mark it `manual-check` and use a mirror or aggregator that is probeable.
+- Connection timeouts to one host that resolves, while other hosts of the same institution work: this can be
+  the local network or a firewall rule rather than the site, and no script change fixes it. Test from
+  another network (the user's browser, a phone hotspot) before retiring the link.
+- "Could not resolve hostname" on the local resolver (`SERVFAIL`) with no second resolver reachable: ask the
+  user to open the page in a browser; if it loads there, the problem is the machine's DNS.
+
 ## Reading hints for pages the script cannot parse
 
 - JavaScript listings: `webfetch` sometimes gets the rendered text; if not, look for an RSS feed, a

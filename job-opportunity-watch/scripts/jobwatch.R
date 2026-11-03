@@ -91,6 +91,11 @@ jw_read_links <- function(path = jw_links_path()) {
     grepl("/search", d$url)
   is_sitemap <- !is_search & grepl("(\\.xml(\\.gz)?|sitemap[^/]*)([?#].*)?$", d$url, ignore.case = TRUE)
   d$type <- ifelse(is_search, "search_engine", ifelse(is_sitemap, "sitemap", "portal"))
+  # "resolver": a stable link that redirects to a changing Google Sheet. Opt in with the word `resolver` in
+  # the note; a portal link whose redirect ends on a sheet is also resolved by jw_probe_one without the flag.
+  # Tabs are chosen by options(jobwatch.gsheet_tabs = "<regex>"), default "postdoc|faculty|permanent".
+  is_res <- !is_search & !is_sitemap & grepl("(^|[;, ])resolver(:|$|[;, ])", d$note %||% "", ignore.case = TRUE)
+  d$type[is_res] <- "resolver"
   d$query <- NA_character_
   for (i in which(is_search)) {
     q <- sub(".*[?&]q=([^&]*).*", "\\1", d$url[i])
@@ -169,8 +174,96 @@ jw_classify_titles <- function(text, profile = NULL) {
   list(anchors = utils::head(a, max_anchors), n_urls = length(locs))
 }
 
+# RSS 2.0, Atom and RDF feeds as a source: one anchor per item (title + link). Items are not filtered
+# here; the job-like flag and the profile prefilter downstream do that. Returns NULL if `doc` is no feed.
+.feed_anchors <- function(doc) {
+  root <- xml_name(doc)
+  if (!root %in% c("rss", "feed", "RDF")) return(NULL)
+  items <- xml_find_all(doc, "//*[local-name()='item' or local-name()='entry']")
+  one <- function(it) {
+    ttl <- xml_text(xml_find_first(it, "./*[local-name()='title']"))
+    lnk <- xml_find_first(it, "./*[local-name()='link']")
+    href <- if (inherits(lnk, "xml_missing")) NA_character_ else {
+      h <- xml_attr(lnk, "href"); if (is.na(h)) xml_text(lnk) else h   # Atom: href attribute; RSS: text
+    }
+    if (is.na(href) || !nzchar(trimws(href))) {
+      g <- xml_text(xml_find_first(it, "./*[local-name()='guid']")); if (grepl("^https?://", g %||% "")) href <- g
+    }
+    c(text = trimws(gsub("\\s+", " ", ttl %||% "")), href = trimws(href))
+  }
+  m <- if (length(items)) do.call(rbind, lapply(items, one)) else matrix(character(), 0, 2, dimnames = list(NULL, c("text", "href")))
+  a <- unique(as.data.frame(m, stringsAsFactors = FALSE))
+  a <- a[!is.na(a$href) & grepl("^https?://", a$href) & nchar(a$text) >= 8, , drop = FALSE]
+  list(anchors = a, n_items = length(items))
+}
+
+# A stable link that redirects to a Google Sheet which changes every year (community job boards). Never pin the
+# resolved sheet id or tab gids in links.csv: keep the stable URL and resolve at run time. Steps: read the
+# redirect target without fetching it, read tab names and gids from the public /htmlview page, pick tabs by
+# name (case-insensitive regex), download each as CSV. Returns a named list of data frames (one per tab).
+# Tab banners and duplicate header names are common: `header_row` says which row holds the headers (the
+# default 2 fits a banner row above them); names are made unique. Filter the rows locally (location, dates).
+jw_resolve_gsheet <- function(url, tabs = "postdoc|faculty|permanent", header_row = 2, timeout = 40) {
+  get <- function(u, ...) request(u) |> req_user_agent(jw_ua) |> req_timeout(timeout) |>
+    req_error(is_error = \(r) FALSE) |> req_options(...) |> req_perform()
+  target <- url
+  if (!grepl("docs\\.google\\.com/spreadsheets/d/", url)) {
+    r <- get(url, followlocation = FALSE)
+    target <- resp_header(r, "location")
+    if (is.null(target) || !grepl("docs\\.google\\.com/spreadsheets/d/", target)) stop("no Google Sheet redirect from ", url)
+  }
+  id <- sub("^.*/spreadsheets/d/([^/?#]+).*$", "\\1", target)
+  h <- get(paste0("https://docs.google.com/spreadsheets/d/", id, "/htmlview"))
+  if (resp_status(h) >= 400) stop("sheet is not public or not found (HTTP ", resp_status(h), ")")
+  m <- regmatches(resp_body_string(h), gregexpr("items\\.push\\(\\{name: \"[^\"]*\"[^}]*?gid: \"[0-9]+\"", resp_body_string(h)))[[1]]
+  if (!length(m)) stop("no tab list found on the htmlview page (layout changed?)")
+  nm <- gsub("\\\\/", "/", sub("^items\\.push\\(\\{name: \"([^\"]*)\".*$", "\\1", m))
+  gid <- sub("^.*gid: \"([0-9]+)\"$", "\\1", m)
+  pick <- grepl(tabs, nm, ignore.case = TRUE)
+  out <- list()
+  for (i in which(pick)) {
+    r <- get(sprintf("https://docs.google.com/spreadsheets/d/%s/export?format=csv&gid=%s", id, gid[i]))
+    if (resp_status(r) >= 400) { warning("tab '", nm[i], "': HTTP ", resp_status(r)); next }
+    d <- utils::read.csv(text = resp_body_string(r), header = FALSE, stringsAsFactors = FALSE, na.strings = "", check.names = FALSE)
+    if (nrow(d) < header_row) next
+    hd <- trimws(as.character(unlist(d[header_row, ]))); hd[is.na(hd) | !nzchar(hd)] <- paste0("col", which(is.na(hd) | !nzchar(hd)))
+    names(d) <- make.unique(hd, sep = "_"); d <- d[-seq_len(header_row), , drop = FALSE]; rownames(d) <- NULL
+    out[[nm[i]]] <- d
+  }
+  attr(out, "sheet_id") <- id; attr(out, "all_tabs") <- nm
+  out
+}
+
+# Sheet rows -> anchors (text from institution, subject, rank/PI, location; href from the URL column).
+.gsheet_anchors <- function(tabs, max_anchors = 2000) {
+  one <- function(d) {
+    cn <- tolower(names(d)); col <- function(p) { i <- grep(p, cn)[1]; if (is.na(i)) rep(NA_character_, nrow(d)) else as.character(d[[i]]) }
+    href <- trimws(col("^(url|link)")); href <- ifelse(grepl("^[a-z0-9.-]+\\.[a-z]{2,}/", href, ignore.case = TRUE), paste0("https://", href), href)
+    txt <- apply(cbind(col("^institution"), col("^subject"), col("^(rank|pi)$"), col("^location")), 1,
+                 function(x) trimws(gsub("\\s+", " ", paste(x[!is.na(x)], collapse = " - "))))
+    data.frame(text = txt, href = href)
+  }
+  a <- unique(do.call(rbind, c(list(data.frame(text = character(), href = character())), lapply(tabs, one))))
+  a <- a[grepl("^https?://", a$href) & nchar(a$text) >= 12, , drop = FALSE]
+  utils::head(a, max_anchors)
+}
+.probe_gsheet <- function(url, timeout, t0) {
+  out <- list(status = "error", http = NA_integer_, final_url = NA_character_, bytes = NA_integer_, text_chars = NA_integer_,
+              n_scripts = NA_integer_, text_hash = NA_character_, note = NA_character_, anchors = NULL)
+  tabs <- tryCatch(jw_resolve_gsheet(url, tabs = getOption("jobwatch.gsheet_tabs", "postdoc|faculty|permanent"), timeout = timeout),
+                   error = function(e) conditionMessage(e))
+  if (is.character(tabs)) { out$note <- substr(paste("resolver:", tabs), 1, 150); return(out) }
+  out$anchors <- .gsheet_anchors(tabs); out$status <- "ok"; out$http <- 200L
+  out$final_url <- paste0("https://docs.google.com/spreadsheets/d/", attr(tabs, "sheet_id"))
+  out$note <- sprintf("resolver: %d tabs (%s), %d rows, %d with a link", length(tabs), paste(names(tabs), collapse = ", "),
+                      sum(vapply(tabs, nrow, 1L)), nrow(out$anchors))
+  out$elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+  out
+}
+
 jw_probe_one <- function(url, timeout = 25, type = "portal") {
   t0 <- Sys.time()
+  if (type == "resolver") return(.probe_gsheet(url, timeout, t0))
   r <- pf_perform(url, jw_ua, timeout = timeout, retry_on = c(429, 502, 503, 504))
   out <- list(status = "error", http = NA_integer_, final_url = NA_character_, bytes = NA_integer_,
               text_chars = NA_integer_, n_scripts = NA_integer_, text_hash = NA_character_,
@@ -178,6 +271,7 @@ jw_probe_one <- function(url, timeout = 25, type = "portal") {
   if (!is.null(r$error)) { out$note <- substr(conditionMessage(r$error), 1, 150); return(out) }
   resp <- r$response
   out$http <- resp_status(resp); out$final_url <- resp$url
+  if (out$http < 400 && grepl("^https://docs\\.google\\.com/spreadsheets/d/", resp$url)) return(.probe_gsheet(url, timeout, t0))
   body <- resp_body_raw(resp); out$bytes <- length(body)
   ctype <- tolower(resp_content_type(resp) %||% "")
   if (out$http >= 400) {
@@ -198,6 +292,15 @@ jw_probe_one <- function(url, timeout = 25, type = "portal") {
     out$anchors <- sm$anchors; out$status <- "ok"
     out$note <- sprintf("sitemap: %d URLs, %d vacancy-like%s", sm$n_urls, nrow(sm$anchors),
                         if (nrow(sm$anchors) >= 2000) " (capped at 2000: first listed kept)" else "")
+    out$elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+    return(out)
+  }
+  if (nzchar(head_txt) && grepl("<(rss|feed|rdf:RDF)\\b", substr(head_txt, 1, 2000))) {
+    doc <- tryCatch(read_xml(head_txt), error = function(e) NULL)
+    fd <- if (is.null(doc)) NULL else .feed_anchors(doc)
+    if (is.null(fd)) { out$note <- "unparseable feed"; return(out) }
+    out$anchors <- fd$anchors; out$status <- "ok"
+    out$note <- sprintf("feed: %d items, %d with title and link", fd$n_items, nrow(fd$anchors))
     out$elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
     return(out)
   }
@@ -423,6 +526,22 @@ jw_replace_link <- function(old_url, new_url, path = jw_links_path(), confirmed 
                     added = format(Sys.Date()), added_by = added_by, replaces = old_url, note = note)
   .write_links_csv(rbind(d, row), path)
   message("Replaced. Backup: ", bak); invisible(bak)
+}
+# Re-enable or retire one existing link (e.g. undo a replacement). Same protocol as the other editors:
+# `confirmed` only after the user said yes, backup first, the row stays in the file.
+jw_set_link_enabled <- function(url, enabled, path = jw_links_path(), confirmed = FALSE, note = NA) {
+  if (!isTRUE(confirmed)) stop("Not confirmed by the user: show the proposed change first.")
+  stopifnot(is.logical(enabled), length(enabled) == 1, !is.na(enabled))
+  d <- .read_links_table(path)
+  i <- match(jw_key(url), jw_key(d$url))
+  if (is.na(i)) stop("Link not found in ", path)
+  if (d$enabled[i] == enabled) { message("Already ", if (enabled) "enabled" else "disabled", ": ", url); return(invisible(NULL)) }
+  bak <- .jw_backup(path)
+  d$enabled[i] <- enabled
+  tag <- paste0(if (enabled) "re-enabled " else "retired ", format(Sys.Date()), if (!is.na(note)) paste0(" (", note, ")") else "")
+  d$note[i] <- paste0(ifelse(is.na(d$note[i]), "", paste0(d$note[i], "; ")), tag)
+  .write_links_csv(d, path)
+  message(if (enabled) "Enabled." else "Disabled.", " Backup: ", bak); invisible(bak)
 }
 # One-time conversion of a legacy links.txt to links.csv (the .txt is left untouched). Needs a yes.
 jw_convert_links_txt <- function(txt = jw_path("links.txt"), csv = jw_path("links.csv"), confirmed = FALSE) {

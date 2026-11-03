@@ -120,8 +120,11 @@ body that is a `urlset`/`sitemapindex` is also read as one). `jw_probe_one` keep
 at 2000 anchors (the note says so). A news-site sitemap with no vacancy URLs comes out as `nav_only`. After every
 probe `jw_probe` also adds `job_like` per anchor and `n_job_like`/`flag` per source (when `jw_checks.R` is
 loaded). Category links whose slug repeats a short link text (`Life Science` -> `/jobs/life-science/`) are not
-counted (`jw_category_link()`); `fine` still means "has vacancy-like links", not "has relevant vacancies". Feed
-sources are not built; a scheduled Task Scheduler run (vs. a manual `Rscript run_weekly.R` or sourced run) is
+counted (`jw_category_link()`); `fine` still means "has vacancy-like links", not "has relevant vacancies". RSS,
+Atom and RDF feeds are read by `jw_probe_one` without a special type, and a link whose redirect ends on a
+public Google Sheet is read as `type = resolver` ([portal-quirks.md](portal-quirks.md)) (title and link per item;
+[stage-s1-probe.md](stage-s1-probe.md)). A re-run of s0 first drops the earlier s0 problem rows, so a fixed cause
+(for example a package installed afterwards) no longer keeps the stage failed; rows of other stages are kept. A scheduled Task Scheduler run (vs. a manual `Rscript run_weekly.R` or sourced run) is
 not tested.
 Tested on 3 real links (a sitemap index with scheme-less `<loc>` values, a portal page, a news sitemap): s1 to s3
 completed and s4 stopped as designed. Tested again (2026-10-27) on 5 real links from one multi-link portal set

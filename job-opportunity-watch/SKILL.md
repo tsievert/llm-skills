@@ -84,7 +84,8 @@ for a class A item). Protocol and examples:
 
 - Show the exact change (new line and section, or a profile diff) and the evidence, and ask with `AskUser`.
 - Apply only after a yes: `jw_add_link(url, section, confirmed = TRUE)`, `jw_replace_link(old, new,
-  confirmed = TRUE)` (the old row stays with `enabled = FALSE`) or `jw_write_confirmed()` for the profile. All
+  confirmed = TRUE)` (the old row stays with `enabled = FALSE`), `jw_set_link_enabled(url, enabled, confirmed = TRUE)`
+  (re-enable or retire one row) or `jw_write_confirmed()` for the profile. All
   write a timestamped backup first and refuse without `confirmed = TRUE`. Never delete user links; bump
   `profile_version` when the profile changes.
 

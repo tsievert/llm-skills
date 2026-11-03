@@ -16,6 +16,8 @@ jw_preflight <- function(week = jw_week_id(), root = jw_root(), run_tests = TRUE
   stage <- "s0"; rd <- jw_run_dir(week, root); dir.create(rd, showWarnings = FALSE, recursive = TRUE)
   jw_stage_begin(stage, week, root)
   on.exit(jw_lock_release(rd), add = TRUE)
+  # a re-run re-checks everything, so rows from an earlier s0 attempt would only report causes that are fixed
+  .problems_drop_stage(stage, week, root)
   prob <- function(code, msg, sev = "error") jw_problem(stage, code, msg, sev, 1L, week, root)
 
   need <- c("arrow", "validate", "jsonlite", "yaml", "httr2", "xml2", "rvest", "kableExtra", "quarto", "targets")

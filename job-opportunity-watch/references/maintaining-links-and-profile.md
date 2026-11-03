@@ -39,10 +39,11 @@ suggest", confirmed = TRUE)`) so it persists and is not probed.
 jw_add_link("https://example.org/jobs", section = "Finnland", label = "Example University",
             note = "official page linked from a vacancy", confirmed = TRUE)
 jw_replace_link(old_url, new_url, note = "moved; found in sitemap", confirmed = TRUE)  # dead link
+jw_set_link_enabled(url, enabled = TRUE, note = "undo replacement", confirmed = TRUE)  # re-enable or retire one row
 jw_write_confirmed(profile_path, new_text, confirmed = TRUE)   # profile: write the full new text
 ```
 
-Both make a timestamped backup next to the file first. For the profile, edit the YAML text minimally
+All of them make a timestamped backup next to the file first. For the profile, edit the YAML text minimally
 (keep the user's comments, order and wording), bump `profile_version`, re-read it with
 `yaml::read_yaml()` to check it parses, and tell the user which backup to restore from if needed. Section
 labels must match the existing label exactly or a new section is created at the end.

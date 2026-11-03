@@ -53,7 +53,9 @@ re-reported unless something changed.
 
 ## What to write (contract: `jw_contracts()$s4`)
 
-One row per pending item. `decision = "rejected_title"` needs nothing else. `decision = "classified"` needs
+One row per pending item: build the table from `jw_pending("s4")`, not from the s2 queue. `jw_pending()` and
+the gate leave out items that s3 marked `expired`, and an s4 row for one fails the close with `s4_coverage`
+("rows that match no candidate"). `decision = "rejected_title"` needs nothing else. `decision = "classified"` needs
 `opp_id` (a stable id you choose: employer slug plus reference), `class` A-E, one final `status`
 (`classification.md`), `track`, `why` and `weakest_dimension`; `Verified open` also needs `evidence_url` of
 the official page. If an item fails exactly one hard rule (FTE, language, geography) but is strong elsewhere,
