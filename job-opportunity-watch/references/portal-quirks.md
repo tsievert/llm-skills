@@ -1,6 +1,14 @@
 # What the probe can and cannot read (tested 2026-10-23)
 
-Contents: test results; filter limits; things to check when it stops working.
+## Contents
+
+- [Test on a real list](#test-on-a-real-list)
+- [Limits of the title filter](#limits-of-the-title-filter)
+- [Links that redirect to a changing Google Sheet](#links-that-redirect-to-a-changing-google-sheet)
+- [Sources that failed in one weekly run (checked 2026-11-03)](#sources-that-failed-in-one-weekly-run-checked-2026-11-03)
+- [JSON sources and endpoint discovery (checked 2026-11-03, one machine, one time)](#json-sources-and-endpoint-discovery-checked-2026-11-03-one-machine-one-time)
+- [Reading hints for pages the script cannot parse](#reading-hints-for-pages-the-script-cannot-parse)
+- [If the probe stops working](#if-the-probe-stops-working)
 
 ## Test on a real list
 
@@ -67,6 +75,45 @@ tab names that match no pattern (returns zero anchors), `jw_probe()` end to end 
   another network (the user's browser, a phone hotspot) before retiring the link.
 - "Could not resolve hostname" on the local resolver (`SERVFAIL`) with no second resolver reachable: ask the
   user to open the page in a browser; if it loads there, the problem is the machine's DNS.
+
+## JSON sources and endpoint discovery (checked 2026-11-03, one machine, one time)
+
+A portal that shows only "Loading..." often fills the page from a JSON endpoint that answers without a login.
+Two are supported by `jw_probe_one()`, each **opt-in per link**: put `json:eures` or `json:oracle` in the link's
+`note` column (the link type becomes `json_eures` / `json_oracle`). The portal URL stays the key; the API call
+is built from its query parameters. Add the word only after the user has accepted the terms below.
+
+| Source | Opt-in | How it reads the portal URL | Terms and robots (read 2026-11-03) |
+|---|---|---|---|
+| EURES job-vacancy search | `json:eures` | `POST /eures/api/jv-searchengine/public/jv-search/search`; maps `keywordsEverywhere`, `locationCodes`, `positionScheduleCodes`, `educationLevel`, `publicationPeriod`, `escoOccupation`, `minNumberPost`, `orderBy`; a `-keyword` is an exclusion applied to titles locally; unknown parameters are listed in the note | The legal notice authorises reuse with acknowledgement of the source (ELA) and says nothing on automated access; `europa.eu/robots.txt` does not disallow `/eures/`. Cite EURES when reusing the data |
+| Oracle Candidate Experience (`*.oraclecloud.com/hcmUI/CandidateExperience/<lang>/sites/<site>/...`) | `json:oracle` | `GET /hcmRestApi/resources/latest/recruitingCEJobRequisitions` with `findReqs;siteNumber=<site>` plus the portal's facet parameters (categories, organizations, locations, titles, posting dates, `keyword`); multi-value facets with `;` work; deadline (`PostingEndDate`) is kept when present | The instance served no `robots.txt` (404). Oracle's website terms (oracle.com) forbid robots and scrapers for oracle.com itself; they were read, but whether they cover an employer's hosted career site was not established, and the employer's own terms were not read. Ask the user per portal |
+| University of Graz (`jobs.uni-graz.at`) | not built | The app calls `personal.uni-graz.at/api/erec/public/job-postings` (JSON with deadlines) | That host's `robots.txt` is `Disallow: /` for all agents, so it is **not fetched**; `jw_discover_endpoints()` reports it as `robots_allowed = FALSE`. Ask the university or use the page in a browser |
+| Jobbnorge | not built | `api.jobbnorge.no` answers 401 | Needs a key: manual check |
+
+Checked live: EURES with a real saved search (2 records after filters and one excluded keyword; not compared with
+the portal's own count) and with a single keyword; Oracle with category, organization and date facets (9 postings;
+job links resolve). EURES quirk: R's libcurl fails with "Failure when receiving data" when it advertises
+compression, so the call sets `accept_encoding = "identity"`. Not tested: more than one page of results, an
+Oracle site with a different language code, EURES filter codes beyond those in the saved search.
+
+Helpers for stubborn links (all in `jobwatch.R`, none edits `links.csv`):
+
+- `jw_robots_allowed(url)`: `TRUE`, `FALSE`, or `NA` when `robots.txt` cannot be fetched (longest match wins,
+  `*` and `$` supported, cached per host). Check it before using any endpoint found by hand.
+- `jw_discover_endpoints(url)`: one page request plus at most three same-site scripts. Lists feeds
+  (`rel=alternate`), schema.org JobPosting data, API URLs named in the scripts (`apiUrl`, `/api/`, `/rest/`,
+  `/wp-json/`) with robots verdict, HTTP status and content type, the opt-in words for the two known portals, and
+  fingerprints for Greenhouse, Lever, Personio, Recruitee and SmartRecruiters (their public job APIs were not
+  tested here). Propose a candidate to the user with this evidence.
+- JSON-LD: `jw_probe_one()` now also reads schema.org `JobPosting` objects from
+  `<script type="application/ld+json">` (including `@graph` and `ItemList`), so a page that exposes vacancies that
+  way no longer looks like a menu. Tested on synthetic pages only; the one live page checked (University of
+  Iceland) had no JobPosting data.
+
+Other findings from the check: the ECRO job-offers page was not dead (the host resolves elsewhere and appears
+in web search; the failure was this machine's DNS), `english.hi.is/vacancies` listed one real vacancy whose
+title had no role word, so `nav_only` is a false negative for sparse pages, and UHasselt's English vacancies
+page stayed `nav_only` after fetching the HTML.
 
 ## Reading hints for pages the script cannot parse
 

@@ -1,6 +1,13 @@
 # Stages s0-s3: setup, probing and what the headless stages cannot read
 
-Contents: data folder; before the first run; reading the source table; sources the script cannot read; dead or moved links.
+## Contents
+
+- [Data folder](#data-folder)
+- [Before the first run](#before-the-first-run)
+- [Reading the source table](#reading-the-source-table-s1_sourcesparquet)
+- [What the script cannot read](#what-the-script-cannot-read) (JavaScript pages, `search_engine` links, feeds, aggregator noise)
+- [Dead or moved links](#dead-or-moved-links-http_error-error)
+- [Related](#related)
 
 The mechanical stages run headless (`targets::tar_make()`, see `pipeline.md`) or from the console with
 `jw_stage_run("s1", function() jw_s1_probe(week), week, expected_n = jw_s1_expected_n(week))`. This file is for
@@ -43,9 +50,35 @@ Record every attempt, continue, never stop the run for one link:
   giving up (propose it as a `type = sitemap` link or a replacement; `jw_find_replacement()` checks
   `robots.txt` sitemaps too). Do not silently simplify a long filtered search URL to get a probe-able page: a
   shortened URL searches something different from what the user asked for, so propose the plain and the
-  simplified version separately rather than swapping one in.
-- **`search_engine` links:** not fetchable. The probe returns the decoded query; run it (without operators)
-  through `web_search`. The time filter in the URL is lost, so check dates in results.
+  simplified version separately rather than swapping one in. For a source that stays JavaScript-only, run
+  `jw_discover_endpoints(url)` (feeds, JSON-LD, API URLs in the page's scripts, with a `robots.txt` verdict); an
+  endpoint whose host disallows robots is reported to the user, not used. EURES and Oracle portals can be
+  switched to a JSON source with `json:eures` / `json:oracle` in the link note, once the user has accepted the
+  terms in [portal-quirks.md](portal-quirks.md).
+- **`search_engine` links:** not fetchable (Google answers plain HTTP with a CAPTCHA or nothing; not bypassed).
+  The probe's note holds the decoded query with all operators plus the URL's time filter, for example
+  `(olfaction OR smell) research (job) -wiley -site:msu.edu  [time filter: past month]`. The key ignores
+  tracking parameters (`sxsrf`, `ved`, `gs_lp`, `sca_esv`, `client`, fragment), so re-pasting the same search
+  from the browser does not create a new source. To run it: pass the query to `web_search` **with** the
+  operators, because the exclusions define the search; `web_search` may honour them only partly, so
+  afterwards drop results that match an excluded term or `-site:` domain yourself, and keep only results
+  within the time filter (check the dates; the filter itself cannot be sent). Tell the user the exact query used
+  and which exclusions you applied by hand. If the tool returns mostly off-topic results with the operators,
+  also try the query without only the `-site:` terms and say so; do not drop all operators silently.
+  **Caveat (live test 2026-11-03):** `web_search` only partly honours operators (an excluded term still appeared),
+  cannot take the time filter, and for a vacancy query returned mostly US commercial job boards, patents and
+  papers, with no university vacancy. Always report this to the user in one line (how many results were real
+  vacancies, which operators were not honoured, that dates could not be filtered); never present such a run as
+  equivalent to the Google search. **Retry loop = diagnostic, not a fix:** after each run call
+  `jw_search_refine(query, result_urls, round)`. If it returns `rerun = TRUE`, run `query_next` (it adds
+  `-site:` for the noisy domains), at most 2 reruns, and list every round (query, noise share) in the report.
+  In the live test (2026-11-03) `web_search` ignored `-site:` completely: the noise share went from 100% to 90%
+  and 9 of 10 round-2 results came from the domains just excluded. Expect the loop to end with the verdict
+  **weak source** (`jw_search_refine` says "every noisy domain is already excluded"); report that verdict, do
+  not keep rerunning, and do not claim the exclusions worked. If a rerun does lower the share, say so; that
+  means the tool honoured the operators this time. After a weak verdict propose, via the maintenance protocol, a
+  better link (a portal, feed or the Brave API); the user decides. Adding domains to `jw_noise_domains` or to
+  the user's saved query is a proposal, not an automatic change.
 - **Aggregator noise:** an aggregator lists the same vacancy as many employers' pages and many unrelated roles;
   count one opportunity once (employer, title, reference, deadline), and use aggregators for discovery, not as
   final evidence ([classification.md](classification.md)'s aggregator-noise note has the detail).

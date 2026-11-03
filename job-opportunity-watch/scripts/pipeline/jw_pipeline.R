@@ -137,7 +137,8 @@ jw_problems_read <- function(week = jw_week_id(), root = jw_root()) {
 # ---- stage files ---------------------------------------------------------------------------------
 jw_stage_file <- function(stage, week = jw_week_id(), root = jw_root()) {
   f <- jw_contracts()[[stage]]$file
-  if (is.null(f)) stop("stage '", stage, "' has no parquet output", call. = FALSE)
+  if (is.null(f)) stop("stage '", stage, "' has no parquet output; valid stage names: ",
+                       paste(names(Filter(function(x) !is.null(x$file), jw_contracts())), collapse = ", "), call. = FALSE)
   file.path(jw_run_dir(week, root), f)
 }
 jw_read_stage <- function(stage, week = jw_week_id(), root = jw_root()) as.data.frame(.read_pq(jw_stage_file(stage, week, root)))

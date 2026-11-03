@@ -96,21 +96,89 @@ jw_read_links <- function(path = jw_links_path()) {
   # Tabs are chosen by options(jobwatch.gsheet_tabs = "<regex>"), default "postdoc|faculty|permanent".
   is_res <- !is_search & !is_sitemap & grepl("(^|[;, ])resolver(:|$|[;, ])", d$note %||% "", ignore.case = TRUE)
   d$type[is_res] <- "resolver"
+  # "json_eures" / "json_oracle": opt in with `json:eures` or `json:oracle` in the note (see .probe_eures, .probe_oracle).
+  js <- tolower(sub(".*(^|[;, ])json:([a-z]+).*", "\\2", ifelse(grepl("(^|[;, ])json:(eures|oracle)", d$note %||% "", ignore.case = TRUE), d$note, "")))
+  d$type[!is_search & js %in% c("eures", "oracle")] <- paste0("json_", js[!is_search & js %in% c("eures", "oracle")])
   d$query <- NA_character_
-  for (i in which(is_search)) {
-    q <- sub(".*[?&]q=([^&]*).*", "\\1", d$url[i])
-    d$query[i] <- if (identical(q, d$url[i])) NA else utils::URLdecode(gsub("\\+", " ", q))
-  }
+  for (i in which(is_search)) d$query[i] <- jw_search_note(d$url[i])
   d$id <- vapply(d$key, function(k) substr(rlang::hash(k), 1, 8), "")
   out <- d[, c("n", "id", "section", "url", "label", "key", "host", "type", "query", "dup_of")]
   attr(out, "n_disabled") <- attr_disabled
   out
 }
 
-jw_key <- function(url) {
+jw_key <- function(url) vapply(url, .jw_key1, "", USE.NAMES = FALSE)
+.jw_key1 <- function(url) {
+  if (grepl("^https?://([^/]*\\.)?(google|bing|duckduckgo|startpage)\\.[a-z.]+/search", url, ignore.case = TRUE)) {
+    sp <- jw_search_parts(url)
+    return(paste0(tolower(sub("^(https?://[^/]+/search).*$", "\\1", url)), "?q=", sp$q_raw,
+                  if (!is.na(sp$recency)) paste0("&tbs=qdr:", sp$recency)))
+  }
   u <- sub("#.*$", "", url)
   u <- sub("/+$", "", u)
   sub("^(https?://[^/]+)", "\\L\\1", u, perl = TRUE)
+}
+
+# Parts of a search-engine URL that define the search: the query (decoded, operators kept), its raw form and the
+# time filter (Google `tbs=qdr:<h|d|w|m|y>[n]` or `as_qdr=`). Session and tracking parameters (sxsrf, ved, gs_lp,
+# sca_esv, client, fragment) are ignored, so re-pasting the "same" search gives the same key.
+jw_search_parts <- function(url) {
+  qs <- sub("^[^?]*\\??", "", sub("#.*$", "", url))
+  pars <- strsplit(strsplit(qs, "&", fixed = TRUE)[[1]], "=", fixed = TRUE)
+  get <- function(nm) {
+    v <- vapply(pars, function(p) if (length(p) >= 2 && identical(p[1], nm)) paste(p[-1], collapse = "=") else NA_character_, "")
+    v <- v[!is.na(v)]
+    if (length(v)) v[1] else NA_character_
+  }
+  q_raw <- get("q")
+  q <- if (is.na(q_raw)) NA_character_ else utils::URLdecode(gsub("+", " ", q_raw, fixed = TRUE))
+  tbs <- get("tbs"); tbs <- if (is.na(tbs)) NA_character_ else utils::URLdecode(tbs)
+  rec <- if (!is.na(tbs) && grepl("(^|,)qdr:[hdwmy][0-9]*", tbs)) sub(".*qdr:([hdwmy][0-9]*).*", "\\1", tbs) else get("as_qdr")
+  list(query = q, q_raw = q_raw, recency = rec)
+}
+
+# Plain-language time filter, e.g. "m" -> "past month", "m3" -> "past 3 months".
+jw_recency_label <- function(rec) {
+  if (is.na(rec)) return(NA_character_)
+  unit <- c(h = "hour", d = "day", w = "week", m = "month", y = "year")[[substr(rec, 1, 1)]]
+  n <- suppressWarnings(as.integer(substring(rec, 2)))
+  if (is.na(n) || n == 1L) paste("past", unit) else paste("past", n, paste0(unit, "s"))
+}
+
+# Note carried by a search_engine source: the full query with operators plus the time filter (read by s1, s4, s5).
+jw_search_note <- function(url) {
+  sp <- jw_search_parts(url)
+  if (is.na(sp$query)) return(NA_character_)
+  paste0(sp$query, if (!is.na(sp$recency)) paste0("  [time filter: ", jw_recency_label(sp$recency), "]"))
+}
+
+# Domains that, in tests, dominated web_search results for vacancy queries without being useful for this skill:
+# US commercial job boards, patent offices and preprint/paper hosts. Extend per user via `extra`.
+jw_noise_domains <- c("ziprecruiter.com", "indeed.com", "glassdoor.com", "simplyhired.com", "monster.com",
+                      "uspto.gov", "patents.google.com", "biorxiv.org", "arxiv.org", "ncbi.nlm.nih.gov",
+                      "researchgate.net", "sciencedirect.com", "springer.com", "nature.com")
+
+# Self-improvement step for a search_engine source. Give the query that was run and the URLs it returned; if too
+# large a share comes from noise domains, it returns `rerun = TRUE` and `query_next` with `-site:` terms added for
+# the noisy domains (domains already excluded are not repeated). Stops after `max_rounds` reruns, so the loop is
+# bounded and `reason` always says why. The caller must report every round to the user.
+jw_search_refine <- function(query, result_urls, round = 1L, max_rounds = 2L, threshold = 0.5,
+                             extra = character(), noise = c(jw_noise_domains, extra)) {
+  host <- tolower(sub("^www\\.", "", sub("^https?://([^/:?#]+).*$", "\\1", result_urls)))
+  is_noise <- vapply(host, function(h) any(h == noise | endsWith(h, paste0(".", noise))), NA)
+  share <- if (length(host)) mean(is_noise) else NA_real_
+  already <- sub("^-site:", "", regmatches(query, gregexpr("-site:[^ )]+", query))[[1]])
+  new <- setdiff(unique(vapply(host[is_noise], function(h) { m <- noise[h == noise | endsWith(h, paste0(".", noise))]; m[which.max(nchar(m))] }, "")), already)
+  out <- list(round = round, n_results = length(host), noise_share = share, noisy_domains = new,
+              rerun = FALSE, query_next = query, reason = "")
+  if (!length(host)) { out$reason <- "no results returned"; return(out) }
+  if (share < threshold) { out$reason <- sprintf("noise share %.0f%% is below %.0f%%: keep results", 100 * share, 100 * threshold); return(out) }
+  if (!length(new)) { out$reason <- "noisy results, but every noisy domain is already excluded: report as weak source"; return(out) }
+  if (round > max_rounds) { out$reason <- "max reruns reached: report as weak source and propose a link change"; return(out) }
+  out$rerun <- TRUE
+  out$query_next <- paste(query, paste0("-site:", new, collapse = " "))
+  out$reason <- sprintf("noise share %.0f%%: rerun with %d added exclusions", 100 * share, length(new))
+  out
 }
 
 # ---- 2. probing -----------------------------------------------------------------------------
@@ -261,9 +329,227 @@ jw_resolve_gsheet <- function(url, tabs = "postdoc|faculty|permanent", header_ro
   out
 }
 
+# ---- JSON sources and endpoint discovery ------------------------------------------------------------
+# Some JavaScript-only portals fill the page from a JSON endpoint that needs no login. Two are supported, each
+# opt-in per link with `json:eures` or `json:oracle` in the note column (the user decides after reading the
+# site's terms; see references/portal-quirks.md). The portal URL stays the key in links.csv: the API call is
+# built from its query parameters, so a filter change in the portal URL is a filter change here.
+# jw_robots_allowed() is checked before every JSON call; a disallowed host is reported, not fetched.
+.robots_cache <- new.env()
+jw_robots_allowed <- function(url, timeout = 15) {
+  root <- sub("^(https?://[^/]+).*$", "\\1", url)
+  path <- sub("^https?://[^/]+", "", url); if (!nzchar(path)) path <- "/"
+  txt <- .robots_cache[[root]]
+  if (is.null(txt)) {
+    r <- tryCatch(request(paste0(root, "/robots.txt")) |> req_user_agent(jw_ua) |> req_timeout(timeout) |>
+                    req_error(is_error = \(r) FALSE) |> req_perform(), error = function(e) NULL)
+    txt <- if (is.null(r)) NA_character_ else if (resp_status(r) >= 400) "" else
+      tryCatch(.clean(resp_body_string(r)), error = function(e) "")
+    assign(root, txt, envir = .robots_cache)
+  }
+  if (is.na(txt)) return(NA)
+  ln <- trimws(sub("#.*$", "", strsplit(txt, "\r?\n")[[1]])); ln <- ln[nzchar(ln)]
+  me <- tolower(jw_ua); cur <- character(); rules <- list(); last_ua <- FALSE
+  for (l in ln) {
+    k <- tolower(sub(":.*$", "", l)); v <- trimws(sub("^[^:]*:", "", l))
+    if (k == "user-agent") { if (!last_ua) cur <- character(); cur <- c(cur, tolower(v)); last_ua <- TRUE
+    } else if (k %in% c("allow", "disallow")) {
+      last_ua <- FALSE
+      for (a in cur) rules[[length(rules) + 1]] <- list(agent = a, allow = k == "allow", pat = v)
+    } else last_ua <- FALSE
+  }
+  named <- Filter(function(r) r$agent != "*" && nzchar(r$agent) && grepl(r$agent, me, fixed = TRUE), rules)
+  use <- if (length(named)) named else Filter(function(r) r$agent == "*", rules)
+  best <- NULL
+  for (r in use) {
+    if (!nzchar(r$pat)) next
+    esc <- gsub("([.+?^${}()|\\[\\]\\\\])", "\\\\\\1", sub("\\$$", "", r$pat), perl = TRUE)
+    rx <- paste0("^", gsub("\\*", ".*", esc), if (grepl("\\$$", r$pat)) "$" else "")
+    if (grepl(rx, path)) {
+      len <- nchar(r$pat)
+      if (is.null(best) || len > best$len || (len == best$len && r$allow)) best <- list(len = len, allow = r$allow)
+    }
+  }
+  is.null(best) || best$allow
+}
+
+.json_out <- function() list(status = "error", http = NA_integer_, final_url = NA_character_, bytes = NA_integer_,
+                             text_chars = NA_integer_, n_scripts = NA_integer_, text_hash = NA_character_,
+                             note = NA_character_, anchors = NULL)
+# accept_encoding identity: the EURES server answers a compressed request with a body libcurl cannot read
+# (R curl error "Failure when receiving data"; verified 2026-11-03, plain curl works).
+.json_post <- function(url, body, timeout) request(url) |> req_user_agent(jw_ua) |> req_timeout(timeout) |>
+  req_options(accept_encoding = "identity") |> req_error(is_error = \(r) FALSE) |> req_body_json(body, auto_unbox = TRUE, null = "null") |> req_perform()
+.q1 <- function(q, nm) { v <- q[[nm]]; if (is.null(v) || !nzchar(v[1])) character() else strsplit(utils::URLdecode(v[1]), ",", fixed = TRUE)[[1]] }
+
+# EURES job-vacancy search. Portal URL parameters map to the public search API; unknown parameters are listed in
+# the note. A keyword with a leading "-" is an exclusion in the portal: it is applied locally to the title.
+.probe_eures <- function(url, timeout, t0, max_rows = 250) {
+  out <- .json_out(); api <- "https://europa.eu/eures/api/jv-searchengine/public/jv-search/search"
+  if (isFALSE(jw_robots_allowed(api, timeout))) { out$note <- "robots.txt disallows the API path; not fetched"; return(out) }
+  q <- httr2::url_parse(url)$query %||% list()
+  known <- c("page", "resultsPerPage", "orderBy", "locationCodes", "keywordsEverywhere", "positionScheduleCodes",
+             "educationLevel", "publicationPeriod", "escoOccupation", "minNumberPost", "lang")
+  kw <- .q1(q, "keywordsEverywhere"); esco <- .q1(q, "escoOccupation")
+  body <- list(resultsPerPage = 50L, page = 1L, sortSearch = if (identical(q$orderBy, "BEST_MATCH")) "BEST_MATCH" else "MOST_RECENT",
+               keywords = lapply(kw[!startsWith(kw, "-")], function(k) list(keyword = k, specificSearchCode = "EVERYWHERE")),
+               publicationPeriod = if (length(q$publicationPeriod)) q$publicationPeriod else NULL,
+               occupationUris = as.list(if (length(esco)) paste0("http://data.europa.eu/esco/occupation/", esco) else character()),
+               skillUris = list(), requiredExperienceCodes = list(), sectorCodes = list(), positionOfferingCodes = list(),
+               positionScheduleCodes = as.list(.q1(q, "positionScheduleCodes")),
+               educationAndQualificationLevelCodes = as.list(.q1(q, "educationLevel")),
+               locationCodes = as.list(.q1(q, "locationCodes")), euresFlagCodes = list(), otherBenefitsCodes = list(),
+               requiredLanguages = list(), minNumberPost = if (length(q$minNumberPost)) as.integer(q$minNumberPost) else NULL,
+               sessionId = "jobwatch")
+  excl <- tolower(sub("^-", "", kw[startsWith(kw, "-")]))
+  rows <- list(); total <- NA_integer_; page <- 1L
+  repeat {
+    body$page <- page
+    r <- tryCatch(.json_post(api, body, timeout), error = function(e) e)
+    if (inherits(r, "error")) { out$note <- paste("eures:", substr(conditionMessage(r), 1, 120)); return(out) }
+    out$http <- resp_status(r)
+    if (out$http >= 400) { out$status <- "http_error"; out$note <- "eures API refused the request (portal filter codes may not map)"; return(out) }
+    x <- resp_body_json(r); total <- x$numberRecords %||% total
+    for (j in x$jvs) {
+      ctry <- paste(toupper(names(j$locationMap %||% list())), collapse = "/")
+      dt <- if (is.numeric(j$creationDate)) format(as.Date(as.POSIXct(j$creationDate / 1000, origin = "1970-01-01", tz = "UTC")), "%Y-%m-%d") else ""
+      rows[[length(rows) + 1]] <- data.frame(
+        text = trimws(sprintf("%s - %s (%s) posted %s", j$title %||% "", j$employer$name %||% "", ctry, dt)),
+        href = paste0("https://europa.eu/eures/portal/jv-se/jv-details/", j$id, "?lang=en"))
+    }
+    if (length(rows) >= min(total %||% 0L, max_rows) || !length(x$jvs)) break
+    page <- page + 1L; Sys.sleep(1.5)
+  }
+  a <- unique(do.call(rbind, c(list(data.frame(text = character(), href = character())), rows)))
+  if (length(excl)) a <- a[!Reduce(`|`, lapply(excl, function(e) grepl(e, tolower(a$text), fixed = TRUE))), , drop = FALSE]
+  unk <- setdiff(names(q), known)
+  out$anchors <- utils::head(a, max_rows); out$status <- "ok"; out$final_url <- url
+  out$note <- sprintf("json:eures %d of %d records read%s%s", nrow(out$anchors), total %||% NA_integer_,
+                      if (length(excl)) paste0("; excluded locally: ", paste(excl, collapse = ",")) else "",
+                      if (length(unk)) paste0("; ignored parameters: ", paste(unk, collapse = ",")) else "")
+  out$elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+  out
+}
+
+# Oracle Candidate Experience (portals at <tenant>.fa.<region>.oraclecloud.com/hcmUI/CandidateExperience/...).
+# The site number comes from the portal URL path; facet parameters of the portal URL are passed to the finder.
+.probe_oracle <- function(url, timeout, t0, max_rows = 500) {
+  out <- .json_out()
+  base <- sub("^(https?://[^/]+).*$", "\\1", url)
+  site <- sub("^.*/sites/([^/?#]+).*$", "\\1", url); lang <- sub("^.*/CandidateExperience/([a-zA-Z_-]+)/.*$", "\\1", url)
+  if (identical(site, url) || identical(lang, url)) { out$note <- "json:oracle needs a .../hcmUI/CandidateExperience/<lang>/sites/<site>/... URL"; return(out) }
+  api <- paste0(base, "/hcmRestApi/resources/latest/recruitingCEJobRequisitions")
+  if (isFALSE(jw_robots_allowed(api, timeout))) { out$note <- "robots.txt disallows the API path; not fetched"; return(out) }
+  q <- httr2::url_parse(url)$query %||% list()
+  facets <- c("selectedCategoriesFacet", "selectedOrganizationsFacet", "selectedLocationsFacet", "selectedTitlesFacet",
+              "selectedPostingDatesFacet", "selectedWorkplaceTypesFacet")
+  use <- intersect(facets, names(q)); unk <- setdiff(names(q), c(facets, "lastSelectedFacet", "keyword", "location", "mode"))
+  fparts <- vapply(use, function(f) paste0(f, "=", utils::URLdecode(q[[f]][1])), "")
+  if (length(q$keyword)) fparts <- c(fparts, paste0("keyword=", utils::URLdecode(q$keyword[1])))
+  rows <- list(); total <- NA_integer_; off <- 0L; lim <- 100L
+  repeat {
+    fin <- paste0("findReqs;siteNumber=", site, ",limit=", lim, ",offset=", off, ",sortBy=POSTING_DATES_DESC",
+                  if (length(fparts)) paste0(",", paste(fparts, collapse = ",")) else "")
+    r <- tryCatch(request(api) |> req_user_agent(jw_ua) |> req_timeout(timeout) |> req_error(is_error = \(r) FALSE) |>
+                    req_url_query(onlyData = "true", expand = "requisitionList", finder = fin) |> req_perform(), error = function(e) e)
+    if (inherits(r, "error")) { out$note <- paste("oracle:", substr(conditionMessage(r), 1, 120)); return(out) }
+    out$http <- resp_status(r)
+    if (out$http >= 400) { out$status <- "http_error"; out$note <- "oracle REST API refused the request"; return(out) }
+    it <- resp_body_json(r)$items[[1]]; total <- it$TotalJobsCount %||% total
+    rl <- it$requisitionList
+    for (j in rl) rows[[length(rows) + 1]] <- data.frame(
+      text = trimws(paste0(j$Title %||% "", " - ", j$PrimaryLocation %||% "",
+                           if (!is.null(j$PostingEndDate)) paste0(" - deadline ", j$PostingEndDate) else "")),
+      href = sprintf("%s/hcmUI/CandidateExperience/%s/sites/%s/job/%s", base, lang, site, j$Id))
+    off <- off + lim
+    if (!length(rl) || length(rows) >= min(total %||% 0L, max_rows)) break
+    Sys.sleep(1.5)
+  }
+  out$anchors <- utils::head(unique(do.call(rbind, c(list(data.frame(text = character(), href = character())), rows))), max_rows)
+  out$status <- "ok"; out$final_url <- url
+  out$note <- sprintf("json:oracle %d of %s postings read%s", nrow(out$anchors), total %||% "?",
+                      if (length(unk)) paste0("; ignored parameters: ", paste(unk, collapse = ",")) else "")
+  out$elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+  out
+}
+
+# schema.org JobPosting objects in <script type="application/ld+json"> (also inside @graph or ItemList): a standard
+# way for a page to expose vacancies even when the visible list is rendered by JavaScript.
+.jsonld_anchors <- function(doc, base_url) {
+  empty <- data.frame(text = character(), href = character())
+  sc <- tryCatch(xml_text(xml_find_all(doc, "//script[@type='application/ld+json']")), error = function(e) character())
+  found <- list()
+  walk <- function(x) {
+    if (!is.list(x)) return(invisible())
+    ty <- unlist(x[["@type"]])
+    if (!is.null(ty) && any(ty == "JobPosting")) {
+      org <- x$hiringOrganization; org <- if (is.list(org)) org$name else org
+      href <- x$url %||% x[["@id"]] %||% base_url
+      txt <- paste(c(x$title %||% x$name, org, if (!is.null(x$validThrough)) paste("deadline", x$validThrough)), collapse = " - ")
+      found[[length(found) + 1]] <<- data.frame(text = trimws(gsub("\\s+", " ", txt)), href = as.character(href))
+    }
+    for (el in x) walk(el)
+  }
+  for (s in sc) walk(tryCatch(jsonlite::fromJSON(s, simplifyVector = FALSE), error = function(e) NULL))
+  if (!length(found)) return(empty)
+  a <- unique(do.call(rbind, found)); a[nchar(a$text) >= 8 & grepl("^https?://", a$href), , drop = FALSE]
+}
+
+# Find what a stubborn page could be read from instead. One page request plus at most three same-site scripts
+# (2 MB cap). Returns candidates with a robots.txt verdict and, for URLs found in scripts, the HTTP status and
+# content type of one GET. Nothing is added to links.csv: propose a candidate to the user with this evidence.
+jw_discover_endpoints <- function(url, timeout = 25, max_scripts = 3) {
+  cand <- list(); add <- function(kind, u, ev) cand[[length(cand) + 1]] <<- data.frame(kind = kind, url = u, evidence = ev)
+  base <- sub("^(https?://[^/]+).*$", "\\1", url)
+  r <- pf_perform(url, jw_ua, timeout = timeout)
+  if (is.null(r$response)) stop("page not fetched: ", conditionMessage(r$error))
+  resp <- r$response; html <- .clean(tryCatch(resp_body_string(resp), error = function(e) ""))
+  doc <- tryCatch(read_html(html), error = function(e) NULL)
+  if (grepl("oraclecloud\\.com/hcmUI/CandidateExperience", url)) add("known: oracle", url, "Oracle Candidate Experience URL; use json:oracle in the link note")
+  if (grepl("europa\\.eu/eures/portal/.*/search", url)) add("known: eures", url, "EURES search URL; use json:eures in the link note")
+  if (!is.null(doc)) {
+    al <- xml_attr(xml_find_all(doc, "//link[@rel='alternate'][contains(@type,'rss') or contains(@type,'atom') or contains(@type,'xml')]"), "href")
+    for (u in al[!is.na(al)]) add("feed", as.character(url_absolute(u, resp$url)), "link rel=alternate")
+    nj <- nrow(.jsonld_anchors(doc, url)); if (nj) add("json-ld", url, sprintf("%d JobPosting objects on the page (the probe reads them)", nj))
+    src <- xml_attr(xml_find_all(doc, "//script[@src]"), "src"); src <- as.character(url_absolute(src[!is.na(src)], resp$url))
+    src <- utils::head(src[startsWith(src, base)], max_scripts)
+    pats <- c(apiUrl = "apiUrl:\"(https?://[^\"]+)\"", api = "\"(https?://[^\"' ]+/(?:api|rest|wp-json)/[^\"' ]{0,60})\"")
+    for (s in src) {
+      rs <- pf_perform(s, jw_ua, timeout = timeout)
+      if (is.null(rs$response) || resp_status(rs$response) >= 400) next
+      b <- resp_body_raw(rs$response); if (length(b) > 2e6) next
+      js <- .clean(rawToChar(b))
+      for (nm in names(pats)) {
+        m <- regmatches(js, gregexpr(pats[[nm]], js, perl = TRUE))[[1]]
+        for (u in unique(sub(pats[[nm]], "\\1", m, perl = TRUE))) add("api in script", u, paste("found in", basename(s)))
+      }
+    }
+  }
+  fp <- c(greenhouse = "boards\\.greenhouse\\.io/([^/\"' ]+)", lever = "jobs\\.lever\\.co/([^/\"' ]+)",
+          personio = "([a-z0-9-]+)\\.jobs\\.personio\\.(?:de|com)", recruitee = "([a-z0-9-]+)\\.recruitee\\.com",
+          smartrecruiters = "(?:careers|jobs)\\.smartrecruiters\\.com/([^/\"' ]+)")
+  for (nm in names(fp)) { m <- regmatches(html, regexpr(fp[[nm]], html, perl = TRUE))
+    if (length(m)) { tok <- sub(fp[[nm]], "\\1", m, perl = TRUE)
+      add(paste0("platform: ", nm), tok, "fingerprint in page; public job API patterns exist but were not tested by this helper") } }
+  if (!length(cand)) return(data.frame(kind = character(), url = character(), evidence = character(),
+                                       robots_allowed = logical(), status = integer(), content_type = character()))
+  d <- unique(do.call(rbind, cand)); d$robots_allowed <- NA; d$status <- NA_integer_; d$content_type <- NA_character_
+  for (i in which(grepl("^https?://", d$url) & d$kind %in% c("api in script", "feed"))) {
+    d$robots_allowed[i] <- jw_robots_allowed(d$url[i], timeout)
+    if (isTRUE(d$robots_allowed[i])) {
+      g <- pf_perform(d$url[i], jw_ua, timeout = timeout)
+      if (!is.null(g$response)) { d$status[i] <- resp_status(g$response); d$content_type[i] <- resp_content_type(g$response) %||% NA }
+      Sys.sleep(1.5)
+    }
+  }
+  rownames(d) <- NULL; d
+}
+
 jw_probe_one <- function(url, timeout = 25, type = "portal") {
   t0 <- Sys.time()
   if (type == "resolver") return(.probe_gsheet(url, timeout, t0))
+  if (type == "json_eures") return(.probe_eures(url, timeout, t0))
+  if (type == "json_oracle") return(.probe_oracle(url, timeout, t0))
   r <- pf_perform(url, jw_ua, timeout = timeout, retry_on = c(429, 502, 503, 504))
   out <- list(status = "error", http = NA_integer_, final_url = NA_character_, bytes = NA_integer_,
               text_chars = NA_integer_, n_scripts = NA_integer_, text_hash = NA_character_,
@@ -308,6 +594,7 @@ jw_probe_one <- function(url, timeout = 25, type = "portal") {
   doc <- tryCatch(resp_body_html(resp), error = function(e) NULL)
   if (is.null(doc)) { out$note <- "unparseable html"; return(out) }
   out$n_scripts <- length(xml_find_all(doc, "//script"))
+  ld <- .jsonld_anchors(doc, out$final_url)  # before the scripts are removed below
   anchors <- xml_find_all(doc, "//a[@href]")
   txt <- .clean(xml_text(anchors)); href <- .clean(xml_attr(anchors, "href"))
   xml_remove(xml_find_all(doc, "//script|//style|//noscript"))
@@ -321,6 +608,7 @@ jw_probe_one <- function(url, timeout = 25, type = "portal") {
   ok <- !is.na(txt) & nchar(txt) >= 12 & nchar(txt) <= 250 & !grepl(.nav_re, tolower(txt)) &
     grepl("^https?://", abs) & !grepl("^(mailto|javascript|tel):", href)
   a <- unique(data.frame(text = txt[ok], href = sub("#.*$", "", abs[ok])))
+  if (nrow(ld)) a <- unique(rbind(a, ld))
   out$anchors <- a
   thin <- pf_js_suspect(out$text_chars, out$n_scripts, nrow(a))
   out$status <- if (thin) "ok_js_suspect" else "ok"
@@ -341,6 +629,11 @@ jw_tick <- function(i, n, t0, what = "") {
 # Probe every unique link once (search-engine URLs are not fetched: their query is returned for the
 # web_search tool). Polite: one request at a time, >= `delay` s between requests to the same host.
 jw_probe <- function(links, delay = 1.5, timeout = 25, profile = NULL, verbose = TRUE) {
+  # A reduced data frame (url/section only) used to give zero rows without a message
+  miss <- setdiff(c("n", "id", "url", "host", "type", "dup_of", "query"), names(links))
+  if (length(miss)) stop("jw_probe() needs the data frame from jw_read_links(); missing columns: ",
+                         paste(miss, collapse = ", "), call. = FALSE)
+  if (!nrow(links)) stop("jw_probe(): `links` has no rows", call. = FALSE)
   uniq <- links[is.na(links$dup_of), ]
   jw_wait_state <- new.env()  # per-call state, isolated from other skills' pf_wait() calls
   src <- list(); anc <- list()

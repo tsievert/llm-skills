@@ -249,3 +249,82 @@ after `edit` calls (the known repo pitfall); fixed with `sed -i 's/\r$//'` and r
 
 Not done in this round: the companion web-keyword ledger, the `jw_job_like_check()` noise-share metric, and
 the excluded-title stop-word pass for tier-2 filtering (all explicitly deferred above, not silently dropped).
+
+## 2026-11-03 (evening): lessons triage, failing sources investigated
+
+Inputs: 4 inbox files (25 entries, one project). `usage.tsv` missing from `~/.posit/lessons/` again, so no coverage
+counts and no watermark update.
+
+| # | Source / check | Status | Finding |
+|---|---|---|---|
+| 1 | `employment.ku.dk` (curl, 20 s) | read | timeout on `/faculty/` and `/`; machine/network side, not fixable in the skill |
+| 2 | `www.ecro.online`, `ecro.online` (curl) | read | DNS fails here; web search shows the site live with a Job Offers page, so not dead; `ecro.org` answers 200 (parked landing page) |
+| 3 | `jobs.uni-graz.at` page + `main.*.js` | read | Angular app; `apiUrl` = `personal.uni-graz.at/api/erec/public`; `/job-postings` returns JSON with deadlines |
+| 4 | Oracle Candidate Experience REST (SDU instance) | read | `recruitingCEJobRequisitions` finder works keyless: 66 postings with `PostingEndDate` |
+| 5 | EURES `jv-searchengine` POST | read | works keyless: 5136 records for one keyword |
+| 6 | Jobbnorge `api.jobbnorge.no` | read | 401, key needed; web search found no public RSS |
+| 7 | `english.hi.is/vacancies` | read | one real vacancy, title without a role word: `nav_only` false negative |
+| 8 | `uhasselt.be` English vacancies | read | no vacancy anchors in the HTML |
+| 9 | academicpositions.com `/rss` | read | 403 (bot wall); not bypassed |
+| 10 | Reproduction: `jw_probe()` on a url/section-only data frame | tested | silent empty result (fixed: stops with missing columns); `jw_stage_file("s1_sources")` error lacked valid names (fixed) |
+| 11 | Reproduction: "could not find function" | tested, not reproduced | `jobwatch.R` attaches httr2, xml2, rvest, readr on source |
+
+Open: a `type = json` source (Oracle, EURES, Graz) is not built; needs the user's decision and a terms-of-use read.
+
+## 2026-11-03 (late): json sources built, terms of use read
+
+| # | Source | Status | Finding |
+|---|---|---|---|
+| 12 | https://eures.europa.eu/legal-notice_en | read | reuse authorised with acknowledgement of ELA; no rule on automated access; logos not reusable |
+| 13 | https://europa.eu/robots.txt | read | no rule on `/eures/`; `Disallow` for `/cgi-bin/`, `/eur-lex/`, `/archives/`, some other paths |
+| 14 | https://personal.uni-graz.at/robots.txt | read | `Disallow: /` for all agents: Graz API not built, reported by `jw_discover_endpoints()` |
+| 15 | https://jobs.uni-graz.at/robots.txt, instance robots of the Oracle portal | read | 404 (no rules) |
+| 16 | https://www.oracle.com/legal/terms.html (curl; webfetch got 403) | read | forbids robots, spiders, scrapers on the oracle.com Site; applicability to a customer-hosted career site unclear; employer terms not read: opt-in per portal |
+| 17 | Oracle finder facets (live) | tested | category 66 to 27, plus date 22; categories + organizations (`;` separated) + date 9; keyword works; `PostingEndDate` often null |
+| 18 | EURES API (live) | tested | works only with `accept_encoding = "identity"` from R libcurl (compressed request: "Failure when receiving data"); `educationLevel=8,NS` and `positionScheduleCodes=NS,fulltime` accepted; saved search gave 2 records |
+| 19 | Greenhouse, Lever, Personio, Recruitee, SmartRecruiters public job APIs | not researched | fingerprints only in `jw_discover_endpoints()`, marked untested |
+
+Built: `jw_robots_allowed()`, `.probe_eures()`, `.probe_oracle()` (opt-in `json:eures` / `json:oracle`), JSON-LD JobPosting
+anchors in the HTML branch, `jw_discover_endpoints()`; 4 offline unit tests added (35 pass). Open: multi-page runs,
+real-portal comparison of EURES counts, JSON-LD on a live page, verification of the five platform APIs.
+
+## 2026-11-03 (late): lessons hook registration
+
+`~/.posit/lessons/usage.tsv` was missing because the global `settings.json` on this machine only had the `SessionStart`
+sync hook; `PostToolUse` (matcher `skill`) and `Stop` entries for `scripts/lessons-hook.sh` were absent (the docs say hooks
+are additive and `Stop` ignores `matcher`). Registered both, created an empty `usage.tsv` (no rows invented; earlier loads
+cannot be reconstructed), and tested the script with synthetic payloads in a scratch `LESSONS_DIR` (repo skill logged,
+unknown skill ignored). Effective from the next session.
+
+## 2026-11-03: safeconduct (MountainMath) evaluated for fetch skills
+
+| # | Source | Status | Finding |
+|---|---|---|---|
+| 20 | https://doodles.mountainmath.ca/posts/2026-10-26-introducing-safeconduct-and-r2parquet/ | read | `safeconduct` (not on CRAN, CRAN submission planned; GitHub mountainMath/safeconduct) escalates curl, headless Chrome, spoofed UA, interactive Chrome, captcha. `fetch()`, `page_html()`, `probe()`. StatCan wait about 2 min; may fail in automated/Docker; clearance not transferable to curl. Not installed or tested (GitHub: needs user permission). |
+
+Assessment: relevant only as an opt-in fallback after `web-fetching-r` bot-wall detection (`probe()` is a diagnostic). Not for
+social-research-search (Bluesky/Mastodon are open APIs). Evasion of bot walls conflicts with the polite-fetch/robots stance.
+
+## 2026-11-03: Google search links (`search_engine` type)
+
+| # | Source / test | Status | Finding |
+|---|---|---|---|
+| 21 | Local: `jw_read_links()` on a long Google URL (q, tbs, sxsrf, ved, gs_lp, `#ip=1`) | tested | classified `search_engine`; `q` decoded correctly incl. `OR`, `-term`, `-site:`. `tbs=qdr:m` (past month) is dropped; `jw_key()` keeps only the fragment-stripped URL, so volatile params (`sxsrf`, `ved`, `gs_lp`, `sca_esv`) change `key`/`id` when the user re-pastes the "same" search |
+| 22 | stage-s1-probe.md "search_engine" bullet | read | says run query "without operators" through `web_search`: drops the exclusions that define the search |
+| 23 | https://developers.google.com/custom-search/v1/overview | read (via search) | Custom Search JSON API closed to new customers, discontinued 2027-01-01; new engines limited to 50 sites |
+| 24 | Bright Data blog (brightdata.com) | search; skipped: commercial | reports direct HTTP to Google gets no results / CAPTCHA |
+| 25 | SERP vendor posts (SerpApi, Serper, DataForSEO, Apify, Keirolabs, Searlo) | skipped: commercial | paid; not recommended |
+| 26 | CRAN: duckduckr (Instant Answer API only, not web results), googler (wraps CLI tool), websearchr (opens URLs), serp (unrelated) | read (CRAN_package_db) | no usable search-results package |
+
+Open: Brave Search API (independent index, key needed, has `-`/`site:` style operators; plan terms not read); the `web_search` tool
+ignores or only partly honours operators and `tbs`.
+
+Built (2026-11-03): `jw_search_parts()`, `jw_search_note()`, `jw_recency_label()`, search-aware `jw_key()` (ignores sxsrf/ved/gs_lp/sca_esv/client/fragment, keeps q and time filter); s1 reference now says keep operators, filter exclusions by hand, report the query used. 1 unit test block added to `test_json.R` (15 expectations), existing tests pass. Not done: Brave `json:brave` source; `web_search` behaviour with operators not tested live.
+
+## 2026-11-03: `web_search` with the full operator query (live test)
+
+| # | Test | Status | Finding |
+|---|---|---|---|
+| 27 | `jw_search_note()` on the user's full Google URL, query passed unchanged to `web_search` | tested | 8 results: 2 US job boards (ZipRecruiter, Indeed; commercial, US), 2 patents, 3 PMC papers, 1 arXiv/bioRxiv paper. Excluded terms/sites (wiley, jstor, wikipedia, msu.edu, eurekalert) were absent, but that could be coincidence: 3 results mention COVID, which `-covid` should remove (a bioRxiv paper did), so operators are at best partly honoured. No time filter, no dates, no Europe-based academic vacancy. Conclusion: not a substitute for the Google search; useful only as a weak discovery pass. |
+
+| 28 | Live retry loop: `web_search` round 1 -> `jw_search_refine` -> round 2 with 6 added `-site:` | tested | Round 1: 9 results, noise share 100% (ziprecruiter, indeed, biorxiv, arxiv, uspto, ncbi); rerun with `-site:` for all six. Round 2: 10 results, 9 from the just-excluded domains (uspto x4, ncbi x3, arxiv, biorxiv), noise share 90%; the one non-noise hit was a 2023 US (Monell) job ad on an EU project site. `web_search` ignores `-site:` entirely, so the rerun loop cannot improve results; `jw_search_refine` correctly stops in round 2 ("every noisy domain already excluded: weak source"). Conclusion: operators are not applied by this tool; the retry loop only documents the weakness. A real fix needs a different source (portal, feed, Brave API) |
