@@ -1,7 +1,19 @@
 # Classification, fields and statuses
 
-Contents: fields to record; classes A-E; near-miss; reading eligibility wording; aggregator noise; final statuses; opportunity tracks;
-evidence order; fallback defaults; stretch and mismatch method examples; deduplication.
+## Contents
+
+- [Fields to verify and record (per opportunity)](#fields-to-verify-and-record-per-opportunity)
+- [Classes](#classes)
+- [Near-miss (one hard rule, otherwise strong)](#near-miss-one-hard-rule-otherwise-strong)
+- [Reading eligibility wording (do not judge on the headline)](#reading-eligibility-wording-do-not-judge-on-the-headline)
+- [Aggregator noise](#aggregator-noise)
+- [Final statuses (exactly one per opportunity)](#final-statuses-exactly-one-per-opportunity)
+- [Opportunity tracks (report separately)](#opportunity-tracks-report-separately)
+- [Evidence order](#evidence-order)
+- [Fallback defaults (only where the profile is silent)](#fallback-defaults-only-where-the-profile-is-silent)
+- [Stretch versus mismatch (examples for method judgement)](#stretch-versus-mismatch-examples-for-method-judgement)
+- [Deduplication](#deduplication)
+- [Columns of `state/opportunities.tsv`](#columns-of-stateopportunitiestsv)
 
 ## Fields to verify and record (per opportunity)
 

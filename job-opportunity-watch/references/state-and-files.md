@@ -1,6 +1,14 @@
 # Data folder, file formats and state
 
-Contents: layout; links file format; profile; state files; privacy; helper functions.
+## Contents
+
+- [Layout](#layout)
+- [links.csv](#linkscsv)
+- [Profile](#profile)
+- [State columns](#state-columns)
+- [Privacy](#privacy)
+- [Functions (scripts/jobwatch.R)](#functions-scriptsjobwatchr)
+- [social_tags.tsv](#social_tagstsv)
 
 ## Layout
 

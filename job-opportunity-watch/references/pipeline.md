@@ -1,7 +1,17 @@
 # Staged weekly pipeline
 
-Contents: why stages; stage table; folder layout; contracts and validation; the completeness gate; locks and
-atomic writes; running it; lessons hand-off; safeguards; the mechanical stages (s1-s3).
+## Contents
+
+- [Why stages](#why-stages)
+- [Stages (order and ownership; the table is `jw_stages` in `scripts/pipeline/jw_pipeline.R`)](#stages-order-and-ownership-the-table-is-jw_stages-in-scriptspipelinejw_pipeliner)
+- [Folder layout](#folder-layout)
+- [Contracts, validation, gate (`jw_contracts.R`)](#contracts-validation-gate-jw_contractsr)
+- [Locks, atomic writes, Windows](#locks-atomic-writes-windows)
+- [Running it](#running-it)
+- [Lessons hand-off (skill-lessons)](#lessons-hand-off-skill-lessons)
+- [Safeguards (summary)](#safeguards-summary)
+- [The mechanical stages (`jw_stage_fns.R`, text checks in `jw_checks.R`)](#the-mechanical-stages-jw_stage_fnsr-text-checks-in-jw_checksr)
+- [Scheduling notes](#scheduling-notes)
 
 ## Why stages
 
