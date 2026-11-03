@@ -42,6 +42,7 @@ For exploratory discovery of behavioural modules instead of pre-defined measures
 ## Files
 
 - [references/dlc-basic-metrics.md](references/dlc-basic-metrics.md): pipeline and decisions for distance, speed, immobility and ROI metrics, worked numbers, statistics, existing tools incl. a tested animovement recipe and its gotchas (y-flip, fps, rhdf5).
+- [references/animovement-suite.md](references/animovement-suite.md): map of the eight animovement packages, version-stamped, with what was and was not tested.
 - `scripts/dlc_metrics.py` and `scripts/dlc_metrics.R`: same-definition basic metrics from DLC csv/h5 (summary, per-frame, time bins).
 - [references/statistical-analysis.md](references/statistical-analysis.md): from metric tables to statistics (unit of analysis, tidy layout, which model for which metric, Python route, reporting). Hands off the generic GLMM workflow to `mixed-models-glmm` and the syllable statistics to `keypoint-moseq`.
 - `scripts/stats_demo.R`: simulated 24-animal design with runnable templates for the tracking-specific analyses (latency, GAM time course, kpms syllable usage/transitions/bout durations); the Gamma/binomial/nbinom2/zero-inflation templates for the same design are in `mixed-models-glmm/scripts/glmm_templates.R`.
@@ -49,6 +50,10 @@ For exploratory discovery of behavioural modules instead of pre-defined measures
 ## Not verified
 
 Basic-metrics scripts: tested on synthetic DLC-format CSV/h5 (single and multi-animal), R and Python agree, cross-checked against trajr, animovement and movement; not run on real recordings or other camera geometries. Both scripts have a `validate_immobile()`/`--manual-immobile` check against manual scoring (see "Synthetic validation versus real recordings" in `references/dlc-basic-metrics.md`), tested on synthetic data in R and Python agreeing with each other, but not yet run against real manual scoring. The statistics templates are tested on simulated data only. If something fails, trust the live package documentation for the installed version over this file and tell the user which part was wrong.
+
+## Beyond DLC: the rest of the animovement suite (R)
+
+For R users, `animovement` also reads SLEAP, LightningPose, idtracker.ai, TRex and others through `aniread::read_dataset()`, and offers outlier masks, filters, egocentric transforms and social distance (`animetric::add_nnd()`). `read_dataset()`, `mask_na_speed()` and `add_nnd()` were tested on package sample data; the other parts are untested pointers, and the packages are development builds with experimental functions. Details, the tested version numbers and limits (for example, `mask_na_speed()` catches single-frame spikes but not multi-frame identity swaps) are in [references/animovement-suite.md](references/animovement-suite.md). Only the DLC route has scripts here; for other trackers, check the column layout after reading before applying `dlc_metrics.R`.
 
 ## Related skills
 
