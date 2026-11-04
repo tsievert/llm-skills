@@ -33,7 +33,8 @@ include sp uncertainty.
 
 ## Failures to expect and report (reported, not reproduced)
 
-- On small synthetic data about a quarter of NCV fits (20 of 70, same design, different seeds) stopped with
+- mgcv 1.9-5's ChangeLog lists several NCV fixes. Re-run 2026-11-04 on 1.9-5: 0 of 30 small fits failed (n = 100, three smooths, `gamSim(1)`). The design differs from the report below, so a fix is plausible but unproven; still count failures.
+- (1.9-4 report) On small synthetic data about a quarter of NCV fits (20 of 70, same design, different seeds) stopped with
   "infinite or missing values in 'x'" from `eigen(NCV2, ...)`. In a simulation study, count and report the
   failed fits; analysing only the successful ones can select easy data sets.
 - Several parallel local workers (four, with two threads each on a 16-thread machine) gave `R_Calloc`

@@ -30,3 +30,10 @@
 ## Log
 
 - 2026-10-27: re-test run, notes in `gam-interpretation/references/*` and `gam-mgcv/*` updated.
+
+## 2026-11-04: mgcv 1.9-5 ChangeLog check
+- Source read (partial, first 90000 of 155399 chars): https://cran.rstudio.com/web/packages/mgcv/ChangeLog. No NEWS file ships in the installed package (`news(package="mgcv")` empty); installed mgcv is 1.9.5, gratia 0.11.2.73.
+- 1.9-5: new `bt` smooth (B-spline tensor products with derivative penalties); fixes for censored `cnorm`, `gdiPK` p>n crash, several NCV bugs, `bam` efam scale adjustment, `gumbls` initialisation; `options.mgcv` defaults (`?options.mgcv`); `bandmult`/`bandsolve`; `gamma` works with EFS in `gam`/`scasm`; `ti` never triggers numerical side constraints; tensor penalty scaling changed (fits with `te`/`ti` may differ slightly from 1.9-4); `uniquecombs` no longer adds contrast attribute.
+- 1.9-4 (already covered): `scasm`, `bcg`, `plot.gam` derivatives, `bam` reports approximate REML/ML.
+- Retests on 1.9-5: NCV without `discrete=TRUE` still warns and resets; small NCV fits 0/30 failed; `twlss` order mean, power, log scale and logLik check still match; `scasm` `sc` k=3 fails, k=4-6 fit; `scasm` `sz` still fails. `options.mgcv` is not an exported object (help topic only, not tested further).
+- Skills updated: gam-mgcv/references/ncv-and-bam-notes.md, gamlss-and-extra-families.md. Not changed: gratia notes (dependency mgcv >= 1.9-4 still true).

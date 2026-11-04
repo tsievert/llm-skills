@@ -35,6 +35,13 @@ See `?smooth.terms` for the full list and `?choose.k` for basis dimension guidan
 - `s(x, by = z)` with numeric `z`: varying-coefficient model; `z` main effect is not identified inside a centred smooth, so include it separately where appropriate.
 - Check `summary()` and `draw()` for each term; a `by` smooth with ordered factors drops the reference level.
 
+## New in mgcv 1.9-5: `bs = "bt"` and `options()` defaults
+
+Tested 2026-11-04 on mgcv 1.9-5 with simulated data (`gamSim(2)`, n = 400); help pages `?smooth.construct.bt.smooth.spec` and `?options.mgcv`.
+
+- **`bs = "bt"`**: tensor product of B-spline bases with derivative-based penalties (Wood 2017, Stat Comput 27:985). It is meant for unevenly distributed data: basis functions with no data in their span are dropped, so the basis can be smaller than `k^d` (the help example shows this; in my test the data covered the unit square and nothing was dropped: `k = c(6, 6)` gave 36 coefficients, the default gave 100). Fitted and summarised normally with `gam(..., method = "REML")`; a 1-D `s(x, bs = "bt", k = 8)` also works. Penalty and spline order are set through `m`, and the help page warns that order is specified in an unusual way (`m = 3` is cubic, penalty order `m - 1`); read the `?` page before choosing `m`. Not compared against `te()` here, so do not claim it is better for a given data set; treat it as an option when `te()` or `s(x, z)` struggles with gaps in the covariate space.
+- **`options(mgcv.*)` defaults** (`?options.mgcv`; the topic is help-only, not an object): `mgcv.gam.method`, `mgcv.gam.optimizer`, `mgcv.bam.discrete`, `mgcv.s.bs`, `mgcv.te.bs`, `mgcv.te.np`, `mgcv.xt`, `mgcv.ti.mc`, `mgcv.plot.scheme`. Verified: `options(mgcv.gam.method = "REML", mgcv.bam.discrete = TRUE)` made `gam()` report `"REML"` and `bam()` use `"fREML"` with discretisation; after resetting, `gam()` returned to `"GCV"`. `options(mgcv.s.bs = c("cr", "tp"))` changed the default `s(x)` basis to `cr`. Risk: a session-wide option silently changes results for code that omits `method` or `bs`, so for reproducibility still write `method = "REML"` (and `discrete`, `bs`) explicitly in the model call, and report any options set.
+
 ## Families
 
 | Data | Family |
