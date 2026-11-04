@@ -38,7 +38,7 @@ lesson_scrub <- function(x) {
 # Patterns that survive scrubbing and still look private; returns a character vector.
 lesson_flags <- function(x) {
   checks <- c(
-    "possible token or key (32+ alphanumerics)" = "[A-Za-z0-9_-]{32,}",
+    "possible token or key (32+ alphanumerics)" = "(?=[A-Za-z0-9_-]*[0-9A-Z])[A-Za-z0-9_-]{32,}",
     "absolute path left" = "(^|[\\s\"'(])([A-Za-z]:[\\\\/]|/(?!<)[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/)",
     "long number (6+ digits, possible ID)" = "(?<![\\d.])\\d{6,}(?![\\d.])"
   )

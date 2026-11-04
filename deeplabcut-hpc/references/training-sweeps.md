@@ -30,6 +30,9 @@ A candidate must match the project type (single- versus multi-animal); do not pr
 - Evaluate with `evaluate_network(config, shuffles=[n], plotting=False)` (`Shuffles=` still works as an alias since 3.0.0).
 - Give every task its own output path and config copy (see pitfalls 1 and 8 in `SKILL.md`).
 - Compare candidates by the same metric on the same split; the default `runner.key_metric` is `test.mAP`.
+- Check walltime feasibility before listing candidates (reported once): estimate seconds per epoch for each `net_type` from a short or partial run (`sacct` Elapsed divided by the last epoch) and compare epochs x pace with the partition limit. In one benchmark several hrnet bottom-up runs ended "partial, cause unknown" after 90 to 170 of 600 epochs because they hit a 48 h limit; treat a partial run with epochs far below target as a walltime hit until the user's `sacct` output says otherwise. If epochs are cut, check that `LRListScheduler` milestones (in epochs) still fall inside the shortened run; or use resume chaining.
+- Evaluate a shuffle in the same DLC build that trained it. `evaluate_network` in the release env rejected a dev-branch config with `extra_forbidden` errors (`runner.load_scheduler_state_dict`, `train_settings.dataloader_kwargs`) because `PoseConfig` forbids unknown keys (reported once; fix applied in a script, not run on a cluster).
+- CTD (conditional top-down) shuffles take their conditions from the prediction file written when the bottom-up snapshot was evaluated, so evaluate the chosen bottom-up snapshot first, then pass `CTD_CONDITIONS=<shuffle>,<snapshot file name or index>`; `-1` resolves to the best snapshot when one exists (read in 3.0.2 source, once; not run).
 
 ## Fair comparison across architectures (benchmarking guide, read 2026-10-29)
 

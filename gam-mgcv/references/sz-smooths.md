@@ -40,6 +40,7 @@ y ~ s(x, bs = "cr") + s(fac, x, bs = "sz", xt = list(bs = "cr"), k = 8)
 y ~ s(x) + s(f1, x, bs = "sz") + s(f2, x, bs = "sz") + s(f1, f2, x, bs = "sz", id = 1)
 ```
 
+- **2 x 2 design, main effects plus an explicit interaction term** (reported once, user-corrected twice; checked on synthetic data, mgcv 1.9-5): `y ~ s(x) + s(f1, x, bs = "sz") + s(f2, x, bs = "sz") + s(x, by = ix)` with `ix` a numeric +1/-1 interaction contrast (product of the two +/-1 codings; it must also be in `newdata`). The numeric `by` smooth is not centred, so it also carries the level shift. It spans the same space as one `sz` term over the combined 4-level cell factor (same coefficient count, predictions agreed to about 0.01 here, penalties differ), but makes the interaction a single term that can be shrunk or dropped as the omnibus null.
 - Put the factor(s) first, then the continuous covariate, as in the docs. Verified: `s(x, fac, bs = "sz")` also fits and gives near-identical smoothing parameters, and gratia since issue #208 accepts any order and several factors, but stick to the documented order.
 - Always include the global `s(x)`. Without it the level smooths contain no shared component and the sum-to-zero constraint forces a sum of deviations, not level curves.
 - The `s(x)` main smooth must use compatible basis and `k` choices with the deviation term; set `k` on both deliberately.
