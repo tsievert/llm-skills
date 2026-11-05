@@ -8,6 +8,7 @@ Contents: Windows settings; repositories inside sync folders (short hazard note)
 - Inspect line endings with `git ls-files --eol`.
 - Long paths (`core.longpaths`) and case-insensitive collisions (two files differing only in case) are known Windows issues; neither was tested here, so check the Git for Windows documentation before advising.
 - Scripts copied to a cluster from the working copy can carry CRLF even when the index is LF. Convert (`sed -i 's/\r$//' file` in Git Bash) or pin with `.gitattributes`.
+- Rewriting a file with CRLF from R: never pass `file(path, "wb")` inline to `writeLines()`. The connection stays open and the content can sit in a buffer, so the file is empty on disk (and `git diff` shows every line deleted) until garbage collection closes it. Reproduced on R 4.6.0 with a 1.7 KB file (0 bytes before `gc()`; a 12-byte file was fine). Use `con <- file(path, "wb"); writeLines(x, con, sep = "\r\n"); close(con)` (or `writeBin` on a raw vector), then check `file.size(path)` and `git diff` before another process reads it.
 - From the assistant's R session, writes outside the project folder can be blocked; do repository work inside the project or ask the user to run commands.
 
 ## Repositories inside sync folders (Syncthing, OneDrive, Dropbox)

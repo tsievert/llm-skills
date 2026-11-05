@@ -31,6 +31,12 @@ max(abs(coef(m_ncv) - coef(m_fix)))   # 0 in the test here; NCV only chooses sp
 Say in the write-up that smoothing parameters were held at the original fit, so the intervals do not
 include sp uncertainty.
 
+When checking a new bootstrap or refit against an earlier one for an outcome that starts at zero (a
+cumulative curve), do not read the maximum relative difference: it is set by the near-zero early cells
+(one report: max 54 percent, median 0.2 percent, largest absolute difference a few seconds on curves
+near 1,000 s). Report absolute differences scaled by the outcome range or the bootstrap SD, with
+quantiles (median, 99th percentile, max). One report, arithmetic argument, not run on data here.
+
 ## Failures to expect and report (reported, not reproduced)
 
 - mgcv 1.9-5's ChangeLog lists several NCV fixes. Re-run 2026-11-04 on 1.9-5: 0 of 30 small fits failed (n = 100, three smooths, `gamSim(1)`). The design differs from the report below, so a fix is plausible but unproven; still count failures.
