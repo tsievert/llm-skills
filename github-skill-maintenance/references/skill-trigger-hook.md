@@ -250,10 +250,11 @@ present), `prompt-signal declaring skills` (which skills declare the field, mirr
 file-signal one), and an error if any skill declares `prompt_signals` but no hook command is wired
 under `UserPromptSubmit`. `lint_skills()` gained a matching `prompt_signals` check (single string,
 compiles as an extended regex, specificity warning on short alternatives) — note the specificity
-check splits naively on every `|`, so a pattern that nests `|` inside a parenthesised group (e.g.
-`every (week|day|month)`) can produce a spurious low-specificity warning on the inner word alone
-(seen once, for `day`, when `staged-assistant-workflow` was first declared); this is a known,
-accepted over-warn, not a bug, since it can only misfire in the direction of extra caution.
+check splits only on top-level `|` (outside parentheses), so a nested alternation such as
+`every (week|day|month)` counts as one alternative. Before 2026-11-05 it split on every `|` and
+raised a spurious low-specificity warning on the inner word `day` for `staged-assistant-workflow`;
+fixed, and the same pattern now lints clean. Escaped characters are skipped; bracket expressions
+(`[|]`) are not parsed, which could only mis-split in the cautious direction.
 
 **Tested** (synthetic piped payloads, Windows Git Bash): a matching `UserPromptSubmit` prompt
 nudges once; a second matching prompt in the same session escalates (writes

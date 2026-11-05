@@ -32,6 +32,17 @@ citing <- oa_fetch(
 )
 ```
 
+Friction seen in sessions without the MCP tools (reported twice, one project, not reproduced):
+- `oa_fetch()` with a `sort` option returned 401 "API key required for cursor paging" although
+  `OPENALEX_API_KEY` was set. Set the option explicitly (`options(openalexR.apikey = Sys.getenv("OPENALEX_API_KEY"))`)
+  or use the `httr2` route below with `api_key` passed explicitly.
+- A loose `search=` sorted by citations returns mostly irrelevant, highly cited papers. Use one
+  parenthesised boolean `title.search` expression; several `title.search` filters joined by `AND` returned
+  zero rows (boolean `AND`/`OR` belongs inside one filter value). Prefer `title.search` over `fulltext.search`
+  for method names.
+- Keyless calls through a fetch tool hit the shared daily budget (HTTP 429 after the first request), and
+  Crossref also rate-limited after a few calls. Use a keyed request or the MCP route, sequential requests only.
+
 `openalexR` is **read-only** (GET only). For anything that creates, edits, or
 deletes resources on the user's account — saved searches, alerts
 (`POST`/`PATCH`/`DELETE /saved-searches`) — use `httr2` directly, since

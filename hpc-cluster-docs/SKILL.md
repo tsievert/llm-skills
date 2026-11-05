@@ -29,7 +29,11 @@ paste back the output. Do not guess or proceed on assumptions.
 
 1. **Check what is already known.** Look in project memory (AGENTS.md section
    "HPC cluster profile") and the conversation. If a profile exists, confirm it in
-   one line and reuse it; do not re-ask.
+   one line and reuse it; do not re-ask. The confirmation is a real question (AskUser:
+   "still on <cluster>?"), not an assumption, whenever the profile predates this
+   session or the task is a new job script: users move between clusters, and a stale
+   account, partition, module or per-user core cap silently breaks the script (reported
+   once, user correction). Fetch the site page before sizing, not after.
 2. **Otherwise ask the user** in a single batch (use the AskUser tool if available,
    with free text):
    - Cluster / institution name (e.g. "Uni X Y-cluster")

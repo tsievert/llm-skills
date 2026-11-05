@@ -37,3 +37,4 @@ application-style-coach	stats-reporting-and-review	no-backlink	Reviewer-response
 tidy-data-wrangling	gam-mgcv	no-backlink	GAM users need modelling guidance here; wrangling is reached through mixed-models-glmm and the general data skills	2026-10-30
 tidy-data-wrangling	r-reproducible-pipeline	no-backlink	Pipeline skill is about orchestration; a cleaning script is just one target and generic skills should not collect domain pointers	2026-10-30
 tidy-data-wrangling	reproducible-research-data	no-backlink	Deposit planning starts from data that already exist; data-repository-readme carries the cleaning pointer instead	2026-10-30
+animal-behaviour-tracking-analysis	gam-mgcv	no-backlink	gam-mgcv users are fitting smooths to an existing table and rarely need DLC metric extraction next; the pointer here is only for per-minute time-course models of a metric	2026-11-05

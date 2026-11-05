@@ -79,6 +79,16 @@ stages <- list(
 )
 ```
 
+Reported (one project, worked): give each stage a state column (`not started`, `partial`, `done`, plus
+`INCONSISTENT` when a stage is declared built but its output is missing), and make the status function
+flag any stage file or report section that is not in the table, so a stage built out of order (before the
+skeleton) cannot go unregistered. For a stage whose code and tests are final but whose numbers are
+provisional (a development run, final run pending), use a development-versus-final gate: a config switch,
+a gate that stays not ok until the final run, and a reason string; the stage reads `partial` and stays the
+next step, while later stages may proceed by the user's decision. Make the first stage reproduce every number
+the plan quotes as an assertion against the raw file; a failed assertion is a result (the plan was wrong),
+not an error.
+
 A status function walks this list in order, checking each stage's output file against its gate,
 and reports the first stage that is missing, failed its gate, or (for an assistant-judgment stage)
 not yet closed out.

@@ -42,7 +42,13 @@ lesson_flags <- function(x) {
     "absolute path left" = "(^|[\\s\"'(])([A-Za-z]:[\\\\/]|/(?!<)[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/)",
     "long number (6+ digits, possible ID)" = "(?<![\\d.])\\d{6,}(?![\\d.])"
   )
-  hit <- vapply(checks, function(p) any(grepl(p, x, perl = TRUE)), logical(1))
+  # Hyphenated word slugs (skill names such as "animal-behaviour-tracking-analysis", also
+  # capitalised or with a short suffix like "-v2") are not secrets; blank them for the token check.
+  slug <- "\\b[A-Za-z]+(?:-[A-Za-z]+){2,}(?:-[A-Za-z0-9]{1,4})?\\b"
+  hit <- vapply(names(checks), function(n) {
+    y <- if (startsWith(n, "possible token")) gsub(slug, " ", x, perl = TRUE) else x
+    any(grepl(checks[[n]], y, perl = TRUE))
+  }, logical(1))
   names(checks)[hit]
 }
 

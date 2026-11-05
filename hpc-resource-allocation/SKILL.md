@@ -38,6 +38,11 @@ not guess or proceed on assumptions.
    sacct -j <id> --format=JobID,JobName,State,Elapsed,Timelimit,AllocCPUS,TotalCPU,ReqMem,MaxRSS
    seff <id>        # if installed: CPU and memory efficiency summary
    ```
+   `sacct`/`seff` are only meaningful after the job ends: for a running job `TotalCPU` is 0,
+   `MaxRSS` is empty and `seff` shows 0% efficiency, so nothing can be sized from them. Ask for
+   numbers after at least one array task is `COMPLETED` (use the task's own job id, `<arrayid>_<n>`),
+   or for a running step `sstat -j <jobid>.batch --format=JobID,MaxRSS,AveCPU` (needs the real
+   job id, not the array id), or read block or replicate timing from the program log.
    Compare `MaxRSS` to `ReqMem`, `Elapsed` to `Timelimit`, and `TotalCPU` to
    `Elapsed x AllocCPUS`. `MaxRSS` for jobs with steps is reported per step; check the right row.
 4. **Scale to the real input** and re-measure; memory and time often scale with input size,

@@ -43,6 +43,9 @@ output. Do not guess or proceed on assumptions.
 - Install packages once, **before** the jobs, from a login node or an interactive
   allocation (sites differ: some forbid installs on login nodes, others require them;
   check the profile). Compute nodes often have no internet.
+- A cluster R often has no default CRAN mirror (`trying to use CRAN without setting a mirror`):
+  pass one explicitly, `install.packages("pkg", repos = "https://cloud.r-project.org")`, or use
+  the site's mirror if its docs name one.
 - Set a personal/project library with `R_LIBS_USER` in `~/.Renviron` or the job script,
   separate per R minor version (`%v`/`%V` expand to the version). Never set library paths
   in `~/.Rprofile`; it should be version-independent.

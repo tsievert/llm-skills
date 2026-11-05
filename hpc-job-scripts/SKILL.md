@@ -52,6 +52,9 @@ guess or proceed on assumptions.
 - Keep the script mostly directives + environment + one launch line; put logic in
   the program.
 - Use job arrays instead of looping `sbatch`; cap concurrency with `--array=0-999%20`.
+  Where the site limits cores per user, choose N = floor(per-user core limit / `--cpus-per-task`)
+  (read the limit from the site page or `sacctmgr show qos`/`assoc`); a larger N only queues
+  tasks behind the cap (pending reason `QOSMaxCpuPerUserLimit` just means the cap is full).
   Many sub-5-minute jobs should be batched into fewer, longer ones (scheduler
   overhead), and some sites cap or discourage arrays: check the profile.
 - Chain stages with `sbatch --parsable` + `--dependency=afterok:<id>`; use
@@ -110,6 +113,7 @@ guess or proceed on assumptions.
 | Symptom | Likely cause |
 |---|---|
 | `bad interpreter: /bin/bash^M` or odd syntax errors | CRLF line endings from Windows; convert and set `*.sh text eol=lf` in `.gitattributes` |
+| Script "did not work" under a `.slurm` or other extension | Slurm reads `#SBATCH` lines from the content, so the extension should not matter (reported once, cause not established); name batch scripts `.sh` and run `file script.sh` to rule out CRLF |
 | Job fails instantly, no log | Output directory missing; check `scontrol show job <id>` (`StdOut=`) |
 | Job pending forever | Request exceeds partition limit, or wrong account/partition |
 | Python output only appears at the end | Buffered stdout; see `hpc-python-code` |

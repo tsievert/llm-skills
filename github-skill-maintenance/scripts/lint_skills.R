@@ -189,12 +189,21 @@ lint_one_skill <- function(dir) {
       compiled <- tryCatch({ grepl(ps, "", perl = FALSE); TRUE }, error = function(e) e)
       if (inherits(compiled, "error"))
         add("error", "prompt_signals", paste("Does not compile as an extended regex:", conditionMessage(compiled)))
-      # Naive split on every '|', same as the file_signals check above; a prompt_signals value
-      # may nest '|' inside a parenthesised group for its own regex alternation (e.g.
-      # "(huge|massive)"), so this only approximates "one alternative" for the specificity
-      # check below, not a structural parse -- harmless, since it can only under- or over-warn
-      # on specificity, never affect what the consuming hook actually matches.
-      alts <- strsplit(ps, "\\|")[[1]]
+      # Split on top-level '|' only (outside parentheses), so a nested alternation such as
+      # "every (week|day|month)" stays one alternative instead of leaving a bare "day".
+      # Escaped characters (e.g. "\\(") are skipped; bracket expressions are not parsed.
+      chars <- strsplit(ps, "")[[1]]
+      depth <- 0L; cut <- integer(); i <- 1L
+      while (i <= length(chars)) {
+        ch <- chars[i]
+        if (ch == "\\") { i <- i + 2L; next }
+        if (ch == "(") depth <- depth + 1L
+        else if (ch == ")") depth <- max(depth - 1L, 0L)
+        else if (ch == "|" && depth == 0L) cut <- c(cut, i)
+        i <- i + 1L
+      }
+      starts <- c(1L, cut + 1L); ends <- c(cut - 1L, length(chars))
+      alts <- mapply(function(s, e) paste(chars[s:e][seq_len(max(e - s + 1L, 0L))], collapse = ""), starts, ends)
       short <- alts[nchar(gsub("[^A-Za-z0-9_]", "", alts)) < 4 & !grepl("\\\\b", alts)]
       if (length(short))
         add("warn", "prompt_signals", paste("Alternative(s) with little specificity (risk of matching incidental text):", paste(short, collapse = ", ")))

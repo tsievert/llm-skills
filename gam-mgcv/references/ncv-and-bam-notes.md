@@ -48,6 +48,26 @@ include sp uncertainty.
   (repeated sessions within animals, 50 data sets) it was too wide by session (SE about twice the empirical
   SD) and about 1.14 times by animal with poor simultaneous coverage; a bootstrap by the clustering unit
   with fixed `sp` (fREML refit above) was best calibrated (about 0.93). One design only; treat as a caution.
+- Hand-built clustered sandwich (verified, mgcv 1.9-5, synthetic quasi-log and `Gamma(log)` `bam(discrete = TRUE)`
+  fits: max difference to `vcov(m, sandwich = TRUE)` was 0 with one cluster per row). Building the score from
+  `m$weights * m$residuals` disagreed by a factor of about 0.1 to 2; use the family quasi-score, divided by
+  `sig2`, with `Vp` as bread, and keep mgcv's `n / (n - edf)` factor and the `Vp - Ve` term. Clustering only
+  changes the meat:
+
+  ```r
+  sandwich_cluster <- function(m, cluster = NULL) {
+    X <- model.matrix(m); fam <- family(m); mu <- m$fitted.values
+    S <- fam$mu.eta(m$linear.predictors) * (m$y - mu) / (m$sig2 * fam$variance(mu)) * X
+    if (!is.null(cluster)) S <- rowsum(S, cluster)          # one score row per cluster
+    n <- nrow(X)
+    n / (n - sum(m$edf)) * m$Vp %*% crossprod(S) %*% m$Vp + (m$Vp - m$Ve)
+  }
+  max(abs(sandwich_cluster(m) - vcov(m, sandwich = TRUE)))   # check: ~0 before using a cluster
+  ```
+
+  Not for extended families (`tw`, `gaulss`): mgcv builds their score from `dDeta()` or a family `sandwich`
+  function. The small-sample factor uses the row count, not the cluster count, so with few clusters the
+  result stays optimistic (see the bootstrap caution above).
 - A 9-data-set pilot looked well calibrated (SE ratio 1.04 to 1.14); 50 data sets gave 0.83 to 0.93. Report
   the Monte Carlo SE of a coverage estimate (about `sqrt(p * (1 - p) / n)`) and avoid conclusions from
   fewer than about 30 replicates.

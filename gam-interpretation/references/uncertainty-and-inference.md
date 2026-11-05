@@ -124,3 +124,12 @@ Residual autocorrelation or clustering makes intervals too narrow. gratia's mode
 - Refit with `unconditional = TRUE` intervals.
 - Leave out a block of data (site, year) and check that the curve is stable.
 - For bam, compare `discrete = TRUE` against exact fits for a subsample.
+- Bootstrap max-t bands for contrasts of cumulative curves: standardised values near the start have tiny SDs, so
+  spurious large values can inflate the critical value, and an SD floor can make flags vanish at early times while
+  another contrast becomes flagged because the critical value fell (flags move in both directions; reported, low
+  confidence). Show the headline and the floored (or grid-restricted, for example a minimum number of contributing
+  units) versions side by side with critical values, define the floor or restriction before looking at the contrast,
+  and do not word borderline contrasts until B is large.
+- Omnibus bootstrap statistics on a PCA reduction can depend on the retained-variance threshold (one case: p about 0.4
+  at 99% and about 0.01 at 99.9%). Pre-declare the threshold, report the number of components, and add a sup-type
+  statistic without PCA as a check.

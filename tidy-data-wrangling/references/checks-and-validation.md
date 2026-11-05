@@ -9,6 +9,7 @@ Sources: Wilson et al. 2017 (record every step, unique ids), Broman and Woo 2018
 - Write the rules before cleaning
 - Plain checks (no extra package)
 - `validate` for a rule set
+- Regression-testing a rebuilt table against an old one
 - Row-count log
 - What a passing check does not show
 
@@ -42,6 +43,14 @@ validate::summary(validate::confront(df, rules))     # passes, fails, NA per rul
 
 Use the `validate::` prefix because the package masks `dplyr::expr`. Rules can be stored in a YAML file and kept with
 the script. Tested only on a toy table.
+
+## Regression-testing a rebuilt table against an old one
+
+Before diffing, prove a natural composite key is unique on both sides (`anyDuplicated()` on each). Then report three
+things: rows only in new, rows only in old, and the maximum absolute difference of each value column on matched rows
+(`anti_join()` both ways, `inner_join()` for the values). If every row appears as "only new" and "only old", the key
+changed (for example the archived table stores an integer code instead of the original string), not the data: map the
+key first, then compare. In a test, assert the exact list of extra rows rather than only a count (reported once).
 
 ## Row-count log
 
