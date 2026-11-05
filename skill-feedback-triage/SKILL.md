@@ -72,6 +72,10 @@ missed, rather than re-deriving the whole triage from scratch.
    - check upstream (package NEWS, docs, GitHub issues; see
      [references/triage-method.md](references/triage-method.md));
    - check the skill text the entry blames: is the claim wrong, missing, or just not read?
+     Grep the named skill (and `HISTORY.md`) for the entry's key terms **before building the
+     table**; a `suggested-change` that an earlier run already applied gets the outcome
+     `already-present` (no edit) instead of a proposed fix (reported once: several entries were
+     only found to be done during the edit step);
    - check CRAN for a package that would remove the problem.
    - `type: new-skill-suggestion` entries (skill slot `new-skill`) propose a skill that
      doesn't exist, so there is nothing to reproduce: instead, check for overlap with an
