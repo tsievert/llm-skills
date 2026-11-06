@@ -13,6 +13,7 @@ changing hook or path config; they may have moved on.
 - Skill discovery
 - SessionStart hook behaviour
 - How this repo's setup maps onto the facts
+- Concrete installed configuration and decided defaults
 - Things that can go wrong, and the audit that catches them
 
 ## Skill discovery
@@ -94,3 +95,31 @@ conversation) and behaviour on a second machine. Test the second machine by runn
 Safety note for edits to the hook script: it runs with the user's privileges at every
 conversation start, so keep it free of network calls other than `git fetch origin main`
 and never make it execute code from the pulled files.
+
+## Concrete installed configuration and decided defaults
+
+Installed and verified live 2026-10-23 (moved here from the project `AGENTS.md`). Goal: skills are
+installed globally (all projects) and kept current with GitHub, with no copying.
+
+- `skills.paths` in `~/.posit/assistant/settings.json` points directly at this clone. It replaces the
+  defaults, so the setting repeats them (`~/.agents/skills`, `~/.posit/assistant/skills`,
+  `.agents/skills`, `.posit/assistant/skills`) and lists this clone last.
+- A `SessionStart` hook runs `scripts/sync-skills.sh` (versioned in this repo): it throttles via
+  `~/.posit/state/llm-skills-last-check` (skip if checked within 24 h), runs `git fetch origin main`,
+  and `git pull --ff-only` if `origin/main` has moved. It fails open (dirty tree or offline: skip and
+  warn, never block the session) and derives the repo directory from its own location.
+- The hook is registered in the global settings file, so it runs regardless of workspace trust, with
+  `timeout` about 20 s. On Windows, shell-form commands run under `cmd.exe`, so the entry calls Git Bash
+  explicitly.
+- The settings file is **identical on every machine**: the clone sits at
+  `%USERPROFILE%\Sync_Home_Work\llm-skills` on both machines in use, so `skills.paths` uses
+  `~/Sync_Home_Work/llm-skills` and the hook command is
+  `"C:\Program Files\Git\bin\bash.exe" "%USERPROFILE%/Sync_Home_Work/llm-skills/scripts/sync-skills.sh"`
+  (`cmd.exe` expands `%USERPROFILE%`). Do not hard-code a user name in either place.
+- The gitignored project `.posit/assistant/settings.json` lists permission paths for both machines.
+- Newly pulled skills are available from the next conversation; a mid-session rescan is unverified.
+
+Decided defaults (formerly "open decisions", settled by what the script does):
+
+- Skills removed from the repo: the clone is the install, so a removed skill disappears locally on the next fast-forward pull; there is no separate deletion step.
+- Local uncommitted edits in the clone: the pull is skipped with a one-line warning, never forced.

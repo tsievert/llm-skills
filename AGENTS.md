@@ -121,32 +121,13 @@ single-file edits, ambiguous-scope work, or tasks needing the main conversation'
 usually cheaper and more reliable done directly, and fanning out many subagents on one task can burn more
 tokens than it saves if they aren't genuinely lower-cost.
 
-## Skill sync (installed and verified live, 2026-10-23)
+## Skill sync
 
-Goal: skills are installed globally (all projects) and kept current with GitHub. Current mechanism —
-no copying: `skills.paths` in `~/.posit/assistant/settings.json`
-(https://assistant.posit.co/docs/reference/config-file/) points directly at this clone, replacing the
-defaults (so the setting repeats them: `~/.agents/skills`, `~/.posit/assistant/skills`, `.agents/skills`,
-`.posit/assistant/skills`, plus this clone last). A `SessionStart` hook keeps the clone itself current:
-
-- Hook script `scripts/sync-skills.sh` (versioned in this repo): throttles via
-  `~/.posit/state/llm-skills-last-check` (skip if checked within 24 h), `git fetch origin main`, and
-  `git pull --ff-only` if `origin/main` has moved. Fails open (dirty tree or offline: skip and warn,
-  never block the session). Derives the repo dir from its own location.
-- Registered in `~/.posit/assistant/settings.json` (global, so it runs regardless of workspace trust),
-  `timeout` ~20 s. On Windows, shell-form commands run under `cmd.exe`, so the entry calls
-  Git Bash explicitly. The file is **identical on every machine** (the clone sits at
-  `%USERPROFILE%\Sync_Home_Work\llm-skills` on both the `thorb` and `au783787` machines), so it uses
-  `~/Sync_Home_Work/llm-skills` in `skills.paths` and, in the hook command,
-  `"C:\Program Files\Git\bin\bash.exe" "%USERPROFILE%/Sync_Home_Work/llm-skills/scripts/sync-skills.sh"`
-  (cmd.exe expands `%USERPROFILE%`). Do not hard-code a user name there. The gitignored project
-  `.posit/assistant/settings.json` lists permission paths for both machines.
-- Newly pulled skills are available from the next conversation; a mid-session rescan is unverified.
-
-## Open decisions
-
-- Whether sync should delete skills removed from the repo (default: no).
-- Handling local uncommitted edits in the clone (default: skip pull and warn).
+Skills load directly from this clone via `skills.paths` in `~/.posit/assistant/settings.json`, and a
+`SessionStart` hook (`scripts/sync-skills.sh`, once per 24 h, fast-forward only, fails open) keeps the clone
+current. Keep the settings file identical on every machine and never hard-code a user name in it. Details,
+the exact hook command and the decided defaults (removed skills, dirty clone):
+`github-skill-maintenance/references/sync-and-config-facts.md`; audit with `check_sync_setup()`.
 
 ## Todo: skills to create
 
