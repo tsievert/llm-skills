@@ -36,15 +36,9 @@ Delete `.posit/assistant/lessons-work` again once the run is archived.
 If the user collected files from other machines or projects, they go into the same
 `inbox` copy; names do not collide by design.
 
-**Dropped-off conversation exports.** If the user also provides conversation-export JSON files
-as context (rather than, or alongside, lesson files), read them with
-`jsonlite::fromJSON(simplifyVector = FALSE)`: each turn is under `messages[[i]]$message$uiMessage`
-(`role`, `content`), and `content` is plain text with embedded tool-call/tool-result markup
-mixed in. The markup dominates file size (a 1 MB export can be mostly noise); strip it with a
-regex before printing, and print each turn truncated. In practice (3 exports, 0.9-1.4 MB each)
-the exports mostly corroborated lesson files already in the inbox, so read the lesson files
-first and use an export only to verify a claim or look for a user correction the lesson writer
-missed, rather than re-deriving the whole triage from scratch.
+**Dropped-off conversation exports.** If the user also provides conversation-export JSON files,
+read the lesson files first and use an export only to verify a claim; the parsing recipe is in
+[references/conversation-exports.md](references/conversation-exports.md).
 
 ## Workflow
 
@@ -114,24 +108,15 @@ missed, rather than re-deriving the whole triage from scratch.
    `check_skill_clashes()` and `check_skill_links()` for a new skill), run any changed
    script or snippet, and state what was and was not tested. Do not call anything ready
    while errors remain.
-7. **Archive.** Move processed files with bash (`mv ... inbox/processed/`) in the real
-   inbox, not the copy, keeping parked ones in place (build the keep list from the files
-   that contain a `park` row in the triage table, not from memory; reported once, low confidence). A file with a mix of resolved and
-   parked entries stays in the inbox whole (do not split it) until every entry in it has a
-   disposition other than `park` — the parked entry is what future runs need to see, and
-   splitting the file risks losing the resolved entries' context. **Record a disposition for
-   every entry of this run** (including use-case entries and those in files you archive) so
-   mixed files stay quiet next time: `dispositions_add(L[rows, ], "fix" | "reject" | ..., ".posit/assistant/lessons-work/dispositions.tsv")`
-   (one call per outcome; `park` and `needs-info` keep an entry open), then copy the ledger
-   back with `cp .posit/assistant/lessons-work/dispositions.tsv ~/.posit/lessons/dispositions.tsv`
-   before deleting the work folder. The ledger is never committed or truncated. Never truncate or edit `usage.tsv`;
-   instead record the watermark with `triage_watermark_set(max(U$time))` (only once the
-   user has seen the triage table; skip it if `U` is empty). Do this before deleting the
-   work folder, since `U` is read from its `usage.tsv` copy; if already deleted, take the
-   last timestamp from the real `~/.posit/lessons/usage.tsv` with bash. The next run then counts
-   only newer rows, so months-apart runs do not double-count. Add a Log entry to `HISTORY.md`
-   (counts, outcomes, what was not verified) with generic wording only. Commit skill
-   edits, never lesson files.
+7. **Archive.** Work through this checklist in order, in the real inbox (not the copy):
+   - [ ] The user has seen the triage table (no archiving or watermark before that).
+   - [ ] Build the keep list from the triage table: every file that contains a `park` row. Do not build it from memory.
+   - [ ] Move all other processed files with bash: `mv ... inbox/processed/`. A file that mixes resolved and parked entries stays in the inbox whole (never split it) until every entry in it has a disposition other than `park`: the parked entry is what future runs need to see, and splitting risks losing the resolved entries' context.
+   - [ ] Record a disposition for **every** entry of this run, including use-case entries and entries in files you archive, so mixed files stay quiet next time. One call per outcome: `dispositions_add(L[rows, ], "fix" | "reject" | ..., ".posit/assistant/lessons-work/dispositions.tsv")`. `park` and `needs-info` keep an entry open.
+   - [ ] Record the watermark with `triage_watermark_set(max(U$time))`; skip it if `U` is empty. Do it before deleting the work folder, because `U` is read from its `usage.tsv` copy; if the folder is already gone, take the last timestamp from the real `~/.posit/lessons/usage.tsv` with bash. The next run then counts only newer rows, so runs months apart do not double-count. Never truncate or edit `usage.tsv`.
+   - [ ] Copy the ledger back: `cp .posit/assistant/lessons-work/dispositions.tsv ~/.posit/lessons/dispositions.tsv`. The ledger is never committed or truncated.
+   - [ ] Delete `.posit/assistant/lessons-work`.
+   - [ ] Add a Log entry to `HISTORY.md` (counts, outcomes, what was not verified) with generic wording only. Commit skill edits, never lesson files.
 
 ## What the data can and cannot say
 

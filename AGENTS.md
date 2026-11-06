@@ -3,6 +3,16 @@
 Repository of custom Posit Assistant skills, synced via GitHub
 (https://github.com/tsievert/llm-skills, branch `main`).
 
+## Hard rules (never break; the repo is public)
+
+- **No secrets.** Never write tokens, passwords, API keys or `.env` contents into any file, ledger, commit,
+  skill or search query. Check that a secret exists; do not print it.
+- **No personal or session data in git.** Never commit or copy verbatim into skills: `AGENTS.local.md`,
+  `context-inbox/` contents, lesson files, `usage.tsv`. Anonymise anything drawn from them.
+- **Installs.** CRAN and Bioconductor (`BiocManager`) installs and updates are always allowed. Installing from
+  GitHub or any other non-CRAN source (for example R-universe) requires stopping and asking the user for explicit
+  permission first.
+
 ## Layout
 
 See `README.md`'s own Layout section for the folder structure. Two rules not stated there:
@@ -35,7 +45,7 @@ duplicating it here.
   Use one ledger per skill or topic (append to an existing one if the topic matches). Format that is easy to digest: a
   numbered **requirements** table (user decisions with dates), **source tables** with a status column (read, partial,
   blocked, search, meta, not researched), short **facts** with the source URL, **open research items**, and a dated **log**.
-  Before searching again, read the ledger and do not repeat a search that has a row. Never record tokens or secrets. Mention
+  Before searching again, read the ledger and do not repeat a search that has a row. Mention
   the ledger path in the reply so the user can find it.
 - **Source-quality rules for all research (standing rule, added 2026-10-30).** (1) Ignore commercial sites (resume/CV services, paid coaching, editing or grant-writing companies, product blogs): they often sell something and their advice is often snake oil. Prefer funders, universities, learned bodies, regulators, primary documents and peer-reviewed work. (2) Ignore sites with clear signs of LLM-generated text (stock phrasing, generic filler, templated sample letters, invented-looking examples). (3) Ignore guidance tuned for a US audience (US-specific norms, funders, systems); general-purpose guidance is fine. Record any source skipped for these reasons in the ledger with status 'skipped: commercial/LLM-like/US'. Skill-specific scope limits (e.g. postdoc and tenure track only) sit in that skill's `SKILL.md` and ledger.
 - Conventions: one dated section per research round; record sources fetched, local test results, bugs/gotchas found, open
@@ -46,8 +56,8 @@ duplicating it here.
 
 Gitignored drop-off folder where the user puts files (conversation exports, scripts, samples) as context for
 developing or improving skills. When the user refers to files they "dropped off", or skill work starts with no
-other source given, list this folder and read the relevant files. Never commit its contents or copy them into
-skills verbatim (may contain personal data); anonymise any lesson drawn from it.
+other source given, list this folder and read the relevant files. Its contents may contain personal data
+(see "Hard rules"); anonymise any lesson drawn from it.
 
 ## Working rules
 
@@ -59,10 +69,7 @@ skills verbatim (may contain personal data); anonymise any lesson drawn from it.
   (https://assistant.posit.co/docs/features/hooks/) before changing hook config.
 - When developing a skill or changing its function, always check the R ecosystem (CRAN) for
   an R package that could improve it (e.g. replace hand-written helpers, add capability).
-  - Installing or updating from CRAN is always allowed without asking.
-  - Installing or updating from Bioconductor (via `BiocManager`) is also always allowed without asking (rule added 2026-10-23).
-  - Installing or updating from GitHub (or any non-CRAN source, e.g. R-universe) requires
-    stopping and asking the user for explicit permission first.
+  - Install permissions are in "Hard rules" above.
 
 ### Standing rules for all skills (added 2026-10-23)
 
@@ -84,7 +91,7 @@ skills verbatim (may contain personal data); anonymise any lesson drawn from it.
 - **Capture lessons (added 2026-10-23).** Every skill except `skill-lessons` must end with a section "Capture lessons
   (self-improvement rule)" that points to the `skill-lessons` skill (generic, anonymised entries into
   `~/.posit/lessons/inbox/`). New skills must include it; `lint_skills()` errors without it. Entries are triaged here with
-  `skill-feedback-triage`. Lesson files and `usage.tsv` are never committed.
+  `skill-feedback-triage`.
 - **Link skills to each other (added 2026-10-23).** Every skill must point to the neighbouring skills a user would plausibly
   need next, in a short "Related skills" section placed before "Explain the reasoning" (one line per skill, saying what
   it is for; match the wording of the existing sections). When adding or changing a skill, (1) add the forward links, (2)
