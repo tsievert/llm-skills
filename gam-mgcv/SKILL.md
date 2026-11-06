@@ -74,7 +74,7 @@ When mgcv's families (including `gaulss()`, `gammals()`, `gevlss()`, `ziplss()`)
 
 ## Mixed models and hierarchical GAMs
 
-Prefer random effects and factor smooths inside `gam()`/`bam()` with REML. Use `gamm4` (lme4 backend), `gamm()` (nlme, for corAR1 and other correlation structures), `glmmTMB` (smooths via `s()`), or `brms` when you need correlated random slopes, specialised families, or a full Bayesian fit. The five HGAM model types (G, GS, GI, S, I) from Pedersen et al. (2019) and the by-variable ordered factor pattern are in [references/hgam-and-random-effects.md](references/hgam-and-random-effects.md).
+Prefer random effects and factor smooths inside `gam()`/`bam()` with REML. Use `gamm4` (lme4 backend), `gamm()` (nlme, for corAR1 and other correlation structures), `glmmTMB` (smooths via `s()`), or `brms` when you need correlated random slopes, specialised families, or a full Bayesian fit. Before including both unit and session (or similar nested) random terms, tabulate how many units have repeated sessions and which factor levels co-occur within a unit: contrasts that exist only between units depend on how variance is split between the random terms, and a unit-versus-session split is identified only from units with repeats (reported twice, low to medium confidence). The five HGAM model types (G, GS, GI, S, I) from Pedersen et al. (2019) and the by-variable ordered factor pattern are in [references/hgam-and-random-effects.md](references/hgam-and-random-effects.md).
 
 ## Dependence in the data
 

@@ -67,12 +67,17 @@ document.
 3. **Check against the call**: document present or missing, limits (pages, words, whole-package size), required
    elements, file naming, sensitive data, metrics allowed or banned. Label every requirement with its source (this
    call, the university's general guidance, TENK) and never present general-guidance items, such as what finalists
-   are assessed on later, as call requirements. For a CV also run
+   are assessed on later, as call requirements. Also compare any template or scaffold structure (a section list from an earlier draft or a
+   default) with the call's actual limits and criteria before coaching content; say which parts come from the
+   template and which from the call, and offer to merge or cut template sections that cannot fit the limit (reported
+   twice; the user stated that the call always overrides default templates). For a CV also run
    [references/tenk-cv-checks.md](references/tenk-cv-checks.md).
 4. **Coach.** Pick about five to seven nudges from
    [references/phrasing-nudges.md](references/phrasing-nudges.md) and
    [references/documents-and-calls.md](references/documents-and-calls.md), ordered: call requirements, verifiability
-   and integrity, clarity and framing, polish. Use the nudge format (quote, pattern, question, optional example).
+   and integrity, clarity and framing, polish. Use the nudge format (quote, pattern, question, optional example). When the document is a readable text file
+   (.qmd, .md, .txt), add the line number next to each quote and re-read the file just before each round, because
+   the user edits between rounds and old numbers go stale.
    Offer more on request.
 5. **Close** with what was checked and what was not (no call, limits not measurable, publications not verified,
    which language version of the call you read) and invite a second pass after the user revises. When the user has

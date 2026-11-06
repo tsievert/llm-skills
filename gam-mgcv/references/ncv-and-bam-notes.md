@@ -16,6 +16,12 @@ one `bs = "re"` term). Items marked "reported" come from a real project and were
 - `select = TRUE` with `discrete = TRUE` is documented only in general terms in `?bam`; verify the effect
   on the fitted object instead of assuming it (below).
 
+## Failures and memory in simulation or sharded NCV fits
+
+Reported once (synthetic small-n data): NCV fits can fail intermittently (non-finite NCV score) and parallel NCV
+fits can exhaust memory. In any simulation study, count failed fits and report them with the results; keep the
+error text per seed, budget memory per worker when sharding locally, and retry an allocation error once.
+
 ## Resampling or bootstrapping at fixed smoothing parameters
 
 Keeping `method = "NCV"` with `sp = <fitted sp>` skips the sp search but still pays NCV overhead and

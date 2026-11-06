@@ -165,6 +165,12 @@ Keep the published version (journal/conference `type == "article"`, not
   Checked live 2026-10-23: `title_and_abstract.search.exact` with parenthesised AND groups and a wildcard, and a wildcard inside
   quotes, both returned 200; a report of 400 for unquoted exact+boolean+wildcard was not reproduced. Boolean groups with `OR`/`AND`
   also work in the non-exact `title_and_abstract.search` and `title.search` (no wildcards there).
+- Reported (3 sessions, one user): a loose `search=` sorted by `cited_by_count` returns off-topic highly cited works.
+  Use one `title_and_abstract.search` filter per concept (comma = AND) or a parenthesised boolean inside a single
+  filter value; for follow-ups on a seed paper prefer `cites:<seed>` with `type:review`. `oa_fetch()` may need the
+  key set explicitly as the `openalexR.apikey` option. Unkeyed REST calls through a fetch tool share a daily
+  budget: do not run them in parallel, use the MCP route or a keyed request, and prefer `title.search` over
+  `fulltext.search` for method names.
 - OpenAlex's `type` and `is_paratext` fields are coarse — see conference
   papers above.
 
