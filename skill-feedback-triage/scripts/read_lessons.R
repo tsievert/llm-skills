@@ -163,7 +163,15 @@ lesson_dupes <- function(lessons, max_dist = 0.35) {
   if (length(out)) do.call(rbind, out) else NULL
 }
 
-lesson_problems <- function(lessons) {
+builtin_skills <- c("create-skill", "import-instructions", "posit-products", "predictive-modeling-python",
+                    "predictive-modeling-r", "quarto-authoring", "r-package-development", "report",
+                    "self-knowledge", "shiny-bslib", "shiny-bslib-theming", "snowflake")
+
+# Skips entries already closed in the ledger (when `status` is present) and entries about built-in
+# skills that have no folder in this repo (nothing to fix here; triage rejects them).
+lesson_problems <- function(lessons, builtin = builtin_skills) {
+  if ("status" %in% names(lessons)) lessons <- lessons[lessons$status != "closed", , drop = FALSE]
+  lessons <- lessons[!lessons$skill %in% builtin, , drop = FALSE]
   types <- c("bug", "missing-guidance", "outdated-fact", "user-correction", "env-difference",
              "worked-well", "use-case", "new-skill-suggestion")
   bad <- function(cond, why) if (any(cond, na.rm = TRUE)) data.frame(file = lessons$file[cond %in% TRUE],
@@ -184,4 +192,53 @@ lesson_problems <- function(lessons) {
         if ("known_skill" %in% names(lessons))
           bad(!lessons$known_skill & !(lessons$type %in% "new-skill-suggestion" & lessons$skill %in% "new-skill"),
               "skill folder not found in the repo"))
+}
+
+# ---- Disposition ledger ------------------------------------------------------------------
+# Files that hold a parked entry stay in the inbox whole, so without a record of what each
+# entry already got, every run re-reads (and re-triages) entries that were fixed, rejected or
+# found already-present earlier. The ledger is one tab-separated file with a header:
+#   key <TAB> disposition <TAB> date
+# key = "<file>|<skill>|<title>" (lesson_key()). Disposition is one of dispositions_allowed.
+# It lives next to the inbox (~/.posit/lessons/dispositions.tsv), is never committed and never
+# truncated; triage copies it into the work folder with the inbox and copies it back at the end.
+#
+#   D <- dispositions_read(".posit/assistant/lessons-work/dispositions.tsv")
+#   L <- lesson_status(L, D)            # adds `key` and `status`: "new", "parked", "needs-info" or "closed"
+#   L[L$status == "new", ]              # triage only these; parked rows are context, not work
+#   dispositions_add(L[idx, ], "fix", ".posit/assistant/lessons-work/dispositions.tsv")
+
+dispositions_allowed <- c("fix", "add-note", "already-present", "reject", "no-change",
+                          "new-skill", "park", "needs-info")
+
+lesson_key <- function(lessons) paste(lessons$file, lessons$skill, lessons$title, sep = "|")
+
+dispositions_read <- function(file) {
+  empty <- data.frame(key = character(), disposition = character(), date = character(),
+                      stringsAsFactors = FALSE)
+  if (!file.exists(file) || file.info(file)$size == 0) return(empty)
+  utils::read.delim(file, quote = "", stringsAsFactors = FALSE, colClasses = "character")
+}
+
+# Entries with `park` or `needs-info` stay open (they are waiting for evidence or an answer);
+# every other disposition closes the entry for good.
+lesson_status <- function(lessons, dispositions) {
+  lessons$key <- lesson_key(lessons)
+  d <- dispositions$disposition[match(lessons$key, dispositions$key)]
+  lessons$status <- ifelse(is.na(d), "new",
+                    ifelse(d == "park", "parked",
+                    ifelse(d == "needs-info", "needs-info", "closed")))
+  lessons
+}
+
+# Appends or updates rows; `lessons` is any subset of read_lessons() output.
+dispositions_add <- function(lessons, disposition, file, date = format(Sys.Date())) {
+  stopifnot(length(disposition) %in% c(1L, nrow(lessons)), all(disposition %in% dispositions_allowed))
+  new <- data.frame(key = lesson_key(lessons), disposition = disposition, date = date,
+                    stringsAsFactors = FALSE)
+  old <- dispositions_read(file)
+  old <- old[!old$key %in% new$key, , drop = FALSE]
+  out <- rbind(old, new)
+  utils::write.table(out, file, sep = "\t", quote = FALSE, row.names = FALSE)
+  invisible(out)
 }

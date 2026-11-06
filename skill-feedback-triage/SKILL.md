@@ -26,6 +26,7 @@ bash (gitignored, so lesson text is never committed):
 rm -rf .posit/assistant/lessons-work    # a leftover copy re-triages already archived files
 mkdir -p .posit/assistant/lessons-work
 cp -r ~/.posit/lessons/inbox ~/.posit/lessons/usage.tsv .posit/assistant/lessons-work/
+cp ~/.posit/lessons/dispositions.tsv .posit/assistant/lessons-work/ 2>/dev/null   # per-entry ledger; absent on the first run
 rm -rf .posit/assistant/lessons-work/inbox/processed
 ls ~/.posit/lessons/inbox | wc -l; ls .posit/assistant/lessons-work/inbox | wc -l   # counts must match (minus processed)
 ```
@@ -53,14 +54,21 @@ missed, rather than re-deriving the whole triage from scratch.
    L <- read_lessons(".posit/assistant/lessons-work/inbox", repo = getwd())
    W <- triage_watermark()   # NULL on the first run, else the cutoff of the last run
    U <- read_usage(".posit/assistant/lessons-work/usage.tsv", since = W)
-   lesson_problems(L)      # malformed entries, unknown skill folders
+   D <- dispositions_read(".posit/assistant/lessons-work/dispositions.tsv")
+   L <- lesson_status(L, D)   # adds `status`: new / parked / needs-info / closed
+   table(L$status)         # triage only "new"; parked and needs-info are context, closed is done
+   lesson_problems(L)      # malformed entries, unknown skill folders (skips closed and built-in-skill entries)
    lesson_overview(L, U)   # per skill: loads, sessions, projects, entries by type
    lesson_dupes(L)         # candidate duplicates (heuristic, check by reading)
    ```
    Report coverage first: skills never loaded in real projects (still untested on real
    data), skills loaded often with no entries (either fine or the reminder is not working;
    say which is unknown), and entries per load. Fix or report malformed entries rather
-   than dropping them silently.
+   than dropping them silently. Entries whose status is `closed` were dispositioned by an
+   earlier run (a mixed file stays in the inbox whole, so they reappear in `read_lessons()`);
+   leave them out of the table and the counts, and do not re-grep or re-propose them.
+   `parked` entries are only evidence: re-open one only when a `new` entry reports the same
+   thing (a second independent report).
 2. **Group.** Merge duplicates into one issue and count independent projects and sessions
    per issue. Keep `generality: likely-user-specific` entries out of skill edits unless a
    second project shows the same thing.
@@ -75,7 +83,10 @@ missed, rather than re-deriving the whole triage from scratch.
      Grep the named skill (and `HISTORY.md`) for the entry's key terms **before building the
      table**; a `suggested-change` that an earlier run already applied gets the outcome
      `already-present` (no edit) instead of a proposed fix (reported once: several entries were
-     only found to be done during the edit step);
+     only found to be done during the edit step). Grep alone misses paraphrased guidance
+     (reported once): for every proposed fix, read the target section of the named skill, not
+     just the grep hits. An entry about a built-in skill that has no folder in this repo
+     (for example `quarto-authoring`) is `reject` before the table;
    - check CRAN for a package that would remove the problem.
    - `type: new-skill-suggestion` entries (skill slot `new-skill`) propose a skill that
      doesn't exist, so there is nothing to reproduce: instead, check for overlap with an
@@ -108,7 +119,12 @@ missed, rather than re-deriving the whole triage from scratch.
    that contain a `park` row in the triage table, not from memory; reported once, low confidence). A file with a mix of resolved and
    parked entries stays in the inbox whole (do not split it) until every entry in it has a
    disposition other than `park` — the parked entry is what future runs need to see, and
-   splitting the file risks losing the resolved entries' context. Never truncate or edit `usage.tsv`;
+   splitting the file risks losing the resolved entries' context. **Record a disposition for
+   every entry of this run** (including use-case entries and those in files you archive) so
+   mixed files stay quiet next time: `dispositions_add(L[rows, ], "fix" | "reject" | ..., ".posit/assistant/lessons-work/dispositions.tsv")`
+   (one call per outcome; `park` and `needs-info` keep an entry open), then copy the ledger
+   back with `cp .posit/assistant/lessons-work/dispositions.tsv ~/.posit/lessons/dispositions.tsv`
+   before deleting the work folder. The ledger is never committed or truncated. Never truncate or edit `usage.tsv`;
    instead record the watermark with `triage_watermark_set(max(U$time))` (only once the
    user has seen the triage table; skip it if `U` is empty). Do this before deleting the
    work folder, since `U` is read from its `usage.tsv` copy; if already deleted, take the
