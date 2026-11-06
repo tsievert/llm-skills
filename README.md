@@ -94,7 +94,7 @@ machine-specific, so they aren't duplicated here).
 | `sync-skills.sh` | `SessionStart` | Fast-forwards this clone from `origin/main` at most once a day | this file's own header comment |
 | `lessons-hook.sh` | `PostToolUse`, `Stop` | Logs skill usage and nudges the assistant to record lessons learned about a skill | [skill-lessons/references/hook-setup.md](skill-lessons/references/hook-setup.md) |
 | `skill-trigger-hook.sh` | `UserPromptSubmit`, `PostToolUse`, `Stop` | Catches an explicit "use/trigger a skill" instruction that was never followed up | [github-skill-maintenance/references/skill-trigger-hook.md](github-skill-maintenance/references/skill-trigger-hook.md) |
-| `skill-file-signal-hook.sh` | `PostToolUse` | Nudges toward a skill when file content strongly implies it, even with no explicit ask | [github-skill-maintenance/references/skill-trigger-hook.md](github-skill-maintenance/references/skill-trigger-hook.md) (same doc, "The file-signal hook" section) |
+| `skill-file-signal-hook.sh` | `PostToolUse` | Nudges toward a skill when file content strongly implies it, even with no explicit ask | [github-skill-maintenance/references/file-signal-hook.md](github-skill-maintenance/references/file-signal-hook.md); prompt wording channel: [prompt-signal-channel.md](github-skill-maintenance/references/prompt-signal-channel.md) |
 | `codebase-map/scripts/codemap-hook.sh` | `PostToolUse` | Regenerates a project's file inventory/dependency map after edits, once the project crosses a size threshold | [codebase-map/references/triggering-and-updating.md](codebase-map/references/triggering-and-updating.md) |
 
 All hooks fail open (a script error or missing dependency never blocks a

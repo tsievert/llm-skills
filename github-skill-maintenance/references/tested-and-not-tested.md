@@ -28,4 +28,4 @@ Its `lint_skills()` check (`metadata.file_signals` compiles as a regex and has r
 specific alternatives) was exercised on the two seeded skills (`hpc-job-scripts`,
 `deeplabcut-hpc`) with no findings. Not tested: firing inside a real conversation turn, the
 cost of scanning every skill's frontmatter at scale. See
-`skill-trigger-hook.md` (same folder) for detail.
+`skill-trigger-hook.md`, `file-signal-hook.md` and `prompt-signal-channel.md` (same folder) for detail.

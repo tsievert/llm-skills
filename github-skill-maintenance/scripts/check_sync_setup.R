@@ -224,7 +224,7 @@ check_sync_setup <- function(repo = NULL, fetch = FALSE,
   }
   # --- skill-file-signal hook (PostToolUse matchers "skill" and "read|grep|bash"; see
   # research/skill-trigger-hooks-ledger.md section 6 and
-  # github-skill-maintenance/references/skill-trigger-hook.md) ---
+  # github-skill-maintenance/references/file-signal-hook.md and prompt-signal-channel.md) ---
   signal_hook_entries <- function(event) {
     out <- list()
     for (g in cfg$hooks[[event]]) for (h in g$hooks) {

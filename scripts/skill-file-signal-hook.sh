@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Hook for the R2 "context-clue" skill undertrigger (see
-# github-skill-maintenance/references/skill-trigger-hook.md and
+# github-skill-maintenance/references/file-signal-hook.md and prompt-signal-channel.md and
 # research/skill-trigger-hooks-ledger.md section 6). Complements skill-trigger-hook.sh (R1,
 # the explicit-instruction case) with a best-effort, NON-BLOCKING nudge for the case where
 # content seen mid-task matches a skill's declared signal, but no skill has been loaded yet

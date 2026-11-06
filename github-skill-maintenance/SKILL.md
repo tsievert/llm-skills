@@ -82,7 +82,9 @@ and say what it would change.
 4. **Sync and hook setup.** Read-only audit of settings, the sync hook, the lessons hooks
    (PostToolUse `skill` and Stop), the skill-trigger hook (UserPromptSubmit, PostToolUse
    `skill`, Stop) and the file-signal hook (PostToolUse `skill` and `read|grep|bash`; see
-   [references/skill-trigger-hook.md](references/skill-trigger-hook.md) for both),
+   [skill-trigger-hook.md](references/skill-trigger-hook.md) for the first,
+   [file-signal-hook.md](references/file-signal-hook.md) and
+   [prompt-signal-channel.md](references/prompt-signal-channel.md) for the second),
    the data folders, stamp and git state:
    ```r
    source("github-skill-maintenance/scripts/check_sync_setup.R")

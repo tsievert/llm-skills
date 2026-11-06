@@ -10,6 +10,8 @@
 - Test recipe (no real session needed)
 - Tested and not tested
 
+Sibling files: [file-signal-hook.md](file-signal-hook.md) (R2: nudge from file content, and the escalation into this hook's `Stop` block), [prompt-signal-channel.md](prompt-signal-channel.md) (prompt wording and per-skill declarations).
+
 Closes the gap found 2026-10-24 in `tmp-examples/conversation-export.json` (see the lesson
 at `~/.posit/lessons/inbox/anon_20261024-162307_manual.md` and
 `research/skill-trigger-hooks-ledger.md` in this repo for the design research): a user
@@ -19,15 +21,15 @@ the four turns that followed, and the instruction was never revisited.
 
 **2026-10-26 update:** a real session (`dlc-pig-method-paper`, an HPC/DeepLabCut
 conversation, analysed from a `conversation-export.json` dropped at the repo root) gave the
-first real-conversation-turn confirmation that both hooks below actually fire and are
+first real-conversation-turn confirmation that both hooks (this one and the file-signal hook) actually fire and are
 visible to the model (closing an item both "Tested and not tested" sections had marked
 untested) — and showed the file-signal nudge (R2) fired twice, for two different skills,
 and was ignored both times, while the explicit-instruction block (R1) correctly forced a
 `skill()` call but could not stop the wrong skill being loaded (a documented limit, see "What
 it does and does not fix"). This added an escalation path: a second, still-ignored
 file-signal nudge for the same skill now feeds into R1's `Stop` block instead of repeating
-the same ignorable line — see "Escalation: a repeated, ignored nudge forces one block"
-below. See `research/skill-trigger-hooks-ledger.md` section 8 for the full analysis.
+the same ignorable line — see "Escalation" in [file-signal-hook.md](file-signal-hook.md)
+See `research/skill-trigger-hooks-ledger.md` section 8 for the full analysis.
 
 ## What it does and does not fix
 
@@ -40,7 +42,7 @@ trigger-miss pattern" section for the other one):
   deterministically.
 - **A context clue is never acted on** (file content implies a skill, no explicit ask): a
   second script, `skill-file-signal-hook.sh`, gives this a best-effort, **non-blocking**
-  nudge (see "The file-signal hook (R2)" below). It cannot judge whether a skill *should*
+  nudge (see [file-signal-hook.md](file-signal-hook.md)). It cannot judge whether a skill *should*
   have fired, only whether a declared text pattern appeared in a tool result — a much
   narrower, mechanical check than the full relevance judgement, and the worst case is one
   ignorable extra line of context, never a forced action. See
@@ -156,201 +158,6 @@ detected, because the match runs over the whole payload rather than an extracted
 question near-miss from the "known, accepted false positive" section above is correctly
 excluded; empty or non-JSON stdin does not crash the script.
 
-## The file-signal hook (R2)
-
-Script: `scripts/skill-file-signal-hook.sh`, built 2026-10-24 after a second, independent
-real-session recurrence of the context-clue undertrigger (see the `github-skill-maintenance`
-lesson `anon_20261024-audit_manual.md` and ledger section 6). Two events, both `PostToolUse`:
-
-| Matcher | Action |
-|---|---|
-| `skill` | Any skill load marks that skill as loaded for the session (`state/<session>.loaded.<skill>`), so it is never nudged for again. |
-| `read\|grep\|bash` | Scans `tool_response` against every skill's declared `metadata.file_signals` (a single, skill-owned `'|'`-separated regex-alternation string in that skill's own `SKILL.md` frontmatter). On the *first* match for a skill not yet loaded this session, emits `hookSpecificOutput.additionalContext` naming it, and marks it nudged (`state/<session>.nudged.<skill>`). On a *second* match for the same still-unloaded skill, writes an escalation marker instead (see below) rather than repeating the same line. **Never blocks itself.** |
-
-### Escalation: a repeated, ignored nudge forces one block
-
-Added 2026-10-26 after the `dlc-pig-method-paper` session (see the update note at the top of
-this file) showed a single non-blocking nudge is not sufficient in practice: both
-`hpc-job-scripts` and `deeplabcut-hpc` were nudged once each, visibly (the nudge text appeared
-in the transcript as a `hook-feedback` block), and neither was acted on.
-
-On a second match for a skill already nudged once and still not loaded, `skill-file-signal-hook.sh`
-writes `state/<session>.pending.fs.<skill>` instead of emitting a second `additionalContext`
-line. `skill-trigger-hook.sh`'s `Stop` handler (R1) now checks for these markers alongside its
-own explicit-instruction `pending` marker, and blocks once if either is present — the two
-sources share the single per-session "reminded" budget, so this does not add a second,
-independent nag. The block `reason` names the specific skill(s) when it knows them from a
-`pending.fs.<skill>` marker (unlike the explicit-instruction case, which stays a fixed generic
-string — see "Why the phrase match scans the whole payload" above for why extracting free text
-is avoided; a skill *name* from a marker filename has no such risk, since it is this repo's own
-controlled vocabulary of skill folder names, not arbitrary user text).
-
-`skill-file-signal-hook.sh` itself still never emits `decision:"block"` — the escalation marker
-is just a file; only `skill-trigger-hook.sh` blocks, now triggered by either source. The
-`check_sync_setup()` `file-signal hook never blocks` check still guards this invariant on the
-unchanged script. This keeps the two scripts' failure costs matched to their reliability: R2's
-own non-blocking nudge is still cheap and can be wrong without consequence, while the one block
-it can now trigger reuses R1's already-accepted bounded cost (at most one forced turn, once per
-session).
-
-`file_signals` is opt-in and deliberately narrow: only add it to a skill with a strong,
-low-ambiguity file signature, matching a file-content clause already in that skill's own
-description. Do not add it to every skill speculatively — a vague pattern produces noise, not
-signal (`lint_skills()` warns on short, non-word-bounded alternatives). The table lives in each
-skill's own frontmatter, not centrally in the hook script, so it is reviewed alongside the skill
-it serves (the maintenance-burden objection in ledger section 5 was the reason this was revised
-rather than hardcoded). Declared on six skills as of 2026-10-26 (seeded on `hpc-job-scripts` and
-`deeplabcut-hpc` round 1/2; widened round 4 after the escalation mechanism above made a repeated
-nudge actionable — see `research/skill-trigger-hooks-ledger.md` section 9 for the full rationale
-per skill):
-
-| Skill | `file_signals` |
-|---|---|
-| `hpc-job-scripts` | `'#SBATCH\|\bsbatch\b\|\bsrun\b'` |
-| `deeplabcut-hpc` | `'import deeplabcut\|pytorch_config\.yaml\|pose_cfg\.yaml'` |
-| `hpc-gpu-jobs` | `'--gres=gpu\|--gpus[=:]\|\bCUDA_VISIBLE_DEVICES\b\|\btorchrun\b'` |
-| `hpc-resource-allocation` | `'OUT_OF_MEMORY\|\boom-kill\b\|\bsacct\b\|\bseff\b'` |
-| `hpc-python-code` | `'\bSIGUSR1\b\|signal\.signal\(signal\.SIGTERM'` |
-| `hpc-r-code` | `'parallelly::availableCores\|future\.batchtools\|\bR_LIBS_USER\b'` |
-| `keypoint-moseq` (added 2026-10-29) | `'import keypoint_moseq\|from keypoint_moseq\|\bjax_moseq\b\|\bkpms\.[a-z_]+\('` — any top-level `kpms.<fn>(` call plus the imports; synthetic-payload tested (`kpms.fit_model(...)`, `import keypoint_moseq as kpms` nudge; `fit_model_in_stan()` silent), not tested in a live turn |
-
-### The prompt-signal channel (added 2026-10-28)
-
-A second, parallel channel reuses all of the above mechanics (nudge once, escalate on a second
-ignored match, never block itself) but keys off the **user's own prompt wording** instead of file
-content, via a `metadata.prompt_signals` field (same shape as `file_signals`: a single
-`'|'`-separated regex-alternation string). Added for `staged-assistant-workflow`, whose trigger is
-"this task's own length/complexity" — a quality of the user's request, not something that shows up
-in a file read — so the file-content channel doesn't apply (see
-`research/staged-assistant-workflow-ledger.md` section 9 for the design history).
-
-`skill-file-signal-hook.sh` now also handles `UserPromptSubmit`, scanning the whole raw payload
-(same embedded-quotes reasoning as `skill-trigger-hook.sh`'s `UserPromptSubmit` handler) against
-every skill's declared `prompt_signals`. Both channels share one marker namespace per skill
-(`$sid.loaded.<skill>` / `$sid.nudged.<skill>` / `$sid.pending.fs.<skill>`), so a skill nudged once
-via either channel is not nudged again via the other, and a second ignored hit on *either* channel
-escalates into `skill-trigger-hook.sh`'s `Stop` block the same way.
-
-| Skill | `prompt_signals` |
-|---|---|
-| `staged-assistant-workflow` | length/complexity phrases first (`huge/massive/very large/too big or long` + task noun; `many/several/multiple sessions ... to finish`; `will take weeks/days/sessions`), recurrence phrases second (`weekly/daily/recurring/periodic/every week`) — length leads per the skill's own rescoped definition (section 6 of its ledger), recurrence is a named secondary case, not the trigger. |
-
-Settings entry: `skill-file-signal-hook.sh` added alongside `skill-trigger-hook.sh` under
-`hooks.UserPromptSubmit` (additive, not a replacement):
-
-```json
-"UserPromptSubmit": [{"hooks": [
-  {"type": "command", "command": "bash .../skill-trigger-hook.sh", "timeout": 10},
-  {"type": "command", "command": "bash .../skill-file-signal-hook.sh", "timeout": 10}
-]}]
-```
-
-`check_sync_setup()` gained matching checks: `prompt-signal UserPromptSubmit hook` (the command is
-present), `prompt-signal declaring skills` (which skills declare the field, mirroring the
-file-signal one), and an error if any skill declares `prompt_signals` but no hook command is wired
-under `UserPromptSubmit`. `lint_skills()` gained a matching `prompt_signals` check (single string,
-compiles as an extended regex, specificity warning on short alternatives) — note the specificity
-check splits only on top-level `|` (outside parentheses), so a nested alternation such as
-`every (week|day|month)` counts as one alternative. Before 2026-11-05 it split on every `|` and
-raised a spurious low-specificity warning on the inner word `day` for `staged-assistant-workflow`;
-fixed, and the same pattern now lints clean. Escaped characters are skipped; bracket expressions
-(`[|]`) are not parsed, which could only mis-split in the cautious direction.
-
-**Tested** (synthetic piped payloads, Windows Git Bash): a matching `UserPromptSubmit` prompt
-nudges once; a second matching prompt in the same session escalates (writes
-`pending.fs.<skill>`, no second `additionalContext` line) instead of repeating itself; an unrelated
-prompt is silent; a length/complexity-phrased prompt and a recurrence-phrased prompt both match
-(two different alternatives in the same field); a skill already loaded via a prior `PostToolUse`
-`skill` call is never nudged via `UserPromptSubmit` either (shared marker namespace confirmed); a
-prompt with embedded double quotes is still detected (whole-payload scan, not an extracted field);
-a missing `session_id` and malformed/empty stdin do not crash the script; the pre-existing
-`file_signals`/`PostToolUse` channel still works unchanged after the refactor that factored both
-channels through one shared `check_signal()` function, including the dash-leading-pattern `--`
-guard (`hpc-gpu-jobs`'s `--gres=gpu`). **Not tested:** firing inside a real conversation turn (only
-synthetic payloads this round); Linux/macOS; whether the length/complexity phrasing is well
-calibrated against real negative examples (e.g. "I check my email daily" containing "daily" with no
-task relevance) — drafted from the ledger's phrase sketches, not yet tuned against a negative-example
-set the way `references/testing-skills.md`'s trigger-query protocol recommends.
-
-`hpc-cluster-docs` deliberately has none: it is a "run this first" skill about identifying a
-cluster, not keyed to a distinguishing content pattern the way the others are.
-
-**`grep -E -- "$pat"` pitfall, found round 4:** a pattern whose first alternative starts with
-`-` (here, `--gres=gpu`) makes `grep` parse it as an option instead of a pattern, failing with
-"unknown option". `lint_skills()`'s regex-compile check uses R's `grepl()`, a different engine
-with no option-parsing step, so it does not catch this. Fixed with the `--` end-of-options
-marker in the hook script's `grep -qE -- "$pat"` call; any `file_signals` value is now safe
-regardless of what it starts with. If a future shared script adds its own `grep` call against a
-`file_signals` value, it needs the same `--` guard — not yet enforced by the linter (see ledger
-section 9.4, open item).
-
-Why non-blocking was judged acceptable here where the original sketch worried about false
-positives: every piece of prior art found (ledger section 6.3 — two independent community
-hooks doing close to the same thing, plus Anthropic's own PostToolUse-linter-nudge pattern)
-only injects `additionalContext`, never blocks, on a content match. The cost of a false
-positive is one ignorable extra sentence of context, at most once per (session, skill) — not
-a wrong action. `check_sync_setup()` has a `file-signal hook never blocks` check that errors
-if the script is ever changed to emit `decision:"block"`, to keep this invariant enforced.
-
-### Settings entry (added alongside the existing `PostToolUse` group)
-
-```json
-"PostToolUse": [
-  {"matcher": "skill", "hooks": [
-    {"type": "command", "command": "bash .../lessons-hook.sh", "timeout": 10},
-    {"type": "command", "command": "bash .../skill-trigger-hook.sh", "timeout": 10},
-    {"type": "command", "command": "bash .../skill-file-signal-hook.sh", "timeout": 10}
-  ]},
-  {"matcher": "read|grep|bash", "hooks": [
-    {"type": "command", "command": "bash .../skill-file-signal-hook.sh", "timeout": 10}
-  ]}
-]
-```
-
-### Files (shares `~/.posit/skill-triggers/state/` with `skill-trigger-hook.sh`, disjoint names)
-
-| Path | Content |
-|---|---|
-| `state/<session>.loaded.<skill>` | exists once that skill has been loaded this session |
-| `state/<session>.nudged.<skill>` | exists once a nudge has fired for that (session, skill) pair |
-| `state/<session>.pending.fs.<skill>` | written on a *second*, still-ignored match for that skill; read and cleared by `skill-trigger-hook.sh`'s `Stop` handler, not by this script |
-| `state/DEBUG` | shared debug switch with `skill-trigger-hook.sh` |
-
-### Tested and not tested (file-signal hook)
-
-Tested on Windows (Git Bash, GNU bash 5.3, GNU grep/sed/awk): `bash -n`; a matching `read`
-result with no skills loaded yet (nudges once); a repeat call in the same session (silent,
-already nudged); a session where the skill was already loaded via a `skill` `PostToolUse`
-call first (silent); unrelated content (silent); a DeepLabCut-matching `grep` result
-(nudges `deeplabcut-hpc`); a non-matching tool (`ls`, silent even with matching text in its
-response); a missing `session_id` (silent, no crash); empty/malformed stdin (no crash, exit
-0); a `tool_response` containing an embedded double quote (still detected — the match runs
-over the raw payload, not an extracted field, same reasoning as `skill-trigger-hook.sh`);
-the `file_signals` extractor directly, against both seeded skills and a skill with none
-declared (empty, correctly). `lint_skills()`'s new `file_signals` regex-compile and
-specificity checks were tested by observation (both seeded skills pass with no new
-findings). `check_sync_setup()`'s new section was run against the real, updated
-`settings.json` content (same path-guard workaround as the other hook audits) — all `ok`.
-**2026-10-26 update:** the `dlc-pig-method-paper` session gave the real-conversation-turn
-confirmation this entry had marked untested — `additionalContext` from `PostToolUse` *was*
-visible to the model (it appeared as a `hook-feedback` block addressed to it) — but visibility
-did not translate into action: the nudge fired once each for `hpc-job-scripts` and
-`deeplabcut-hpc` and both were ignored, which is what motivated the escalation path above.
-The escalation itself (second match → `pending.fs.<skill>` marker → one named `Stop` block) was
-tested with synthetic piped payloads, mirroring the existing recipe: a first match nudges and
-marks `nudged`; a second match for the same still-unloaded skill writes `pending.fs.<skill>`
-instead of a second `additionalContext`; a `skill` load between the first and second match
-clears the path (no escalation, confirming `loaded.<skill>` is still checked first); two
-different skills each escalating in the same session produce one `Stop` block naming both,
-not two; combined with an explicit-instruction `pending` marker, one block fires with a reason
-that mentions both sources; `bash -n` and `check_sync_setup()` both still pass, including the
-unchanged `file-signal hook never blocks` guard. **Still not tested:** the escalation firing
-inside a real conversation turn (only the original nudge was confirmed live, not yet a second,
-ignored one); the cost of scanning ~24 `SKILL.md` files per matching tool call at scale
-(unsized, see ledger section 6.6); Linux/macOS; a second machine; whether this closes the gap
-for skills beyond the two seeded `file_signals` patterns (needs a broader rollout decision, not
-made here).
-
 ## Tested and not tested
 
 Tested on Windows (R 4.6.0, Git Bash via the agent's sandboxed shell, GNU grep 3.0, GNU
@@ -364,7 +171,7 @@ to record that as a lesson" set the pending marker, and the next turn did call `
 `Stop` never had to block — the marker was already cleared), but it loaded `skill-lessons`, not
 `deeplabcut-hpc`. This is exactly the documented limit ("was some `skill()` call made", not "was
 it the right one") rather than a new bug; it is recorded here as the first real confirmation of
-that limit, not a fix. The escalation feature added 2026-10-26 (see the R2 section above) was
+that limit, not a fix. The escalation feature added 2026-10-26 (see [file-signal-hook.md](file-signal-hook.md)) was
 tested only with synthetic payloads, including a scenario combining an explicit `pending` marker
 with an escalated `pending.fs.<skill>` marker in the same session (one block, reason names both).
 **Not tested:** the hook firing inside a real conversation turn (this file was written and
@@ -380,48 +187,3 @@ model loaded `skill-lessons` for an explicit request that named `deeplabcut-hpc`
 but the escalation path draws the name from a controlled marker file, not free text — but this
 is a hypothesis, not yet observed).
 
-### Prompt signals declared on tool/code-vocabulary skills (added 2026-10-29)
-
-Besides `staged-assistant-workflow`, `prompt_signals` is now declared on skills whose users typically paste code or
-error text into the prompt, using distinctive tokens only. Where a skill already had `file_signals`, the prompt pattern
-mirrors it (plus a few prompt-only terms).
-
-| Skill | `prompt_signals` |
-|---|---|
-| `keypoint-moseq` | `'\bkpms\b\|keypoint[-_]moseq\|\bjax[-_]moseq\b\|\bkappa\b[^.?!\n]{0,60}\bsyllable'` |
-| `deeplabcut-hpc` | `'deeplabcut\|DeepLabCut\|\banalyze_videos\b\|\btrain_network\b\|pytorch_config\.yaml\|pose_cfg\.yaml'` |
-| `hpc-job-scripts` | `'#SBATCH\|\bsbatch\b\|\bsrun\b'` |
-| `hpc-resource-allocation` | `'OUT_OF_MEMORY\|\boom-kill\b\|DUE TO TIME LIMIT\|\bseff\b\|\bsacct\b'` |
-| `mixed-models-glmm` | `'\b(glmmTMB\|glmer\|lmer\|lmerTest\|DHARMa)\b\|boundary \(singular\) fit'` |
-| `gam-mgcv` | `'\bmgcv\b\|\bgam\.check\b\|\bbam\(\|\bgratia\b'` |
-| `r-reproducible-pipeline` | `'_targets\.R\|\btar_make\b\|\btar_target\b\|\bcrew\.cluster\b'` |
-| `python-reproducible-pipeline` | `'\bsnakemake\b\|\bSnakefile\b\|\buv\.lock\b'` |
-
-Deliberately not added: `hpc-gpu-jobs`, `hpc-python-code`, `hpc-r-code` (a pasted Slurm message would nudge four HPC
-skills at once; the nudge budget is per skill, so noise multiplies), `animal-behaviour-tracking-analysis` (no distinctive
-token, its vocabulary is generic: "distance", "freezing"), and skills defined by task rather than vocabulary
-(`openalex`, `manuscript-*`, `data-repository-readme`). Caveat: the scan covers the whole raw payload, so a `cwd` path
-containing a signal word also matches. Tested with synthetic `UserPromptSubmit` payloads (kpms code, glmmTMB singular
-fit, oom-kill, `analyze_videos` nudge; "what is a mean" silent; a repeat kpms match escalates silently). `weekly` in an
-unrelated prompt still nudges `staged-assistant-workflow` (the known calibration gap above). Not tested live.
-
-### Wrangling signals on `tidy-data-wrangling` (added 2026-10-30)
-
-Both channels are declared, because wrangling shows up as function names in prompts (`pivot_longer`, `clean_names`) and
-in scripts the assistant reads. Alternatives are tidyr/janitor/readxl/tidyxl/unpivotr function names, `library(tidyr)`,
-`library(janitor)`, `library(readxl)`, `tidyr::`, `janitor::` (file channel), and the phrases `wide to long`, `long to wide`,
-`messy data`, `tidy data` (prompt channel). `library(dplyr)`, `library(tidyverse)`, `mutate`, `filter` and joins were left out on
-purpose: they appear in almost every R script, so every analysis session would be nudged. Tested with synthetic payloads
-(`pivot_longer` prompt nudges, a second match escalates silently, `fit a gam` silent, `library(janitor)` file read nudges,
-`library(dplyr)` file read silent, `wide to long` nudges). Regex probes: `read_excel(path)` matches; "my tidy plot", "use dplyr
-filter" do not. Known over-match: `tidy data` in a README or deposit request nudges this skill too (cost: one ignorable line).
-Not tested live.
-
-Round 2 (2026-10-30, same day): added wording triggers for the word "wrangling" and for cleaning phrases in the prompt channel
-(`wrangl*`, "data cleaning", "data tidying", "reshaping", "clean my/the/this data", "clean up (my|this) data"), and section-header
-and script-banner wording in the file channel for `.qmd`, `.Rmd` and `.R` files read by the assistant (`## Data wrangling`,
-`# ---- Clean data ----`, `### Import data`, `## Tidy ...`, `## Reshape ...`, `## Join tables`, `## Missing values`, plus
-"data cleaning", "data preparation"). Patterns avoid `^` anchors because the scan runs over the tool response as one string,
-and avoid groups containing `|` because the linter splits naively on every `|`. Synthetic payloads: a qmd with `## Data wrangling`
-and an R script with `# ---- Clean data ----` nudge; `## Results` / `## Figure 1` stay silent; "help me wrangle this table" nudges.
-Over-match risk: a README or methods section titled "Data cleaning" in a non-R project also nudges; cost is one ignorable line.
