@@ -10,7 +10,7 @@ metadata:
 
 # GAMs and GAMMs with mgcv
 
-Workflow and rules for additive models in R. Details live in `references/`; load only what the task needs.
+Workflow and rules for additive models in R. Details live in `references/`; load only what the task needs. Items marked "reported" in the references come from one or two projects and are not reproduced: treat them as hypotheses.
 
 ## First steps
 
@@ -31,7 +31,7 @@ m <- gam(y ~ s(x1) + s(x2) + f,      # f: factor
 - Offsets: `offset(log(exposure))` in the formula for rates.
 - Factors must be real `factor`s (not character) for `by =` and `bs = "re"`.
 - Do not hand-tune `sp` or `fx = TRUE` unless there is a reason; let REML estimate smoothness.
-- Consider `select = TRUE` (double-penalty shrinkage, can remove terms) when many candidate smooths exist. With `select = TRUE` every smooth has two penalties, so a fixed `sp` inside `s()` needs one value per penalty, e.g. `s(x, sp = c(10, -1))` (`-1` = estimate; a scalar errors with "incorrect number of smoothing parameters"; reproduced). Reported, one project: for cumulative or strongly autocorrelated outcomes `select = FALSE` let a time smooth saturate at `k`, so test it on a subset before recommending it.
+- Consider `select = TRUE` (double-penalty shrinkage, can remove terms) when many candidate smooths exist. With `select = TRUE` every smooth has two penalties, so a fixed `sp` inside `s()` needs one value per penalty, e.g. `s(x, sp = c(10, -1))` (`-1` = estimate; a scalar errors with "incorrect number of smoothing parameters"; reproduced). For cumulative or strongly autocorrelated outcomes, test `select` on a subset first ([references/workflow-and-long-fits.md](references/workflow-and-long-fits.md)).
 - To test or extend an existing model, read formula, family and data from the saved model object or script (`formula(m)`, `family(m)`, `m$model`), never rebuild them from prose notes.
 - For `bam()` fits the estimated dispersion is `m$sig2`; `m$scale` is a placeholder of 1 (reproduced; `summary(m)$scale` is right). Do not report `m$scale`.
 
@@ -74,7 +74,7 @@ When mgcv's families (including `gaulss()`, `gammals()`, `gevlss()`, `ziplss()`)
 
 ## Mixed models and hierarchical GAMs
 
-Prefer random effects and factor smooths inside `gam()`/`bam()` with REML. Use `gamm4` (lme4 backend), `gamm()` (nlme, for corAR1 and other correlation structures), `glmmTMB` (smooths via `s()`), or `brms` when you need correlated random slopes, specialised families, or a full Bayesian fit. Before including both unit and session (or similar nested) random terms, tabulate how many units have repeated sessions and which factor levels co-occur within a unit: contrasts that exist only between units depend on how variance is split between the random terms, and a unit-versus-session split is identified only from units with repeats (reported twice, low to medium confidence). The five HGAM model types (G, GS, GI, S, I) from Pedersen et al. (2019) and the by-variable ordered factor pattern are in [references/hgam-and-random-effects.md](references/hgam-and-random-effects.md).
+Prefer random effects and factor smooths inside `gam()`/`bam()` with REML. Use `gamm4` (lme4 backend), `gamm()` (nlme, for corAR1 and other correlation structures), `glmmTMB` (smooths via `s()`), or `brms` when you need correlated random slopes, specialised families, or a full Bayesian fit. Before including both unit and session random terms, tabulate repeats and level co-occurrence per unit ([references/workflow-and-long-fits.md](references/workflow-and-long-fits.md)). The five HGAM model types (G, GS, GI, S, I) from Pedersen et al. (2019) and the by-variable ordered factor pattern are in [references/hgam-and-random-effects.md](references/hgam-and-random-effects.md).
 
 ## Dependence in the data
 
@@ -85,9 +85,8 @@ Plain `gam()` assumes independent residuals. With time series, spatial or repeat
 - `gam.check(m)` / `gratia::appraise(m)`: QQ, residuals vs linear predictor, histogram, observed vs fitted.
 - Quantile residuals for discrete families: `gratia::quantile_residuals()`, `gratia::rootogram()` for counts, `DHARMa` as an alternative.
 - Concurvity: `mgcv::concurvity(m, full = FALSE)` or `gratia::model_concurvity()`. High concurvity makes individual smooths unreliable, so say so when interpreting.
-- Compare models with `AIC()` and `anova(m1, m2, test = "F")` as approximate tools. REML scores are not comparable across models with different parametric (fixed) terms; refit with `method = "ML"` for that, or compare predictive performance.
-- With dependent data (repeated animals, working independence), in-sample AIC can favour a covariate term that does not help predict new units (reported, high confidence, one project). Decide by leave-whole-groups-out CV: refit without each group (or fold of groups), score held-out groups with the family deviance residuals, pair the candidates per group and take the SE over groups. fREML is not comparable across fixed-effect changes. Centring a smooth covariate is a no-op (identical fit); centring a linear covariate only moves the intercept.
-- After an mgcv or gratia upgrade, re-run a saved anchor script and record `packageVersion()` in saved results. Fixed-family fREML fits are the stable anchor; extended families (`tw`, `twlss`) and NCV are the paths changelogs usually touch (reported, one project: Tweedie/Gamma fREML anchors reproduced exactly after a bump).
+- Compare models with `AIC()` and `anova(m1, m2, test = "F")` as approximate tools. REML scores are not comparable across models with different fixed terms; refit with `method = "ML"` or compare predictive performance.
+- With dependent data (repeated animals), in-sample AIC can favour a term that does not help predict new units; use leave-whole-groups-out CV. After an mgcv or gratia upgrade, re-run a saved anchor script and record `packageVersion()`. Both: [references/model-comparison.md](references/model-comparison.md).
 - `summary(m)` p-values for smooths are approximate and conditional on the smoothing parameters; report effect shapes with intervals rather than relying only on p-values.
 
 ## Interpretation and prediction
@@ -97,18 +96,18 @@ Plotting, partial effects, simultaneous intervals, group comparisons, derivative
 - Smooths are centred, so partial-effect plots show effects relative to the intercept, not the response scale.
 - Whole-response predictions: `predict(m, newdata, type = "link", se.fit = TRUE)`, then back-transform with `family(m)$linkinv`, which gives valid intervals on the response scale.
 - Exclude random effects from predictions with `exclude = "s(g)"` (and supply a dummy level); hold other covariates at typical values.
-- Excluding random effects gives a typical-unit curve, not the group mean. Under a log link with heterogeneous units or zeros this can differ several-fold (synthetic Gamma(log) test: 2.5 vs raw mean 7.5). Ask early whether the user wants the typical unit or the group mean, and overlay raw group means on response-scale curves before interpreting contrasts. For group-mean contrasts, an animal-level bootstrap of raw means is the simplest route; a marginal model is an option, but its parameters depend on the fixed effects and are not automatically population averages. "Population-level" is ambiguous (brms uses it for fixed effects), so confirm the meaning first (see the `gam-interpretation` skill, phrasing reference).
+- Excluding random effects gives a typical-unit curve, not the group mean, and under a log link the two can differ several-fold. Ask early which the user wants, and avoid bare "population-level" (ambiguous). The explanation and the wording are in the `gam-interpretation` skill (its uncertainty-and-inference and phrasing references).
 - Do not extrapolate outside the data.
 
 ## Large data
 
 `bam(..., method = "fREML", discrete = TRUE, nthreads = n)` for tens of thousands of rows or more. Use `gam()` for smaller data; `bam()` smoothing selection differs slightly. Under `discrete = TRUE`, `select = TRUE` and some families behave differently; check `?bam`. For `method = "NCV"` (model comparison, cheap refits at fixed smoothing parameters, failure reporting, a verified clustered-sandwich recipe, checking `select = TRUE`) see [references/ncv-and-bam-notes.md](references/ncv-and-bam-notes.md). On clusters, set `nthreads` from the job allocation (see the `hpc-r-code` skill).
 
-Before queueing several expensive fits, time one: run a 2 to 3 step row ladder (for example 640, 1,280, 2,560 rows) with a short guard (`callr` timeout), extrapolate, and only then queue larger fits; kill queued background fits when the first one times out. Start long background fits with `callr::r_bg()` at top level, not inside `local()` or a function that returns (reported twice in one project, not reproduced with callr 3.8.0: jobs died silently or at startup); check the log within the first minute, save results per variant or every N replicates so the job is resumable, and time one variant first because changing an `fs` covariate (for example to its log) once changed `bam` time several-fold. Reported: `gam()` with `bs = "fs"` or large `sz` terms took 100 s at 640 rows and over 300 s at 1,280, while `bam(discrete = TRUE)` fit the same structure on 40,000 rows in about 5 minutes. Location-scale and other general families are `gam()` only (details in [references/gamlss-and-extra-families.md](references/gamlss-and-extra-families.md)), so probe scale models on a lean mean model (random intercept and slope instead of `fs` terms) or consider two-stage variance weights in `bam()`.
+Before queueing several expensive fits, time one on a short row ladder (for example 640, 1,280, 2,560 rows) and extrapolate. `fs` and large `sz` terms are slow in `gam()`, and location-scale families are `gam()` only. Row-ladder recipe, `callr::r_bg()` background-fit rules and timings: [references/workflow-and-long-fits.md](references/workflow-and-long-fits.md).
 
 ## Reporting
 
-State family and link, smoother types and k, estimation method, the diagnostics checked (and any remaining concerns), edf per smooth, and plots of partial effects with intervals. Be proportionate: a wiggly smooth with wide intervals is not evidence of a real feature. Report the unresolved issues (low k-index, concurvity, dependence) rather than hiding them. For bootstrap simultaneous (max-t) bands, state B and which ranked maximum is the critical value (B = 100 means the 5th largest), call contrasts with t within about 5% of the critical value borderline (one flagged contrast flipped between B = 200 and B = 100), and use B of at least 1,000 for a final critical value.
+State family and link, smoother types and k, estimation method, the diagnostics checked (and any remaining concerns), edf per smooth, and plots of partial effects with intervals. Be proportionate: a wiggly smooth with wide intervals is not evidence of a real feature. Report the unresolved issues (low k-index, concurvity, dependence) rather than hiding them. For bootstrap simultaneous (max-t) bands, state B and the critical-value rank, and use B of at least 1,000 for a final value ([references/model-comparison.md](references/model-comparison.md)).
 
 ## Resources
 

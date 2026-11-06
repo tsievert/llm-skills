@@ -93,6 +93,4 @@ data.frame(term = vapply(m$smooth, `[[`, "", "label"), edf = summary(m)$s.table[
 lapply(m$smooth, function(s) m$sp[s$first.sp:s$last.sp])     # all sps huge (for example > 1e7): fully shrunk
 ```
 
-Reported: terms with edf below 0.01 had all smoothing parameters above 1e7. `summary()` can print p-values
-of exactly 0 for terms with edf near zero (huge F); do not report those, and say "shrunk to near zero"
-only after checking the smoothing parameters.
+Reproduced 2026-11-06 (synthetic `bam(select = TRUE)`, three smooths, one real): the two noise terms had edf about 1e-5 and all smoothing parameters above 1e6 (up to 2.6e8), while the real term kept an sp of 0.23 on its wiggly penalty. A report of `summary()` printing p-values of exactly 0 for edf-near-zero terms was not reproduced (p = 0.50 and 0.85 here). Check the smoothing parameters before saying "shrunk to near zero", and do not report p-values for such terms.

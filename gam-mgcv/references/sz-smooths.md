@@ -80,11 +80,11 @@ Practical guidance:
 
 ## Judging k, interactions and groupings (reported, one project, not reproduced)
 
-- Because `k.check()` gives no k-index, check `k` through the stability of contrasts between two disjoint halves of the units (for example animals). Reported: with `k = 6` a factor contrast changed sign between halves; at `k = 10` and `15` the between-half difference halved and the halves agreed (cost 1.3 to 2 times at `k = 15`). Start at `k >= 10` for multi-level factors with distinct shapes. edf of `k = 3` terms is all-or-nothing, so it is not evidence either way.
+- Because `k.check()` gives no k-index, check `k` through the stability of contrasts between two disjoint halves of the units (for example animals). In the one project that used this check, a contrast changed sign between halves at a small `k` and agreed at larger `k`. The numbers were not reproduced, so no `k` is recommended here: raise `k` until the halves agree and watch the fitting cost. Agreement is not proof that `k` is adequate. edf of `k = 3` terms is all-or-nothing, so it is not evidence either way.
 - edf of an interaction `sz` term is not a test of the interaction. Compare drop-one-term refits (fREML score, fitted group means, contrasts) and use targeted contrasts with a bootstrap by unit.
 - A fixed-smoothing-parameter bootstrap SD is a lower bound on the uncertainty. The difference between two halves has SD about twice the full-data SD, so compare `|half1 - half2| / (2 x bootstrap SD)`.
 - Before collapsing factor levels, tabulate the cross of the grouping, the raw factor and the subject covariates. A coarse grouping can average away the relation of interest (for example same-type versus other-type stimuli defined by a subject covariate).
-- A covariate that varies only between units (such as strain) next to a unit-level factor smooth is weakly identified; its contrasts moved by 0.2 to 1.6 link units across grids and penalty settings. Check across settings and with a unit-level bootstrap. Also check edf per term and the spread of the contrast under resampling, because a `sp < 1e-2` flag did not catch a term that had been shrunk out (edf 0).
+- A covariate that varies only between units (such as strain) next to a unit-level factor smooth is weakly identified; its contrasts can move substantially across prediction grids and penalty settings (one project, size not reproduced). Check across settings and with a unit-level bootstrap, and check edf per term: a term shrunk out has edf near 0 and very large smoothing parameters, so a "small sp" flag will not catch it.
 
 ## Checking and plotting
 

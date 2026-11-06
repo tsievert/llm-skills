@@ -74,9 +74,9 @@ Always follow with a family-appropriate residual check; `gam.check()` for non-Ga
 - Using AIC across models fitted by REML with different fixed effects.
 - Comparing smooth significance across groups by looking at overlapping pointwise intervals; use `difference_smooths()`.
 
-## Cumulative or power-law outcomes (reported, one project)
+## Cumulative or power-law outcomes
 
-For an outcome that accumulates from zero (random-walk-like, log link), a time smooth at its edf ceiling (`k-1`) in every fit often signals a covariate-scale problem, not too small a `k`. Raising `k`, `m = 3` penalties, fixed `sp` on raw time and `offset(log(t))` did not help in the reported case (fixed `sp` raised RMSE 2 to 3 times, so the curvature was real), whereas `s(log(t))` halved the RMSE of group means and allowed the global smooth to be forced linear. Overlay raw group means on fitted means before penalising or raising `k`. Dependent observations also make the independence likelihood overstate evidence for curvature, so edf at the ceiling with large n is not necessarily overfitting. The time-scale choice changed some factor contrasts (one changed sign), so report which scale was used.
+For an outcome that accumulates from zero (random-walk-like, log link), a time smooth at its edf ceiling (`k-1`) in every fit often signals a covariate-scale problem, not too small a `k`. Reproduced 2026-11-06 (synthetic Gamma(log) cumulative curves, 30 animals x 60 times, mgcv 1.9-5): `s(t, k = 10)` gave edf 8.86 and an RMSE of group means of 0.96, while `s(log(t), k = 10)` gave edf 1.97 and RMSE 0.55. Not reproduced, one project only: raising `k`, `m = 3` penalties, fixed `sp` on raw time and `offset(log(t))` did not help (fixed `sp` raised RMSE 2 to 3 times, so the curvature was real). `s(log(t))` also allowed the global smooth to be forced linear. Overlay raw group means on fitted means before penalising or raising `k`. Dependent observations also make the independence likelihood overstate evidence for curvature, so edf at the ceiling with large n is not necessarily overfitting. The time-scale choice changed some factor contrasts (one changed sign), so report which scale was used.
 
 ## Spatial and temporal notes
 
