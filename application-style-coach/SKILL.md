@@ -83,6 +83,10 @@ document.
    which language version of the call you read) and invite a second pass after the user revises. When the user has
    a final PDF, offer the PDF checks.
 
+## Layout tip for text sources
+
+When the draft is a plain-text source (qmd, md, txt) and lines hold several sentences, suggest once, as a layout tip and not a verdict, putting one sentence per line: it renders the same in Markdown/Quarto and lets line-number feedback point at a single sentence. Cite line numbers in feedback on such files. Never reflow the file; the user decides.
+
 ## Optional flag script
 
 `scripts/style_flags.R` (base R plus `stringi`; `xml2` for .docx and `pdftools` for .pdf) reads a file or a literal

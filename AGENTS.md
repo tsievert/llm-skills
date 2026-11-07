@@ -176,7 +176,7 @@ skill, a research round, or a triage run, append an entry there (not here).
 
 ## Lessons triage state
 
-- Lessons usage watermark: 2026-11-06T19:47:04
+- Lessons usage watermark: 2026-11-07T21:31:57
 
 The watermark above is read/written by `skill-feedback-triage/scripts/read_lessons.R`'s
 `triage_watermark()`/`triage_watermark_set()`, which default to `agents = "AGENTS.md"` —

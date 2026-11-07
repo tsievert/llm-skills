@@ -71,3 +71,7 @@ Contents: YAML description traps, CRLF line endings, links, hooks, naming, front
   `new.env()` also searches the parent chain, so a global object with the same name gives a false hit
   and a check silently finds nothing (hit once in the shadowed-name check, 2026-10-30). Use
   `new.env(parent = emptyenv())` and `exists(..., inherits = FALSE)`.
+
+- **Backticked `references/` or `scripts/` paths resolve inside the same skill.** `lint_skills()` reports
+  "Referenced path does not exist" when a SKILL.md cites another skill's file that way (reported once,
+  2026-11-06). Cite the other skill by name and describe the file in words.

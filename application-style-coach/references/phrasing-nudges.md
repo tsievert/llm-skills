@@ -93,8 +93,12 @@ the facts support.
 |---|---|---|
 | Hedge on an achievement ("I helped with the analysis") | What exactly did you do? | "I performed the [analysis] and interpreted [result]." |
 | Hedge on a plan ("I hope to explore") | Is the plan uncertain or decided? | "I will test [question] using [approach]." Keep hedges where uncertainty is real. |
+| Hedge that states a real uncertainty or an unconfirmed item ("should emerge", "likely limited to") | Do not flag it. It is the honest limit that the call asks for. | Flag only unexplained hedges (no stated condition) and overclaims; ask which items are confirmed rather than asking to remove the hedge. |
 | Superlative | What fact would a sceptical specialist accept? | Replace with the fact, or remove. |
 | False modesty ("my modest contribution") vs grandiosity ("fundamentally transforms the field") | Does the sentence say what was demonstrated? | "We showed that [finding]." |
+
+Before sending feedback, check the nudges against each other: asking for honest limits and then flagging the
+hedged wording that states them is contradictory (reported once, 2026-11).
 
 ## Structure and reader
 
