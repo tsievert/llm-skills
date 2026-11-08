@@ -8,7 +8,7 @@ metadata:
 
 # Mixed models and GLMMs in R
 
-Default stack: `glmmTMB` for fitting (handles Gamma, beta-binomial, nbinom2, zero inflation, dispersion models), `lmerTest` for Gaussian models needing Satterthwaite df, `DHARMa` for residuals, `emmeans` for contrasts, `performance` for ICC/R2/singularity. All CRAN. Tested versions: glmmTMB 1.1.15.2, DHARMa 0.5.0, emmeans 2.0.4, lme4 2.0.6, performance 0.19.0, lmerTest 3.2.1.
+Default stack: `glmmTMB` for fitting (handles Gamma, beta-binomial, nbinom2, zero inflation, dispersion models), `lmerTest` for Gaussian models needing Satterthwaite df, `DHARMa` for residuals, `emmeans` for contrasts, `performance` for ICC/R2/singularity. All CRAN. Tested versions: glmmTMB 1.1.15.2, DHARMa 0.5.1, emmeans 2.0.4, lme4 2.0.6, performance 0.19.0, lmerTest 3.2.1.
 
 Tested, runnable templates for every pattern below: [scripts/glmm_templates.R](scripts/glmm_templates.R) (simulated data; run with `source(..., local = new.env())`). Copy the relevant block and adapt it. Details and pitfalls: [references/pitfalls-and-reporting.md](references/pitfalls-and-reporting.md).
 
@@ -57,7 +57,8 @@ Compare `nbinom2` with and without `ziformula`. Then say which quantity you repo
 
 ## Known issues seen in testing
 
-- `DHARMa::testCategorical(plot = FALSE)` errored ("plot.new has not been called yet") in DHARMa 0.5.0; the template uses a base-R Levene-like check instead.
+- `DHARMa::testCategorical(plot = FALSE)` errored ("plot.new has not been called yet") in DHARMa 0.5.0; fixed in 0.5.1 (checked 2026-11-08), so on 0.5.1 or later `testCategorical(sim, group, plot = FALSE)` works. The template keeps a base-R Levene-like check so it also runs on 0.5.0.
+- DHARMa 0.5.1 fixes that matter here: `testDispersion` was biased for k/n (cbind) binomial models and `simulateResiduals(refit = TRUE)` lost power for binomial/beta-binomial with more than one trial; results from 0.5.0 for such models are worth re-running. `cbind()` responses with prior weights now stop with an error, `plotResidualsAll()` is deprecated for `plotResiduals(form = ...)`, and `testOutliers(plotBoostrap=)` is now `plotBootstrap=`. Prefer `update.packages()` to 0.5.1 or later.
 - glmmTMB convergence warnings: "singular convergence (7)" usually accompanies a boundary random-effect fit; simplify the structure rather than changing optimizers.
 - `broom.mixed`, `car`, `ggeffects` are not installed locally; templates avoid them. Installing from CRAN is allowed.
 - `rptR` prints a long progress bar and may emit singular-fit warnings inside bootstraps; both are harmless but noisy.

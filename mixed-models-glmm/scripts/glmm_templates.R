@@ -77,7 +77,7 @@ m_gam  <- glmmTMB(latency ~ group * trial_c + (1 | animal), family = Gamma(link 
 m_gam_d <- update(m_gam, dispformula = ~ group)
 print(AIC(m_gam, m_gam_d))
 # Residual spread per group (Levene-like test on scaled residuals). DHARMa::testCategorical(plot = FALSE) errored
-# in DHARMa 0.5.0 ("plot.new has not been called yet"), so use plain base R here.
+# in DHARMa 0.5.0 ("plot.new has not been called yet"; fixed in 0.5.1), so plain base R keeps this working on both.
 print(anova(lm(abs(residuals(simulateResiduals(m_gam)) - 0.5) ~ group, data = trials)))
 # plotResiduals(simulateResiduals(m_gam), trials$group) draws the same comparison
 

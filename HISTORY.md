@@ -1355,3 +1355,7 @@ The "Skill sync" section (hook mechanism, settings entry, cross-machine path rul
 
 ### 2026-11-07: lessons triage run
 9 new entries (34 closed, 14 parked left alone). Outcomes: 4 fix (one-sentence-per-line layout tip and a hedging-versus-honest-limits rule in `application-style-coach`; a `lint_skills()` cross-skill path pitfall in `github-skill-maintenance`), 2 already-present (DOI hyperlinks in `openalex`; unreproduced `gam-mgcv` claims already reworded), 3 use-case. `lint_skills()` clean for the two edited skills; `skills-ref validate` and a live trigger test not run. The hedging rule is from one report (not reproduced); `style_flags.R` still flags hedges unconditionally, which the SKILL text already says are prompts only.
+
+## 2026-11-08: DHARMa 0.5.1 review
+
+Read CRAN NEWS for DHARMa 0.5.1 (installed, tested locally). `testCategorical(plot = FALSE)` now works (0.5.0 bug fixed). Updated `mixed-models-glmm` (tested versions, bug note, 0.5.1 fix summary incl. k/n binomial `testDispersion` bias and `plotBootstrap` rename) and the template comment. Other skills mention DHARMa only generically; no change needed. Source: https://cran.rstudio.com/web/packages/DHARMa/news/news.html
