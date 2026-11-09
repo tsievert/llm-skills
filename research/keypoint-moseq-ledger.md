@@ -228,3 +228,20 @@ Local test 0.8.4 (2026-10-30, Windows, uv venv Python 3.12, CPU, synthetic DLC c
 - `compute_stats_df(min_frequency=0)`: 498 rows = 6 recordings x 83 syllables; 294 rows frequency 0; 298 NaN duration (4 more: only first/last instance). Heading columns `heading_mean/std/min/max`. Velocity columns are `velocity_px_s_*`. Default `min_frequency` 0.005.
 - `run_kruskal` returns a tuple (DataFrame, DataFrame, dict); prints a warning when most syllables have a group with < 3 values; 3 vs 3 non-overlapping gave p_adj 0.10.
 - Not run: grid movies, overlay, update_hypparams/update_config, location_aware.
+
+## Round 10 (2026-11-09): releases 0.8.5 and 0.8.6
+
+Source: GitHub REST API `releases` (read, not run locally; no Python on PATH this session).
+- 0.8.5 (2026-11-05): code unchanged from 0.8.4; FAQ NaN section rewritten (data first: still periods, animal entering/leaving, objects in frame); `jitter` advised to at most 1e-2 (0.8.4 said 1e-1).
+- 0.8.6 (2026-11-09): float32 default (GPU and CPU), jax-moseq >= 0.3.9, new dependency orjson; different random draws per seed vs 0.8.5; calibration widget frames differ; results.h5/moseq_df/stats heading float32, labels int32; upstream timings (test data 643,911 frames: 9.6 vs 29.4 min on V100, 0.74 vs 10.5 GiB); auto memory check and `mixed_map_iters` default 5 segments (user value kept); persistent JAX compile cache; `outlier_removal` plots 10 random recordings; FAQ OOM figure 0.5 GB + 0.05 MB/100 frames; FAQ no longer suggests single precision or x64 check; NaN fix for large syllable noise (#272).
+- Skill updated: SKILL.md (intro, rule 10, provenance), workflow version table, hpc-and-troubleshooting (jax-moseq, sizing, OOM and NaN rows).
+- Open: run 0.8.6 locally (headless script, float32 readers `kpms_summarise_results.py`/`kpms_results.R`, `plot_recordings`/new arguments, orjson install on Windows); check `kpms_headless_fit.py` and `kpms_fit.sbatch` for options now redundant (mixed_map_iters, parallel_message_passing); `use-cases-and-literature.md` line 65 (is #153 jitter/NaN fixed) still untested; common-problems.md #236 multi-GPU row may be outdated.
+
+Local test 0.8.6 (2026-11-09, Windows, uv 0.12.5 venv Python 3.12.14, kpms 0.8.6, jax-moseq 0.3.9, jax 0.12.0.1, CPU, synthetic DLC csv 6 x 1500 frames x 5 bodyparts; folder `tmp-examples/k086`, deleted afterwards):
+- Install via `uv pip install keypoint-moseq==0.8.6` clean; `check_installation()` lists versions and CPU device.
+- `kpms_headless_fit.py` fresh (4 AR + 2 full iterations, ~4.7 s and 5.6 s) and resume (to 8 iterations: "resuming at 6/8", only 2 run); exit 0; outlier QA plots now say "6 of 6 recordings" (new `plot_recordings` default 10); `check_nan_proportions` still prints a Styler repr.
+- `results.h5`: centroid, heading, latent_state float32; syllable int32; shapes unchanged.
+- `kpms_summarise_results.py` and `kpms_results.R` both ran on it and agree: 209 bouts, 486 usage rows, 194 transition rows. kpms CSV export syllables equal the h5. `compute_moseq_df` centroid/heading float32; `compute_stats_df(min_frequency=0)` 486 rows (6 x 81), `heading_mean` float32.
+- Not run: GPU, grid movies, calibration, `apply_model`, float64 mode, speed/memory claims. Closed: the earlier open item on float32 readers and 0.8.6 install on Windows (orjson).
+
+Check (2026-11-09): do `kpms_headless_fit.py` / `assets/kpms_fit.sbatch` need memory options after 0.8.6? Neither sets `parallel_message_passing`, `set_mixed_map_iters` or `set_mixed_map_gpus` (grep), so no code change needed; one GPU per task stays. Stable FAQ (webfetch): out-of-memory section no longer mentions `parallel_message_passing` or `set_mixed_map_iters`; `set_mixed_map_gpus(2)` still given for multi-GPU on Linux; NaN section lists `parallel_message_passing=True` ("by default only enabled on GPU") and says jitter affects only the serial sampler (CPU or `parallel_message_passing=False`). Docs in `hpc-and-troubleshooting.md` and the workflow reference reworded accordingly. Open: whether jitter being serial-sampler-only should be added to rule 10 (read, not tested).

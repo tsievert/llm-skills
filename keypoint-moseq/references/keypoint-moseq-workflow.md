@@ -2,7 +2,7 @@
 
 ## Contents
 
-- [Version changes that matter (0.6.6 to 0.8.4)](#version-changes-that-matter-066-to-084)
+- [Version changes that matter (0.6.6 to 0.8.6)](#version-changes-that-matter-066-to-086)
 - [Pipeline (interactive Python API, as in the tutorial)](#pipeline-interactive-python-api-as-in-the-tutorial)
 - [Output structure](#output-structure)
 - [Config keys that matter](#config-keys-that-matter)
@@ -15,9 +15,9 @@
 
 Source: kpms stable docs (modeling tutorial for notebook version "0.8", FAQs, advanced topics, analysis) re-read 2026-10-29 against 0.8.3, plus runs on 0.6.6, 0.8.0 and (2026-10-29, scripts, CPU) 0.8.3. Re-check against the installed version. Since 0.8.0 the tutorial passes `metadata=metadata` to `init_model` and `**config()` (so `fps`) to `fit_model`, validates videos with `check_videos`, and starts with `kpms.check_installation(notebook_version="0.8")`. `scripts/kpms_headless_fit.py` passes `metadata=` and `fps=` (needs >= 0.8.0). Research record: `research/keypoint-moseq-ledger.md` in the llm-skills repo.
 
-## Version changes that matter (0.6.6 to 0.8.4)
+## Version changes that matter (0.6.6 to 0.8.6)
 
-0.8.4 rows come from the release notes (read 2026-10-30). Locally run on 0.8.4 (2026-10-30, Windows, uv venv Python 3.12, CPU, synthetic DLC csv, 6 recordings): headless fit and resume, `compute_stats_df` full recording x syllable grid (498 rows = 6 x 83 at `min_frequency=0`), circular heading columns present, `run_kruskal` warning for groups with fewer than 3 values, and a 3 vs 3 non-overlapping test giving an adjusted p of about 0.10 (not 0.0001). Not run: grid movies, `overlay_keypoints_on_video`, `update_hypparams`, `update_config`, `location_aware`.
+0.8.5 and 0.8.6 rows come from the release notes (read 2026-11-09). Run locally on 0.8.6 (CPU, synthetic data): headless fit and resume, both result readers (float32/int32 output read fine), `compute_moseq_df`/`compute_stats_df`; the GPU, speed and memory claims are untested here. 0.8.4 rows come from the release notes (read 2026-10-30). Locally run on 0.8.4 (2026-10-30, Windows, uv venv Python 3.12, CPU, synthetic DLC csv, 6 recordings): headless fit and resume, `compute_stats_df` full recording x syllable grid (498 rows = 6 x 83 at `min_frequency=0`), circular heading columns present, `run_kruskal` warning for groups with fewer than 3 values, and a 3 vs 3 non-overlapping test giving an adjusted p of about 0.10 (not 0.0001). Not run: grid movies, `overlay_keypoints_on_video`, `update_hypparams`, `update_config`, `location_aware`.
 
 | Change | Release | Consequence |
 |---|---|---|
@@ -40,6 +40,10 @@ Source: kpms stable docs (modeling tutorial for notebook version "0.8", FAQs, ad
 | `init_model(location_aware=True)` uses the given `allo_hypparams` (0.8.3 replaced them with defaults) | 0.8.4 | Refit if you set custom ones |
 | `update_hypparams` raises for `num_states`, `latent_dim`, `nlags`, `S_0_scale`, `K_0_scale` | 0.8.4 | Set these in the config and initialise a new model; 0.8.3 silently changed only the stored value |
 | `update_config` writes numpy values as plain numbers/lists and keeps settings without a default | 0.8.4 | A `config.yml` broken by `fps=np.float64(30)` under 0.8.3 needs a manual fix |
+| 0.8.5: code unchanged from 0.8.4; FAQ NaN advice rewritten (check the data first: long still periods, animal entering/leaving the frame, objects pulling keypoints off the animal); `jitter` now advised only up to 1e-2 | 0.8.5 | Matches rule 10 in `SKILL.md`; no code changes needed |
+| Models fit in **float32 by default** (GPU and CPU); saved models/data in the other precision are converted on load with a message; same seed draws different random numbers than 0.8.5, so a 0.8.5 seed does not reproduce the fit; calibration widget shows different frames for the same seed; `results.h5`, `moseq_df` centroid/heading and `stats_df` heading statistics are float32, syllable labels int32 | 0.8.6 | Record the precision in provenance; refits are not bit-identical to older runs; the R and Python readers in this skill read float32/int32 output without changes (tested 2026-11-09) |
+| Needs jax-moseq >= 0.3.9; `orjson` is a new required dependency | 0.8.6 | Update the environment together; the 0.8.6 notes say fitting no longer stops on NaNs when a syllable's noise greatly exceeds keypoint noise (#272) |
+| Performance (release notes, kpms test data of 643,911 frames): whole fit 9.6 min instead of 29.4 on a V100, peak GPU memory 0.74 GiB instead of 10.5; GPU pose step runs 5 data segments at a time, with a memory check before fitting that lowers it if needed (a value set with `jax_moseq.utils.set_mixed_map_iters` is kept); persistent JAX compile cache (see the FAQ for its location); `outlier_removal` plots 10 random recordings by default (`plot_recordings`); faster calibration widget, grid movies, trajectory plots, `reindex_syllables_in_checkpoint` (in place), `save_results_as_csv` | 0.8.6 | Upstream numbers, not measured here. The FAQ no longer suggests single precision for out-of-memory errors; GPU memory is about 0.5 GB plus 0.05 MB per 100 frames per the FAQ |
 | Recordings loaded from a directory are sorted | 0.6.13 | Noise calibration reproducible across machines |
 
 
@@ -151,7 +155,7 @@ Load the checkpoint, load and outlier-filter new keypoints, `format_data`, then 
 - Trimming: slice coordinates and confidences per recording and keep the frame index offsets.
 - Merging similar syllables: `generate_syllable_mapping(results, [[1,3],[4,5]])` then `apply_syllable_mapping` and `save_hdf5` to a new file. Keep the original and report the merge rule.
 - Location-aware modelling (`location_aware=True`): experimental, not tested in the paper.
-- Memory knobs: `parallel_message_passing=False` (about 4-6 times less memory, slower), `set_mixed_map_iters(n)`, `set_mixed_map_gpus(n)`; or fit on a subset and `apply_model` to the rest.
+- Memory: 0.8.6 fits in float32 and picks the segment count from a pre-fit memory check, so try a plain fit first. Manual fallbacks (older advice, not re-measured on 0.8.6): `parallel_message_passing=False` (about 4-6 times less memory, slower; the FAQ now lists `parallel_message_passing=True` only as a NaN remedy, on by default on GPU), `set_mixed_map_iters(n)`; `set_mixed_map_gpus(n)` is still in the FAQ for multi-GPU on Linux; or fit on a subset and `apply_model` to the rest.
 
 ## Data requirements (FAQ)
 

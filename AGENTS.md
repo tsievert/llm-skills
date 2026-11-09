@@ -147,7 +147,7 @@ anything) is still open. Before starting a new one: follow the working rules abo
 |---|---|---|
 | `mixed-models-glmm` | done | lme4/glmmTMB/DHARMa/performance/emmeans for repeated-measures trials |
 | `animal-behaviour-tracking-analysis` | partial | DLC metrics and their statistics (kpms split out 2026-10-29). Open: validate immobility/freezing thresholds against manual scoring, real-data tests. |
-| `keypoint-moseq` | done | kpms fitting, kappa, known user problems, syllable statistics; research in `research/keypoint-moseq-ledger.md`. Open: GPU/Slurm runs, real data, `apply_model`, grid movies. |
+| `keypoint-moseq` | done | kpms fitting, kappa, known user problems, syllable statistics; research in `research/keypoint-moseq-ledger.md`. Last checked against kpms 0.8.6 (2026-11-09, CPU, synthetic). Open: GPU/Slurm runs, real data, `apply_model`, grid movies. |
 | `reproducible-research-data` | done | FAIR data deposits, data dictionaries, renv/uv lockfiles, Quarto manuscripts |
 | `manuscript-figures-ggplot` | done | journal-ready ggplot2 figures (CVD-safe palettes, sizing, export) |
 | `stats-reporting-and-review` | done | Effect sizes, power, pre-registration (`prereg`; `preregr` archived from CRAN 2026-07-28, do not use), multiplicity, reviewer responses. `report()` output is a scaffold only. Open: GAM results-prose convention not yet added to `gam-interpretation`. |
