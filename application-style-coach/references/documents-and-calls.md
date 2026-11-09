@@ -116,3 +116,10 @@ Formatting only; the assistant does not check whether publications exist or whet
 - Total page limit, file format, file naming and size as the call states.
 - Same names, titles, dates and spelling across all documents.
 - Public-document check: CV and list may be public; confidential data stays out.
+- Coherence across the package (when asked whether the documents fit together): claims in the letter against
+  evidence in the CV and list; methods in the plan against demonstrated experience; terminology drift; funding
+  statements; the call's criteria covered somewhere. Report mismatches as questions ("does the letter need to claim
+  this?"), never as instructions to add items.
+- A CV lists decided funding and verifiable outputs only. Pending grant applications and claims about unpublished
+  data are not CV items; the letter may mention them, so a letter-CV gap there is not an error (reported once: a
+  user corrected this).

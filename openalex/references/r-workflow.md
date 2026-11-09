@@ -48,6 +48,12 @@ deletes resources on the user's account — saved searches, alerts
 (`POST`/`PATCH`/`DELETE /saved-searches`) — use `httr2` directly, since
 `openalexR` has no wrapper for these endpoints.
 
+### Gotcha: author results have flat `h_index` columns, not `summary_stats`
+
+`oa_fetch(entity = "authors")` (seen with openalexR 3.1.2) flattens the API's nested `summary_stats` into
+top-level `h_index`, `i10_index` and `2yr_mean_citedness` columns; selecting `summary_stats` errors with
+"Column doesn't exist". Check `names()` first. The raw API (`httr2`) returns the nested `summary_stats`.
+
 ### Gotcha: `oa_fetch()`'s custom `select` silently drops unmapped fields
 
 `oa_fetch()` only exposes fields it has a built-in column mapping for. Ask

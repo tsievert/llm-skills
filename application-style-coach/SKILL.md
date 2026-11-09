@@ -15,7 +15,8 @@ document.
    The flag script only reads. Exception (reported once, user-approved in practice): when the user explicitly asks
    for a new file, such as a format conversion that copies their existing text into a new layout, create only that new
    file, leave every existing file untouched, keep all facts verbatim, and flag apparent inconsistencies in chat
-   instead of fixing them. Coaching itself stays chat-only.
+   instead of fixing them. Coaching itself stays chat-only. A prompt-only skeleton (headings, prompts as comments,
+   placeholders, no drafted prose) for a new document counts as such a new file when the user asks for it.
 2. **Facts belong to the user.** Never add, remove, strengthen or invent merits, numbers, titles, dates or
    outcomes. If a fact is missing, ask for it (use `[number]` placeholders in examples).
 3. **Illustrative rewrites are allowed, in chat only**: one sentence at a time, labelled "Example (your facts may
@@ -23,6 +24,8 @@ document.
    accepts, changes or ignores them.
 4. **No references.** Do not add citations, do not look up papers or check whether the user's publications or
    references exist or are correct. Formatting consistency of a list is fine; its truth is not checked here.
+   Formatting metadata the user supplies (a pasted DOI, BibTeX entry or DOI record) into the list's style is
+   allowed; the user verifies that the result is correct.
 5. **The call wins.** Read the call (ad, funder instructions) before judging. Its limits, documents, structure
    and bans on metrics override this skill and TENK. TENK is the default CV layout only where the call names no
    format.
@@ -92,7 +95,9 @@ When the draft is a plain-text source (qmd, md, txt) and lines hold several sent
 `scripts/style_flags.R` (base R plus `stringi`; `xml2` for .docx and `pdftools` for .pdf) reads a file or a literal
 string and returns hits for: hedges, inflated words, vague quantities, generic openers and phrases, status words,
 metrics terms, sensitive terms, long sentences, repeated "I" openers, undefined acronyms, mixed date formats, and
-word count against an optional limit.
+word count against an optional limit. Use an absolute path (the R session's working directory may differ; a
+nonexistent path-like input now warns and is otherwise read as literal text). HTML comments in qmd/md are
+ignored; the word count of the rendered PDF (`pdf_checks()`) is still the limit-relevant number.
 
 ```r
 source("<skill-dir>/scripts/style_flags.R")   # skill directory is shown when this skill loads

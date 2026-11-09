@@ -60,6 +60,8 @@ decide what the results mean, and does not touch files it should not own.
   convention, the `CRediTas` round-trip gotcha, non-standard role lists.
 - [references/linting-checklist.md](references/linting-checklist.md): spelling, grammar, bibliography,
   non-standard characters, a suggested pre-submission order, and what is not yet covered.
+- [references/multi-document-page-numbers.md](references/multi-document-page-numbers.md): continuous page
+  numbers across several standalone Quarto typst PDFs (application packages).
 - `scripts/credit.R`, `scripts/check_manuscript.R`, `scripts/check_grammar.R`: the R functions referenced
   above.
 

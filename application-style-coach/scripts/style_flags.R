@@ -5,7 +5,13 @@
 
 read_application_text <- function(path) {
   stopifnot(length(path) == 1)
-  if (!file.exists(path)) return(path)  # treat as literal text
+  if (!file.exists(path)) {
+    if (!grepl("\\n", path) && nchar(path) < 260 &&
+        grepl("[/\\\\]|\\.(qmd|md|txt|docx|pdf|rmd|tex)$", path, ignore.case = TRUE))
+      warning("'", path, "' looks like a file path but does not exist (working directory: ", getwd(),
+              "); treating it as literal text. Use an absolute path.", call. = FALSE)
+    return(path)  # literal text
+  }
   ext <- tolower(tools::file_ext(path))
   if (ext == "docx") {
     if (!requireNamespace("xml2", quietly = TRUE)) stop("Install xml2 to read .docx files.")
@@ -19,6 +25,8 @@ read_application_text <- function(path) {
     txt <- unlist(strsplit(paste(pdftools::pdf_text(path), collapse = "\n"), "\n"))
   } else {
     txt <- readLines(path, warn = FALSE, encoding = "UTF-8")
+    # Drop HTML comments (scaffolding prompts) so they do not inflate the word count
+    txt <- strsplit(gsub("(?s)<!--.*?-->", "", paste(txt, collapse = "\n"), perl = TRUE), "\n", fixed = TRUE)[[1]]
     # Drop YAML front matter and fenced code so only prose is checked
     fence <- grepl("^\\s*(```|~~~)", txt)
     txt <- txt[cumsum(fence) %% 2 == 0 & !fence]
