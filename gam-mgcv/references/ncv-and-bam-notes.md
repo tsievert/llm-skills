@@ -43,6 +43,14 @@ cumulative curve), do not read the maximum relative difference: it is set by the
 near 1,000 s). Report absolute differences scaled by the outcome range or the bootstrap SD, with
 quantiles (median, 99th percentile, max). One report, arithmetic argument, not run on data here.
 
+## Re-labelling (sign-flip, permutation) inference around a bam fit
+
+Repeat the whole pipeline inside each re-labelling: recompute every covariate derived from the labels (for
+example a unit baseline averaged over sessions of one treatment label), its centring across units, and any
+other label-dependent summary, then refit. A covariate computed once from the true labels makes the
+re-labelling distribution invalid. Add a test that the covariate changes under a flip and stays centred
+(one project, mgcv 1.9-5, all refits converged; design note, not a simulation of the size of the error).
+
 ## Failures to expect and report (reported, not reproduced)
 
 - mgcv 1.9-5's ChangeLog lists several NCV fixes. Re-run 2026-11-04 on 1.9-5: 0 of 30 small fits failed (n = 100, three smooths, `gamSim(1)`). The design differs from the report below, so a fix is plausible but unproven; still count failures.

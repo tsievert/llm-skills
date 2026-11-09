@@ -97,6 +97,7 @@ Plotting, partial effects, simultaneous intervals, group comparisons, derivative
 - Whole-response predictions: `predict(m, newdata, type = "link", se.fit = TRUE)`, then back-transform with `family(m)$linkinv`, which gives valid intervals on the response scale.
 - Exclude random effects from predictions with `exclude = "s(g)"` (and supply a dummy level); hold other covariates at typical values.
 - Excluding random effects gives a typical-unit curve, not the group mean, and under a log link the two can differ several-fold. Ask early which the user wants, and avoid bare "population-level" (ambiguous). The explanation and the wording are in the `gam-interpretation` skill (its uncertainty-and-inference and phrasing references).
+- Averaging a group-mean prediction over the observed values of an additive covariate (for example age) under a log link does not need units x grid rows: predict the grid with the covariate at a reference value, then multiply by `mean(exp(eta_i - eta_ref))`, where `eta_i` and `eta_ref` are link-scale predictions of one reference grid row at each unit's covariate value and at the reference value. Valid only for additive terms with no interaction with the covariate. Verified 2026-11-09 on a Poisson bam (mgcv 1.9-5, synthetic): matches brute force to rounding error.
 - Do not extrapolate outside the data.
 
 ## Large data

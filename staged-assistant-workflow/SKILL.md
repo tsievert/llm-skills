@@ -87,7 +87,13 @@ provisional (a development run, final run pending), use a development-versus-fin
 a gate that stays not ok until the final run, and a reason string; the stage reads `partial` and stays the
 next step, while later stages may proceed by the user's decision. Make the first stage reproduce every number
 the plan quotes as an assertion against the raw file; a failed assertion is a result (the plan was wrong),
-not an error.
+not an error. Likewise gate a port of prototype code on reproducing the saved results, and treat a
+mismatch as a possible prototype bug, not only a port bug (reported once: an old script pair had mixed two
+data sources; the port was right, and the correction was flagged in the hand-off).
+
+When a stage grows too large for one session after the user answers a batch of design questions, write an
+"answered (with IDs) / still open (with defaults)" list into the hand-off file first, then split the stage
+into numbered sessions, each naming the skills to load, its input and its output (reported once, worked).
 
 A status function walks this list in order, checking each stage's output file against its gate,
 and reports the first stage that is missing, failed its gate, or (for an assistant-judgment stage)

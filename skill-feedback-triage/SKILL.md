@@ -110,7 +110,7 @@ read the lesson files first and use an export only to verify a claim; the parsin
    while errors remain.
 7. **Archive.** Work through this checklist in order, in the real inbox (not the copy):
    - [ ] The user has seen the triage table (no archiving or watermark before that).
-   - [ ] Build the keep list from the triage table: every file that contains a `park` row. Do not build it from memory.
+   - [ ] Build the keep list from the triage table: every file that contains a `park` row of this run **and** every file with a parked-status entry from earlier runs (`unique(L$file[L$status == "parked"])`; reported once: a bulk move archived such files). Do not build it from memory.
    - [ ] Move all other processed files with bash: `mv ... inbox/processed/`. A file that mixes resolved and parked entries stays in the inbox whole (never split it) until every entry in it has a disposition other than `park`: the parked entry is what future runs need to see, and splitting risks losing the resolved entries' context.
    - [ ] Record a disposition for **every** entry of this run, including use-case entries and entries in files you archive, so mixed files stay quiet next time. One call per outcome: `dispositions_add(L[rows, ], "fix" | "reject" | ..., ".posit/assistant/lessons-work/dispositions.tsv")`. `park` and `needs-info` keep an entry open. Allowed values: `fix`, `add-note`, `already-present`, `reject`,
      `no-change`, `new-skill`, `park`, `needs-info`; use-case entries get `no-change` (`use-case` is not a value and errors).

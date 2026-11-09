@@ -56,3 +56,20 @@ All runs on synthetic data, mgcv 1.9-5, callr 3.8.0, R 4.6.0, Windows. Skill fil
 | 11 | max-t critical value flip B = 200 vs 100 | not testable (data-specific) | anecdote dropped, mechanism kept |
 | 12 | Tweedie/Gamma fREML anchors reproduced after upgrade | not testable | sentence dropped |
 | 13 | NCV intermittent failures, parallel `R_Calloc` errors, clustered-sandwich coverage simulation, `scasm` fs/sc timing, sz 2x2 recipe, twlss scale-RE oscillation | not retested this round | left labelled "reported" (NCV 0/30 and sandwich identity already re-run 2026-11-04/05) |
+
+## 2026-11-09: k.check() and `sz` terms, online check (triage follow-up)
+
+Requirement 2 (2026-11-09, user): the triage fix for the "k audit when `k.check()` has no k-index for `sz`" entry must be backed by an online search, not only a local test.
+
+| Source | Status | Finding |
+|---|---|---|
+| https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/k.check.html (mgcv 1.9-4 help) | read | Smooths of factor variables are not supported and give an NA p-value. k-index = differencing residual-variance estimate over residual variance, from near neighbours in the numeric covariates; p-value by reshuffling (`n.rep`); models above `subsample` (5000) rows are tested on a random subsample; p-values vary between replicates. "Doubling a suspect k and re-fitting is sensible: if edf increases substantially ..." |
+| https://rdrr.io/cran/mgcv/man/k.check.html | read (search snippet) | Same text for the NA statement and edf close to k'. |
+| gam.check help (rdocumentation 1.9-4) | read (search snippet) | Same test via `k.sample`/`k.rep`. |
+| `?choose.k` text (CRAN manual) | read (search snippet) | Costlier alternative: increase k and refit; no statistically important change means k was large enough; change in smoothness selection criterion and edf are the numerical measures. |
+| https://arxiv.org/pdf/1602.06696 (Pya and Wood 2016) | read (abstract) | Origin of the differencing test and of an edf-of-residual-smooth approach; only the abstract was read. |
+| mgcv GitHub issues/forums for an `sz`-specific k-index | not researched | Search returned nothing `sz`-specific; whether the NA is intended or only unimplemented for `sz` is not documented beyond the factor-smooth sentence. |
+
+Facts: the k-doubling refit in the skill is documented behaviour, not an invention of the reporting project. Added to the skill: the fREML-score change, the 5,000-row subsample and p-value variability. The bootstrap-SD scale for contrasts stays labelled as one project's addition. Local re-check (mgcv 1.9-5, synthetic bam, `select = TRUE`): NA for the `sz` row; global-smooth edf 6.7 of k' 7 rose to 9.9 at k = 16.
+
+Open: whether the differencing k-index could be computed by hand for `sz` terms (residuals ordered by the numeric covariate within level); not tried.
