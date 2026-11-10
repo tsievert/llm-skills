@@ -428,3 +428,13 @@ Method: `github-skill-maintenance/references/testing-skills.md` proxy variant. 2
 | Near misses routed correctly otherwise | Quarto template, CRediT, .bib duplicates -> quarto skill; cover letter -> `application-style-coach`; Cohen's d, reviewer response -> `stats-reporting-and-review`; figure sizing -> `manuscript-figures-ggplot`; literature search -> `openalex` |
 
 Pass rate by split: train 97%, validation 93%. Decision: no description change; the single systematic risk is a `.qmd` file name pulling coaching requests to the Quarto skill, which the description already handles by naming content coaching. Still untested: real fresh conversations, and the (untestable here) effect of file-signal wording. Scratch files in `tmp-examples/` were deleted.
+
+## 14. STROBE and SPIRIT currency, roadoi email (2026-11-10)
+
+| Item | Finding | Source | Status |
+|---|---|---|---|
+| SPIRIT | SPIRIT 2025 exists (published 2025-04-28 in BMJ, PLOS Medicine, Lancet, JAMA, Nature Medicine): 34-item checklist plus schedule diagram, 2 items added, 5 revised, 5 deleted or merged, new open-science section | https://pmc.ncbi.nlm.nih.gov/articles/PMC12035670/ (BMJ version) | read (search excerpt) |
+| STROBE | No full revision of the 2007 22-item base checklist found; extensions exist (e.g. nutrition STROBE-nut 2026, STROBE-Equity 2025). Evidence is thin: the pages saying "not superseded" are aggregator sites (casrai.org, journalmetrics.org) of unclear quality; EQUATOR's STROBE page (https://equator-network.org/reporting-guidelines/strobe/) lists extensions and no revision | search excerpts | skipped as sources: commercial/LLM-like (casrai.org, journalmetrics.org); EQUATOR page read as excerpt only |
+| roadoi email | `roadoi_email` is set in the user's environment (checked by `nzchar`, value not printed); `UNPAYWALL_EMAIL` is not. `openalex/scripts/fetch_fulltext.R` defaults `email` to `UNPAYWALL_EMAIL`, so the coach text tells the assistant to pass `email = Sys.getenv("roadoi_email")` | local check; `openalex/scripts/fetch_fulltext.R` line 44 | done |
+
+Decision: skill text names SPIRIT 2025 as a pointer and says to confirm STROBE on EQUATOR. Open: a primary-source check of STROBE status (the STROBE initiative site was not fetched). Search budget for the turn: two searches used.

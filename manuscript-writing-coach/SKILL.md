@@ -57,6 +57,8 @@ content is the user's: the assistant asks questions and points at patterns; it d
      journal's checklist) and turn it into questions ([references/reporting-and-ethics.md](references/reporting-and-ethics.md)).
      Say plainly when no standard matches; do not invent one.
    - *Citations against content:* the `.bib` check in [references/bib-and-fulltext.md](references/bib-and-fulltext.md).
+     First check that `roadoi_email` is set (`nzchar(Sys.getenv("roadoi_email"))`, never print it); if not, nudge the
+     user to add it to `~/.Renviron` as described there.
 4. **Close** with what was checked and what was not (journal rules not read, design unknown, full text unavailable,
    script limited to numbers) and invite a second round after the user revises.
 

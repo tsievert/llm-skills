@@ -20,7 +20,7 @@ the EQUATOR library, and check whether the journal requires it. Sources: ledger 
 | Live-animal experiments (incl. behaviour) | ARRIVE 2.0 (reporting), PREPARE (planning), ASAB/ABS ethics guidelines | Animal Behaviour and Animal Behavior and Cognition name these; invertebrate rules differ by journal |
 | Meta-analysis in ecology and evolution | PRISMA-EcoEvo | General PRISMA 2020 for systematic reviews; ROSES for environmental evidence synthesis |
 | Transparency in ecology and evolution | TTEE (Tools for Transparency in Ecology and Evolution) | Journal-level levels for data, code, materials, design and analysis; some journals use it in reporting summaries |
-| Randomised trials, observational studies | CONSORT 2025, STROBE | Pointers only, outside the usual field; STROBE currency not re-checked |
+| Randomised trials, observational studies | CONSORT 2025 (trial reports), SPIRIT 2025 (trial protocols), STROBE | Pointers only, outside the usual field; no full revision of the 2007 STROBE base checklist was found on 2026-11-10 (extensions exist), so confirm on the EQUATOR page |
 | Supervised machine learning in biology | DOME | See below |
 
 Journal instructions decide whether a checklist is required and where it goes (supplement, reporting summary).

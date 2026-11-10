@@ -40,6 +40,11 @@ One row per entry: key, normalised DOI, open-access status (gold, hybrid, bronze
 Unpaywall, then Europe PMC XML for PMC records) rather than writing a new fetcher. Its use needs the user's own email
 for Unpaywall; never invent one, and ask before any metered call.
 
+Email setup: check that the variable exists without printing it, `nzchar(Sys.getenv("roadoi_email"))`. If it is
+`FALSE`, nudge the user to add a line `roadoi_email=<their address>` to their `~/.Renviron` (`usethis::edit_r_environ()`
+opens it) and restart R; do not write the file for them. `fetch_fulltext()` defaults to `UNPAYWALL_EMAIL`, so pass
+`email = Sys.getenv("roadoi_email")` explicitly (or the user can set both variables).
+
 ## Terms for reading full text
 
 Practical rules, not legal advice:

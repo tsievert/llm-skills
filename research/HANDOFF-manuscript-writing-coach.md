@@ -75,4 +75,4 @@ No secrets, no personal data or `context-inbox/` content in the repo (anonymise 
 
 1. Issue 1: may the hand-off sentence be added to the `application-style-coach` description (another skill's file)?
 2. Issue 4: which backlinks to add, and which `no-backlink` decisions to record (suggested split above)?
-3. Issue 7 and 8: which real manuscript and `.bib` may be used for testing, and is an Unpaywall email available in `UNPAYWALL_EMAIL` (check that it exists; do not print it)?
+3. Issue 7 and 8: which real manuscript and `.bib` may be used for testing, and is an Unpaywall email available (`roadoi_email` is set as of 2026-11-10; `fetch_fulltext()` reads `UNPAYWALL_EMAIL` by default, so pass it explicitly) (check that it exists; do not print it)?
