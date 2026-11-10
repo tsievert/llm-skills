@@ -128,8 +128,10 @@ thousands separators, a percent, a negative interval, a p-value, a rounded value
 and table references, a code chunk and a reference list), on a markdown file with an "Abstract" heading and inline R
 (warned), on a LaTeX abstract environment, on a literal string with `abstract =`, and on input with no abstract (clear
 error). Research basis (six rounds, sources and gaps): `research/manuscript-writing-coach-ledger.md`. Not tested: the
-script on real manuscripts, Quarto `abstract` set through includes or `.docx`/`.pdf` input, the `.bib` full-text check
-end to end (it reuses the tested `openalex` script and `bibtex` parser findings, section 8.4 of the ledger), whether
+script on real manuscripts, Quarto `abstract` set through includes or `.docx`/`.pdf` input, the claim
+comparison on more than one paper (the `.bib` parse, availability table, PDF download, `pdftools` text extraction and
+one claim comparison were run on a real 24-entry file on 2026-11-10, ledger sections 15 and 16; two-column PDFs
+interleave their columns, so passages must be read in context), Zotero/Better BibTeX output and `@string`/`@comment` entries, whether
 the nudges help real authors, other fields than ecology and behaviour, and
 publisher AI policies (they change; none are quoted). Guideline versions were checked 2026-11-10 and may have moved.
 Description trigger proxy test 2026-11-10 (20 queries, 3 subagent runs seeing only names and descriptions; queries in

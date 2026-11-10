@@ -36,9 +36,18 @@ and 12.
 ## Availability table
 
 One row per entry: key, normalised DOI, open-access status (gold, hybrid, bronze, green, closed), licence, version
-(published, accepted, submitted), where. Use the full-text script in the `openalex` skill (OpenAlex locations, then
-Unpaywall, then Europe PMC XML for PMC records) rather than writing a new fetcher. Its use needs the user's own email
-for Unpaywall; never invent one, and ask before any metered call.
+(published, accepted, submitted), where. Two tools, tested 2026-11-10 on a 6-DOI sample of a real `.bib`:
+
+- `roadoi::oadoi_fetch(dois, email = Sys.getenv("roadoi_email"))` (Unpaywall) returns `is_oa`, `oa_status` and, in
+  the list column `best_oa_location`, `license` and `version`. Use it for the availability table (`license` and
+  `version` are `NULL`/`NA` for closed papers).
+- `fetch_fulltext()` from the `openalex` skill (OpenAlex locations, then Unpaywall, then Europe PMC XML for PMC
+  records) downloads PDFs and returns only a download status (`downloaded`, `no_open_access_copy`,
+  `oa_but_no_direct_pdf`) plus the source, not licence or version. Use it only for entries the table marks open. It
+  writes a `manifest.tsv` and PDFs into `outdir`; point `outdir` at a git-ignored folder.
+
+Both need the user's own email; never invent one, and ask before any metered call. A gold paper with a
+NonCommercial-NoDerivatives licence can still show `oa_but_no_direct_pdf`: then ask the user to open or paste it.
 
 Email setup: check that the variable exists without printing it, `nzchar(Sys.getenv("roadoi_email"))`. If it is
 `FALSE`, nudge the user to add a line `roadoi_email=<their address>` to their `~/.Renviron` (`usethis::edit_r_environ()`
@@ -65,6 +74,13 @@ Compare the user's sentence with the paper's abstract and the relevant section. 
 that differs, an effect described as causal where the paper reports an association, a result from a different species
 or setting, a conclusion from the paper's Discussion presented as its result. The version matters (a preprint may differ
 from the published paper), so state which version was read.
+
+Mechanics (tested once, 2026-11-10): `pdftools::pdf_text()` gives one string per page; collapse whitespace, then
+search each part of the user's claim as a pattern (tool or software name, species, sample, numbers) and read about 250
+characters around each hit. Limits: two-column journal layouts interleave the columns, so a hit can mix sentences from
+both columns; read the surrounding passage rather than trusting a single match. Figures and tables mostly do not
+extract as text, so say what could not be checked. Typical finding: a short note such as "custom model" was
+partly supported (a pretrained model retrained on new frames), which is why mismatches are reported as questions.
 
 ## Delegation
 

@@ -438,3 +438,31 @@ Pass rate by split: train 97%, validation 93%. Decision: no description change; 
 | roadoi email | `roadoi_email` is set in the user's environment (checked by `nzchar`, value not printed); `UNPAYWALL_EMAIL` is not. `openalex/scripts/fetch_fulltext.R` defaults `email` to `UNPAYWALL_EMAIL`, so the coach text tells the assistant to pass `email = Sys.getenv("roadoi_email")` | local check; `openalex/scripts/fetch_fulltext.R` line 44 | done |
 
 Decision: skill text names SPIRIT 2025 as a pointer and says to confirm STROBE on EQUATOR. Open: a primary-source check of STROBE status (the STROBE initiative site was not fetched). Search budget for the turn: two searches used.
+
+## 15. `.bib` full-text check, first real-file test (2026-11-10)
+
+Input: a real user `.bib` from the git-ignored `context-inbox/` (not copied anywhere; contents not recorded here). Results are counts only.
+
+| Step | Result |
+|---|---|
+| `bibtex::read.bib()` vs raw key scan | 24 raw entries, 24 parsed, 0 dropped, 0 duplicate keys, all `@article`, all with a DOI, no `@string`/`@comment`, no Better BibTeX-style extra fields |
+| `roadoi::oadoi_fetch()` on a random 6-DOI sample (`roadoi_email` set, value not printed) | worked; 3 closed, 3 gold (2 CC BY, 1 CC BY-NC-ND), all open ones `publishedVersion`; columns `is_oa`, `oa_status`, `best_oa_location$license` and `$version` |
+| `fetch_fulltext()` on the same sample (`email = Sys.getenv("roadoi_email")`) | worked; 2 downloaded as PDFs (one from a repository, one from a publisher), 3 `no_open_access_copy`, 1 `oa_but_no_direct_pdf`; returns status and source only, no licence or version |
+| Test files | PDFs and manifest written to `tmp-examples/fulltext`, deleted afterwards |
+
+Bug in the draft skill text: `bib-and-fulltext.md` said the availability table (status, licence, version) came from the `openalex` script. It does not; fixed to use `roadoi` for the table and `fetch_fulltext()` for download only.
+Still untested: PDF text extraction and the claim comparison, Zotero/Better BibTeX exports, `@string`/`@comment`, a `.bib` with entries without DOI, the subagent delegation path (more than ten entries).
+
+## 16. Claim comparison, first test (2026-11-10)
+
+Setup: one open-access (gold, CC BY, published version) paper from the user's real `.bib`, downloaded with `fetch_fulltext()`, text extracted with `pdftools::pdf_text()` (11 pages, about 65,000 characters). The user supplied a rough note about what the paper contributes to their manuscript; claim parts were searched as patterns and read in context. PDF and test folder deleted afterwards. No citation key or paper content is recorded here beyond this summary.
+
+| Result | Detail |
+|---|---|
+| Works | Page-wise extraction, pattern search and reading about 250 characters of context found every part of the claim (species, software, model origin, single-animal setup) |
+| Finding type | One part of the note ("custom model") was only partly supported: the paper retrained a pretrained model on new frames. Reported to the user as a question, not a verdict |
+| Limitation 1 | Two-column layout interleaves the columns in extracted text, so single hits mix sentences; passages must be read in context |
+| Limitation 2 | Figures and tables mostly do not extract as text; numbers in them cannot be checked this way |
+| Limitation 3 | One paper and a short rough note; no tests on a numeric claim, a scanned PDF, or a preprint-versus-published comparison |
+
+Skill text changed: "Comparing text and claim" in `bib-and-fulltext.md` now has a short mechanics paragraph and the limits; the "Tested and not tested" paragraph in `SKILL.md` lists the test and the two-column limitation.
