@@ -44,8 +44,8 @@ for Unpaywall; never invent one, and ask before any metered call.
 
 Practical rules, not legal advice:
 
-- Open access is not one permission. Gold or hybrid with a Creative Commons licence allows reading and reuse with
-  attribution. `bronze` (free to read, no explicit licence) and a missing licence mean reuse rights are unclear.
+- Open access is not one permission. Gold or hybrid with a Creative Commons licence allows reading; reuse terms depend on
+  the specific licence (for example NonCommercial or NoDerivatives variants). `bronze` (free to read, no explicit licence) and a missing licence mean reuse rights are unclear.
   Green copies may be accepted or submitted versions that differ from the published text.
 - Reading a paper to check the user's own sentences against it is the normal use. Storing, redistributing or bulk
   mining is different and depends on the licence and the site's terms.

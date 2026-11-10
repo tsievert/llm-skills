@@ -30,8 +30,8 @@ from clinical trial reports, so do not quote them as facts about ecology.
 
 - Does it say what was studied and in what system, without whimsy? Key terms early.
 - Does it reflect what the paper shows, not more? Ask for two or three alternative titles from the user, not from you.
-- For ecology, adapt the clinical "SPICED" idea (my adaptation): system or species, setting, condition, outcome,
-  design. Offer it as a prompt only.
+- For ecology, adapt the clinical "SPICED" idea (the clinical "SPICED" idea, adapted): system or species, setting, condition, outcome,
+  design. This is an adaptation by the skill's author, not a published scheme; offer it as a prompt only.
 - Re-check title and abstract after every revision of the body.
 
 ## Abstract
@@ -45,7 +45,8 @@ from clinical trial reports, so do not quote them as facts about ecology.
 ## Introduction
 
 - Funnel: broad context, what is known, the gap, the question. Not a literature review.
-- Rough length: about 10 to 15% of the words (read-only word count is possible); a prompt, not a rule.
+- Rough length: about 10 to 15% of the words, a figure from a clinical-writing guide (read-only word count is
+  possible); a prompt, not a rule, and journals and ecology papers differ.
 - Does the last paragraph state the question or hypothesis and briefly what was done?
 - Will the Discussion answer that question in matching words?
 - Where a claim is about other work, flag "source?" (see reference-needed rules).
@@ -88,8 +89,9 @@ from clinical trial reports, so do not quote them as facts about ecology.
 
 Ask, per quote: does the design support this verb? Causal wording ("drives", "leads to") for correlational or
 observational data, unhedged generalisation beyond the sampled species or setting, and an abstract stronger than the
-body are the usual cases. The reverse also matters: stacked hedges that make the contribution unreadable. Peer review
-changes hedging little, but it improves how limitations are reported, so ask about limitations. Hedge lists are a
+body are the usual cases. The reverse also matters: stacked hedges that make the contribution unreadable. One study of clinical
+trial discussions found that peer review changed hedging little but improved how limitations were reported, so ask
+about limitations. Hedge lists are a
 prompt generator; only the user knows the design.
 
 ## Reference-needed spots

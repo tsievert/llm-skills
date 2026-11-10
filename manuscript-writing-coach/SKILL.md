@@ -125,7 +125,7 @@ Tested 2026-11-10 on Windows 11, R 4.6.0: `number_consistency.R` on an artificia
 thousands separators, a percent, a negative interval, a p-value, a rounded value, a missing value, citations, figure
 and table references, a code chunk and a reference list), on a markdown file with an "Abstract" heading and inline R
 (warned), on a LaTeX abstract environment, on a literal string with `abstract =`, and on input with no abstract (clear
-error). Research basis (five rounds, sources and gaps): `research/manuscript-writing-coach-ledger.md`. Not tested: the
+error). Research basis (six rounds, sources and gaps): `research/manuscript-writing-coach-ledger.md`. Not tested: the
 script on real manuscripts, Quarto `abstract` set through includes or `.docx`/`.pdf` input, the `.bib` full-text check
 end to end (it reuses the tested `openalex` script and `bibtex` parser findings, section 8.4 of the ledger), whether
 the nudges help real authors, other fields than ecology and behaviour, and
