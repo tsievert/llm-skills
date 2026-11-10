@@ -71,6 +71,7 @@ that skill owns the document; this skill only produces the underlying numbers.
   (including edf and simultaneous-interval conventions) stays in `gam-interpretation`, not duplicated here.
 - `manuscript-writing-quarto`: structures the manuscript document, CRediT statement, and linting; this skill
   only supplies numbers and scaffolded text it reviews, never finished prose.
+- `manuscript-writing-coach`: chat-only coaching on whether the reported numbers and wording fit the paper's claims; it never writes the text either.
 - `openalex`: literature context for discussing effect sizes or power against prior studies.
 
 ## Explain the reasoning (teaching rule)

@@ -1,6 +1,6 @@
 ---
 name: manuscript-writing-quarto
-description: Structures a Quarto manuscript for journal submission (project type manuscript, quarto-journals templates for ACM/ACS/AGU/Biophysical Journal/Elsevier/JASA/JSS/PLOS, line numbers, MECA bundles), generates a CRediT author-contribution statement from an author-by-role table (wraps CRediTas), and runs flags-only linting (spelling, grammar via LanguageTool, bibliography duplicate/DOI checks, non-standard characters) before submission. Use when the user asks to set up, structure, format or submit a Quarto manuscript for a journal, wants a CRediT statement or author contributions section, or wants a manuscript spell-checked, grammar-checked or linted before submission. Never writes autonomous prose and never edits the .bib file; figure export belongs to manuscript-figures-ggplot, the data/code deposit to reproducible-research-data, and Git/CITATION.cff to git-for-research-projects.
+description: Structures a Quarto manuscript for journal submission (project type manuscript, quarto-journals templates for ACM/ACS/AGU/Elsevier/JASA/JSS/PLOS, line numbers, MECA bundles), generates a CRediT author-contribution statement from an author-by-role table (wraps CRediTas), and runs flags-only linting (spelling, grammar via LanguageTool, bibliography duplicate/DOI checks, non-standard characters) before submission. Use when the user asks to set up, structure, format or submit a Quarto manuscript for a journal, wants a CRediT statement or author contributions section, or wants a manuscript spell-checked, grammar-checked or linted before submission. Never writes autonomous prose and never edits the .bib file; coaching of the paper's argument, framing or abstract belongs to manuscript-writing-coach, figure export belongs to manuscript-figures-ggplot, the data/code deposit to reproducible-research-data, and Git/CITATION.cff to git-for-research-projects.
 ---
 
 # Manuscript writing with Quarto
@@ -86,6 +86,7 @@ mentioned as an alternative.
 
 ## Related skills
 
+- `manuscript-writing-coach`: chat-only coaching of the paper's argument, section content and wording; spelling, grammar, bibliography and character linting stay in this skill.
 - `manuscript-figures-ggplot`: journal-ready figure sizing, palettes and export for the same manuscript.
 - `reproducible-research-data`: the data/code deposit that accompanies the paper.
 - `git-for-research-projects`: Git hygiene, tags and CITATION.cff for the manuscript repository.

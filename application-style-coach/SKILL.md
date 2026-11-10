@@ -1,6 +1,6 @@
 ---
 name: application-style-coach
-description: "Coaches the wording, framing and layout of academic job and fellowship application documents in English: cover or motivation letter, CV in the Finnish TENK researcher's CV template, research statement or plan, teaching portfolio or statement, list of publications. Reads the call first, then gives feedback in chat only: observations, questions and one-sentence illustrative rewrites. Never edits the user's file, never changes facts, never adds or looks up references. Optional read-only scripts flag hedges and inconsistencies and check the final PDF. Use when the user asks to check, polish or give style feedback on an application, cover letter, CV layout, research statement or teaching portfolio. Finding vacancies belongs to job-opportunity-watch, manuscript prose and Quarto checks to manuscript-writing-quarto, reviewer responses to stats-reporting-and-review."
+description: "Coaches the wording, framing and layout of academic job and fellowship application documents in English: cover or motivation letter, CV in the Finnish TENK researcher's CV template, research statement or plan, teaching portfolio or statement, list of publications. Reads the call first, then gives feedback in chat only: observations, questions and one-sentence illustrative rewrites. Never edits the user's file, never changes facts, never adds or looks up references. Optional read-only scripts flag hedges and inconsistencies and check the final PDF. Use when the user asks to check, polish or give style feedback on an application, cover letter, CV layout, research statement or teaching portfolio. Finding vacancies belongs to job-opportunity-watch, coaching of a scientific paper's content to manuscript-writing-coach, Quarto and mechanical manuscript checks to manuscript-writing-quarto, reviewer responses to stats-reporting-and-review."
 ---
 
 # Application style coach
@@ -157,6 +157,7 @@ call outside Finland. Limits quoted from calls are examples and change; check th
 ## Related skills
 
 - `job-opportunity-watch`: finding and tracking vacancies; this skill starts once the user has a call to apply to.
+- `manuscript-writing-coach`: chat-only coaching of a scientific paper's argument and wording; this skill is not for papers.
 - `manuscript-writing-quarto`: spelling and grammar linting and manuscript structure; this skill is not for papers.
 - `stats-reporting-and-review`: reviewer-response drafting, a different genre with different rules.
 

@@ -75,7 +75,8 @@ rendered on a cluster, fonts differ (Arial is usually missing); see the font not
   `data-repository-readme`: data dictionary whose labels can feed `labs(dictionary = )`;
   `social-research-search`: finding what plotting problems people report (see
   [references/community-notes.md](references/community-notes.md) for what it found on 2026-10-23);
-  `manuscript-writing-quarto`: structures the Quarto manuscript these figures go into.
+  `manuscript-writing-quarto`: structures the Quarto manuscript these figures go into;
+  `manuscript-writing-coach`: chat-only feedback on whether the figures and tables carry the paper's argument.
 
 ## Tested and not tested
 

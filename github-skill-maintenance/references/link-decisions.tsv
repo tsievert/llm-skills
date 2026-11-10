@@ -38,3 +38,7 @@ tidy-data-wrangling	gam-mgcv	no-backlink	GAM users need modelling guidance here;
 tidy-data-wrangling	r-reproducible-pipeline	no-backlink	Pipeline skill is about orchestration; a cleaning script is just one target and generic skills should not collect domain pointers	2026-10-30
 tidy-data-wrangling	reproducible-research-data	no-backlink	Deposit planning starts from data that already exist; data-repository-readme carries the cleaning pointer instead	2026-10-30
 animal-behaviour-tracking-analysis	gam-mgcv	no-backlink	gam-mgcv users are fitting smooths to an existing table and rarely need DLC metric extraction next; the pointer here is only for per-minute time-course models of a metric	2026-11-05
+manuscript-writing-coach	animal-behaviour-tracking-analysis	no-backlink	The coach only points to it for tracking-study reporting questions; users computing DLC metrics do not need paper-level coaching next	2026-11-10
+manuscript-writing-coach	deeplabcut-hpc	no-backlink	HPC and training skill; manuscript coaching is not a next step for a cluster job	2026-11-10
+manuscript-writing-coach	keypoint-moseq	no-backlink	Only a pointer for reporting questions on syllable studies; kpms users do not need manuscript coaching from within the fitting workflow	2026-11-10
+manuscript-writing-coach	openalex	no-backlink	Generic literature skill must not collect a pointer to every domain skill that uses it	2026-11-10

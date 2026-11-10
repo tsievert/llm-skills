@@ -1,0 +1,106 @@
+{
+  "skill": "manuscript-writing-coach",
+  "split": "fixed 60/40 train/validation",
+  "queries": [
+    {
+      "query": "Can you read my discussion section in paper_draft.qmd and tell me whether I'm overclaiming? I say 'drives' but it's a correlational field study.",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "I have the data and figures for my pig-behaviour study but no idea how to start writing. Can you help me outline the paper?",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "check my abstract numbers against the results please, ms.md",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "Reviewer 2 says my intro is too long and never says the question. Is the funnel structure off?",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "is my conclusion stronger than what my results actually support?",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "which reporting guideline should I follow for a field study on animal behaviour with video scoring?",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "I'm stuck on the methods section of my ecology manuscript, give me questions to think through so I can write it myself",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "Does every claim in my intro that needs a citation have one? Just flag them, don't add any",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "Which papers in my references.bib are open access so I can check what they actually say?",
+      "should_trigger": true,
+      "split": "validation"
+    },
+    {
+      "query": "does my title and abstract stand alone? feedback on wording only, I'll rewrite",
+      "should_trigger": true,
+      "split": "train"
+    },
+    {
+      "query": "set up a Quarto manuscript with the PLOS template and line numbers",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "spell-check and grammar-check my manuscript.qmd before I submit",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "generate a CRediT author contribution statement from my authors table",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "polish my cover letter for a postdoc application",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "give me the Cohen's d and a power analysis for this t-test",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "draft a point-by-point response to the reviewers",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "make Figure 2 journal ready, 85 mm wide, colour-blind safe",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "find recent papers on pose estimation in pigs",
+      "should_trigger": false,
+      "split": "validation"
+    },
+    {
+      "query": "check my .bib for duplicate keys and missing DOIs",
+      "should_trigger": false,
+      "split": "train"
+    },
+    {
+      "query": "rewrite my results paragraph so it sounds more professional",
+      "should_trigger": false,
+      "split": "validation"
+    }
+  ]
+}
