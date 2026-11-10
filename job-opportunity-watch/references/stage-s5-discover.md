@@ -32,7 +32,7 @@ read-only; link posts, do not profile individuals).
 2. Add at most a few new candidates per run, drawn from what you saw (co-occurring tags, field and language
    variants). Do not invent tags no post uses.
 3. After screening, `jw_tags_record(platform, tag, hits = <posts judged job-relevant>, useful = <of those, how many
-   led to a verified opportunity or a link the user accepted>, query_type = <"hashtag"/"text"/"author+tag">,
+   led to a verified opportunity or a link the user accepted>, query_type = <"hashtag"/"text"/"author+tag"/"web_keywords">,
    posts_per_month = <rough estimate from this run>)`. Count honestly; zero is valid. `posts_per_month` is
    overwritten each run, not accumulated: a niche field tag can look structurally low-volume (a few posts over
    several months) rather than merely unlucky this week, which is the point of recording it.
@@ -43,7 +43,7 @@ read-only; link posts, do not profile individuals).
 ## What to write (contract: `jw_contracts()$s5`)
 
 One row per lead: `lead_id`, `platform` (bluesky, mastodon, web), `query`, `query_type`, a short `text`
-excerpt (no author names, no profiles), `url`, `lead_status` (lead, rejected, verified) and `note`. A lead
+excerpt (no author names, no profiles), `url`, `lead_status` (lead, rejected, verified), `note` and `found` (date the lead was seen). `query_type` must be one of `hashtag`, `text`, `author+tag`, `web_keywords` (use `web_keywords` for a web-search lead); `jw_write_stage()` does not check it, so a wrong value only fails at the s5 close (rule `s5_qtype`). A lead
 becomes an opportunity only after its employer page is classified in s4 terms; carry verified leads into the
 next s4 batch, never straight into the ledger.
 
