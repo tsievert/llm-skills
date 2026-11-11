@@ -62,6 +62,7 @@ y ~ s(x) + s(f1, x, bs = "sz") + s(f2, x, bs = "sz") + s(f1, f2, x, bs = "sz", i
 7. Sparse levels: a level with few observations across the range of `x` still gets a smooth; with a separate smoothing parameter it can overfit. Use `id`, lower `k`, or `select = TRUE` / `bs = "ts"` style shrinkage via `xt = list(bs = "ts")` (untested; check the fit).
 8. With several factors, interpret terms in order: main-effect deviations first, then interaction deviations. Check concurvity.
 9. `gam.check()` residual panels work; the non-Gaussian caveats from the main skill still apply.
+10. **Level order can change the fit.** Refitting the same `bam` with only the factor level order changed moved contrast curves (one project: up to about one null SD; row order changed nothing, `discrete = TRUE` vs `FALSE` agreed closely). Reproduced 2026-11-11 on synthetic Gaussian data (5 levels, 25 times x 12 reps, mgcv 1.9-5): reversing the levels moved predictions by 0.44 and a shuffled order by 1.29 with outcome SD 0.5, also with `select = FALSE`, so it is not specific to `select = TRUE`. The cause is not established and `?smooth.construct.sz.smooth.spec` does not mention it (the sum-to-zero constraint is one suspect). Fix a canonical level order before fitting, report it, and refit with one or two other orders as a sensitivity check before interpreting level contrasts.
 
 ## sz vs by, ordered-by, fs
 
@@ -69,7 +70,7 @@ y ~ s(x) + s(f1, x, bs = "sz") + s(f2, x, bs = "sz") + s(f1, f2, x, bs = "sz", i
 |---|---|---|---|---|
 | `s(x, by = fac)` + `fac` | none | each level's full curve (centred) | one per level, or `id` | no shared component; needs parametric `fac` |
 | `ofac + s(x) + s(x, by = ofac)` | reference level's curve | differences to reference level | per difference smooth | results depend on the reference level; reference has no deviation term |
-| `s(x) + s(fac, x, bs = "sz")` | average across levels | deviations from average, sum to zero | per level, or `id` | symmetric treatment of levels; no reference level to choose |
+| `s(x) + s(fac, x, bs = "sz")` | average across levels | deviations from average, sum to zero | per level, or `id` | no reference level to choose in the parametrisation, but the fitted curves can still depend on factor level order (see pitfall 10) |
 | `s(x) + s(x, fac, bs = "fs")` | shared | fully random curves, one smoothing parameter | one | the main effect is not forced to carry as much as possible (doc statement); `fs` is efficient with `gamm` |
 | `t2(x, fac, bs = c("tp", "re"), full = TRUE)` | | | | mgcv docs say this is exactly equivalent to `fs`, but slower |
 

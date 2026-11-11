@@ -63,3 +63,12 @@ Skill: `deeplabcut-hpc`. Status: round 1 done 2026-10-29. No cluster access; all
 Facts added: see Open items. The multi-GPU and resume statements come from a fetch tool summarising source files, not from running code; treat as "read, not run".
 
 Open research items (round 2): install DLC 3.0.2 in a uv venv and verify `Shuffles=` alias warning, `runner.gpus` DataParallel on a multi-GPU node (needs the user's cluster), resume epoch semantics; docs.jsonl chars 270000+; forum access via a browser or API key.
+
+## Triage round 2026-11-11 (lessons inbox)
+
+| Source | Status | Finding |
+|---|---|---|
+| https://github.com/DeepLabCut/DeepLabCut/issues/3547 | read (search snippet) | Worker count 28 slower than 6; main process 98.5% CPU with 2 workers; larger batch did not raise utilisation. Backs the pitfall 5 caveat. |
+| local bash test | run | `${X:-d}` gives d for empty X; `${X-d}` gives empty. |
+
+Outcomes: dataloader caveat, CTD/top-down pre-flight and shell-default notes added; dev-branch env note already present; top-down head `input_size` for heatmap nets parked (patch untested).

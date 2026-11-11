@@ -7,6 +7,7 @@ Evidence labels: "Reproduced" items were re-run on synthetic data (date given); 
 - Cumulative or autocorrelated outcomes and `select`
 - Unit and session random terms
 - Timing before queueing expensive fits
+- Chunked, resumable bootstrap refits
 - Background fits with callr
 - Location-scale families
 
@@ -32,6 +33,17 @@ Cost depends on the design (levels of grouping factors, `k`, family), so do not 
 
 - Check the log within the first minute and save results per variant, or every N replicates, so the job is resumable.
 - Earlier advice was to start `callr::r_bg()` fits at top level because jobs reportedly died inside `local()` or a returning function. Not reproduced (callr 3.8.0, Windows, R 4.6.0, 2026-11-06: results returned from top-level, `local()` and function-wrapped calls, also after `gc()`). It stays a precaution, not a rule; if a job dies silently, send `stdout`/`stderr` to a log file.
+
+## Chunked, resumable bootstrap refits
+
+For a bootstrap of many `bam()` refits (one project: B = 1,000 whole-animal refits of 0.7 to 3.5 s each, `discrete = TRUE`, Gamma(log)):
+
+1. Generate all resampling draws up front from one seed with sequential `sample()` calls (count any redraw rule, for example redraws for empty cells, and log it).
+2. Run chunks of about 100 replicates, each in a guarded `callr` subprocess with a finite timeout.
+3. Write one verified cache file per chunk; store a checksum of that chunk's draws in its settings so a stale cache is detected. A rerun skips fresh chunks.
+4. Keep the thread count (`nthreads`) fixed: with the same seed and threads the first 100 and 500 replicates reproduced an earlier smaller run exactly (largest relative difference 0). Compare results scaled by the bootstrap SD, not relative to values near zero.
+
+Single report; not re-run here.
 
 ## Location-scale families
 

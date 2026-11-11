@@ -112,7 +112,7 @@ guess or proceed on assumptions.
 
 | Symptom | Likely cause |
 |---|---|
-| `bad interpreter: /bin/bash^M` or odd syntax errors | CRLF line endings from Windows; convert and set `*.sh text eol=lf` in `.gitattributes` |
+| `bad interpreter: /bin/bash^M` or odd syntax errors | CRLF line endings from Windows; convert and set `*.sh text eol=lf` in `.gitattributes`; if an editing tool's multi-line replace reports "string not found" on a Windows-origin script, suspect CRLF, and after tool edits run `file` to catch mixed endings (reported once) |
 | Script "did not work" under a `.slurm` or other extension | Slurm reads `#SBATCH` lines from the content, so the extension should not matter (reported once, cause not established); name batch scripts `.sh` and run `file script.sh` to rule out CRLF |
 | Job fails instantly, no log | Output directory missing; check `scontrol show job <id>` (`StdOut=`) |
 | Job pending forever | Request exceeds partition limit, or wrong account/partition |

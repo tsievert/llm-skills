@@ -84,6 +84,7 @@ output. Do not guess or proceed on assumptions.
   needs `.options.future = list(seed = TRUE)`). Setting different plain seeds per worker
   does not guarantee non-overlapping streams.
 - In arrays, derive the base seed from the task ID and log it.
+- To make a finished bootstrap or simulation extendable, seed each draw independently (for example `seed = base + 1000 * outer + inner`) so more draws continue the same stream and finished fits are reused. Before fitting anything, run a dry run that regenerates the old draws (including any redraw counts) and compares them with the finished files. Do heavy per-replicate summarising (for example an SD per contrast and time) inside the worker and save it next to the raw predictions, so the local analysis step does not need the large arrays. One report (mgcv `bam` nested bootstrap, 200 outer draws); not re-run here.
 
 ## Output, logging, checkpoints
 

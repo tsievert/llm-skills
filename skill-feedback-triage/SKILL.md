@@ -72,7 +72,10 @@ read the lesson files first and use an export only to verify a claim; the parsin
      reproduced with a cheap test of that code path before it is parked or rejected, even at low
      confidence (reading the code for a check is not evidence that the check covers every path);
    - check upstream (package NEWS, docs, GitHub issues; see
-     [references/triage-method.md](references/triage-method.md));
+     [references/triage-method.md](references/triage-method.md)). This is required for every
+     proposed fix that states a package's behaviour, even when a local reproduction succeeded, and
+     it is done before the triage table is shown, not after approval (reported once: the user had to
+     ask for the documentation search after the table);
    - check the skill text the entry blames: is the claim wrong, missing, or just not read?
      Grep the named skill (and `HISTORY.md`) for the entry's key terms **before building the
      table**; a `suggested-change` that an earlier run already applied gets the outcome
