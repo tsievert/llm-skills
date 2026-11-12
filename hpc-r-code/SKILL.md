@@ -98,6 +98,7 @@ output. Do not guess or proceed on assumptions.
   skip chunks whose result already exists on restart. Pipelines built with `targets`
   skip completed targets in the same spirit.
 - Never write all tasks' results into one shared file; per-task files, merge later.
+- Returning hundreds of per-task files to a laptop: a plain `rsync` of the folder can time out repeatedly. On the cluster, pack each outcome into one uncompressed tar (`nohup`, or a short `sbatch --wrap` job if the login node kills it) and write `sha256sum` checksums. Transfer the tars with `rsync --partial --append-verify -e "ssh -o ServerAliveInterval=30"`, verify the checksums, extract locally and compare the file count. Skip gzip for double-precision predictions: little space saved for the CPU cost. One report (about 400 files); the commands are standard but not re-run here, and the user runs them (see "Where this skill runs").
 
 ## Submitting jobs from R (future.batchtools, clustermq, rslurm, slurmR)
 

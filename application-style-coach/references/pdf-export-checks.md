@@ -42,6 +42,11 @@ source("<skill-dir>/scripts/pdf_checks.R")   # needs pdftools
 pdf_checks("<final.pdf>", max_pages = 2, max_mb = 5)   # limits from the call; expect_size = "A4"
 ```
 
+For a limit that excludes references or other back matter (for example "2 pages excluding references"),
+`pdf_checks()` gives only total pages and words. Find the page holding the references heading (`pdftools::pdf_text()`,
+search per page), then report the body pages and the word count on the last body page, so a near-overflow of a few
+lines is visible. Whole-package limits and per-document limits are checked separately.
+
 The result is a table with `ok`, `check` and `info`. A `check` is a prompt to look, not a verdict. To scan the PDF
 text for style flags run `style_flags("<final.pdf>")` from `style_flags.R` (it reads PDFs through `pdftools`).
 

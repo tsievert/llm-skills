@@ -31,6 +31,7 @@ yellow end (`end` below 1) because pale yellow has low contrast on white.
 - Avoid large areas of saturated colour; use lighter fills for areas and stronger colour for small marks.
 - Thin lines and small points lose colour contrast; make them bigger or use shape/linetype as well.
 - Keep colour-to-group mapping identical across every figure of a paper.
+- Before proposing a candidate palette, show a simulated-vision swatch (`colorspace::simulate_cvd` / `deutan()`, `protan()`, `tritan()`, plus greyscale). Hue-only pairs collapse under deutan or protan; pairs with a large lightness difference (for example dark blue and gold) survive. Avoid red-green and green-purple pairs, and ask the user about colours they find harsh (saturated orange was rejected once). One report.
 
 ## Categorical palettes
 

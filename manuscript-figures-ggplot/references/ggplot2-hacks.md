@@ -51,6 +51,7 @@
 | `guides(colour = guide_colourbar(position = "bottom", theme = theme_sub_legend(key.width = unit(1, "null"), title.position = "top")))` | Colourbar stretched across the panel width, from the styling article | Tested: renders |
 | Per-category transparency: `aes(alpha = grp)` + `scale_alpha_manual(values = c(...))` | Highlight one group, fade the rest (post) | Tested |
 | `scale_colour_identity()`, `scale_alpha_identity()` | Use colours stored in the data (highlight columns) rather than a legend; used in 15 scripts. No legend, so say in the caption what the colours mean | Tested |
+| Labels outside the panel at a fixed axis end: spread label y positions manually (minimum gap, keep the mean), draw a short leader `geom_segment()` and `geom_text()` beyond the axis end, with `coord_cartesian(clip = "off")` and a wide right `plot.margin` (widen `panel.spacing.x` in facets) | `geom_text_repel(xlim = c(end + offset, NA))` pulled labels back over the curves once the axis had no room; ggrepel's docs pair `clip = "off"` with `xlim = c(-Inf, Inf)`, which I did not test here | One report; manual pattern worked, ggrepel route untested |
 | Small multiples with the other groups in grey (`layout = "fixed"` layer or a second layer with unfaceted data) | Untangles spaghetti charts (post) | `layout =` argument: not tested |
 
 ## Theme and defaults (ggplot2 4.x)

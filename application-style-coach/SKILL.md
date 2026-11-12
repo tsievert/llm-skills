@@ -17,6 +17,9 @@ document.
    file, leave every existing file untouched, keep all facts verbatim, and flag apparent inconsistencies in chat
    instead of fixing them. Coaching itself stays chat-only. A prompt-only skeleton (headings, prompts as comments,
    placeholders, no drafted prose) for a new document counts as such a new file when the user asks for it.
+   Second exception (reported once): when the user explicitly asks to insert a fact they supplied into an existing
+   file, make only that minimal edit, add no wording beyond their facts, ask for any missing fact first, and say
+   afterwards exactly what changed.
 2. **Facts belong to the user.** Never add, remove, strengthen or invent merits, numbers, titles, dates or
    outcomes. If a fact is missing, ask for it (use `[number]` placeholders in examples).
 3. **Illustrative rewrites are allowed, in chat only**: one sentence at a time, labelled "Example (your facts may
@@ -66,7 +69,10 @@ document.
    page, search summaries) that differ on required documents: compare at least two, treat the employer's full ad as
    authoritative, list differences, say which version you read and ask the user to confirm with the contact.
 2. **Read the document** from a pasted text or a path (read only). For a mechanical first pass, optionally run
-   the flag script (see below) and use its hits as prompts, not verdicts.
+   the flag script (see below) and use its hits as prompts, not verdicts. Read the whole document (title, summary,
+   objectives) before coaching any passage and name its central theme and terms first; judge logic flow as
+   claim-to-claim links between neighbouring sentences, not the purpose of each sentence alone (reported once: the
+   user corrected line-by-line coaching of related sentences).
 3. **Check against the call**: document present or missing, limits (pages, words, whole-package size), required
    elements, file naming, sensitive data, metrics allowed or banned. Label every requirement with its source (this
    call, the university's general guidance, TENK) and never present general-guidance items, such as what finalists
@@ -80,7 +86,12 @@ document.
    [references/documents-and-calls.md](references/documents-and-calls.md), ordered: call requirements, verifiability
    and integrity, clarity and framing, polish. Use the nudge format (quote, pattern, question, optional example). When the document is a readable text file
    (.qmd, .md, .txt), add the line number next to each quote and re-read the file just before each round, because
-   the user edits between rounds and old numbers go stale.
+   the user edits between rounds and old numbers go stale. In each re-read of an edited .qmd/.md, also check that
+   every `]` closing a Pandoc citation is followed by a space or punctuation (`[@key]has` renders as a
+   label-not-found error at build time, for example in Typst); say so in the first line of the round.
+   For a reorder request, give the full new order as a numbered list with old and new line numbers in the first
+   answer, and say plainly if it barely differs from the original. For a length-cutting request, before offering an
+   example check antecedents, cross-references and whether the section's argument still holds, and state that check.
    Offer more on request.
 5. **Close** with what was checked and what was not (no call, limits not measurable, publications not verified,
    which language version of the call you read) and invite a second pass after the user revises. When the user has
