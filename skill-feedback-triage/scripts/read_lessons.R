@@ -242,3 +242,40 @@ dispositions_add <- function(lessons, disposition, file, date = format(Sys.Date(
   utils::write.table(out, file, sep = "\t", quote = FALSE, row.names = FALSE)
   invisible(out)
 }
+
+# Re-check parked entries against the current skill text: parked entries go stale when a later
+# edit (or an earlier one the entry missed) already covers them. For each parked entry, take its
+# distinctive words (title + suggested change), count how many appear in the named skill's files
+# (all skills when `all_skills = TRUE` or for `new-skill` entries; with all skills use `flag_share = 0.6`, as scores rise for every entry) (HISTORY.md and research ledgers are excluded: they quote the entries themselves), and report the best-matching file. A high
+# share is a candidate for `already-present`, not proof: read the target section before deciding.
+parked_recheck <- function(lessons, repo = getwd(), min_chars = 6, all_skills = FALSE, flag_share = 0.4) {
+  p <- lessons[lessons$status == "parked" & lessons$type != "use-case", , drop = FALSE]
+  if (!nrow(p)) return(data.frame())
+  stop_words <- c("should", "guidance", "skill", "section", "report", "reported", "entry", "about",
+                  "which", "their", "there", "would", "after", "before", "where", "using", "short")
+  words <- function(x) {
+    w <- unique(tolower(unlist(strsplit(paste(x, collapse = " "), "[^A-Za-z0-9_.-]+"))))
+    w[nchar(w) >= min_chars & !w %in% stop_words]
+  }
+  files_of <- function(skill) {
+    dirs <- if (skill == "new-skill" || all_skills) dirname(list.files(repo, "^SKILL[.]md$", recursive = TRUE, full.names = TRUE)) else file.path(repo, skill)
+    f <- unlist(lapply(dirs[dir.exists(dirs)], list.files, pattern = "[.](md|R|sh|py|tsv)$",
+                       recursive = TRUE, full.names = TRUE))
+    f
+  }
+  out <- lapply(seq_len(nrow(p)), function(i) {
+    w <- words(c(p$title[i], p$suggested_change[i]))
+    f <- files_of(p$skill[i])
+    txt <- vapply(f, function(x) tolower(paste(readLines(x, warn = FALSE), collapse = " ")), "")
+    hits <- vapply(txt, function(t) sum(vapply(w, grepl, TRUE, x = t, fixed = TRUE)), 0)
+    best <- if (length(hits)) which.max(hits) else NA_integer_
+    data.frame(skill = p$skill[i], title = substr(p$title[i], 1, 60), terms = length(w),
+               best_hits = if (is.na(best)) 0 else hits[[best]],
+               share = if (length(w) && !is.na(best)) round(hits[[best]] / length(w), 2) else 0,
+               best_file = if (is.na(best)) NA else sub(paste0("^", normalizePath(repo, "/"), "/?"), "", f[best]),
+               stringsAsFactors = FALSE)
+  })
+  out <- do.call(rbind, out)
+  out$likely_stale <- out$share >= flag_share
+  out[order(-out$share), ]
+}

@@ -8,15 +8,20 @@ the fix, measuring whether the loop works.
 | Situation | Outcome |
 |---|---|
 | Reproduced on synthetic data, or error text clearly names a skill claim as wrong | `fix`, even from one report |
-| Same issue in 2 or more independent projects, not reproduced | `fix` or `add-note`, worded as "reported, not reproduced" |
-| One report, `confidence: low`, `generality: unsure` | `park` (but a `bug` entry naming a script is reproduced first; one quick test, not code reading) |
+| Same issue in 2 or more projects, not reproduced | `fix` or `add-note`, worded as "reported, not reproduced" |
+| One report, `generality: general`, `confidence` medium or higher, change is a cheap additive note (a bullet or sentence, no behaviour change) | `add-note`, worded as "reported once" |
+| One report, `confidence: low`, `generality: unsure`, or the change alters behaviour or adds bulk | `park` (but a `bug` entry naming a script is reproduced first; one quick test, not code reading) |
 | `generality: likely-user-specific` and no second report | `reject` or `park` |
 | Needs a cluster, GPU or the user's data to check | `needs-info`: give the exact command and ask for the pasted output |
 | `use-case` | not a defect: count per skill, list friction notes, compare with `usage.tsv` and `reminders.tsv` to judge whether capture triggers reliably (loads vs. reminders vs. entries) |
 | `worked-well` | note in the skill's "tested" statement only if it adds real-data evidence |
 
-Independent means different project folders and sessions; two files from the same project
-count once.
+There is one user (multiple users are not planned), so every report comes from the same
+person's habits. "Independent" therefore means different project folders and sessions of
+that user, not different people; two files from the same project count once. Because a
+second reporter will never exist, a one-report gate alone would stall most guidance gaps:
+weigh the cost and generality of the change (see the cheap-note row) instead of waiting
+for repetition.
 
 ## Reproducing
 

@@ -1404,3 +1404,13 @@ Checked: `lint_skills()` clean, `skills-ref validate` valid. Not checked: the Pa
 
 9 new entries (47 closed, 18 parked earlier), 1 project. Outcomes: 4 fixes/notes in `deeplabcut-hpc` (GPU-monitoring CSV time span as pace estimate; docs-vs-3.0.2 code defaults and the local scratch-env route; rtmpose_x crop vs `input_size` ordering; pointer in SKILL.md) and 1 fix in `hpc-job-scripts` (DOS line breaks message, whole-folder detect-and-fix snippet); 1 parked (in-training CTD metrics not comparable with benchmark, cause unverified); 1 already-present (grep cannot detect CRLF); 2 use-case entries no-change.
 Checked: DLC pytorch_config docs page re-read (still lists batch 1, covering true; silent on top_down_crop), `lint_skills()` (info only), `skills-ref validate` valid for both skills, CRLF re-normalised after edits. Not checked: the 3.0.2 code defaults and the rtmpose crop mismatch were not reproduced (needs a DLC install); the CRLF snippet was not run on a cluster; the raw base.yaml URL returned 404.
+
+### 2026-11-12 lessons triage (fourth run of the day)
+
+6 new entries (53 closed, 19 parked earlier), 1 project plus 1 triage session. Outcomes: 1 fix in `deeplabcut-hpc` (training-sweeps.md: diff tuned config against DLC defaults, size batch from measured GPU memory, replicate definition); 1 park (`hpc-job-scripts`: orchestrator accumulating past rounds, generality unsure); 1 reject (custom benchmark export schema); 3 no-change (2 use-cases, watermark NULL report that did not reproduce: `triage_watermark()` reads the line correctly and the earlier run probably created it at its end).
+Checked: `lint_skills()` (info only). Not checked: `skills-ref validate`, upstream DLC docs for the batch-memory rule (stated as a rough rule from one project).
+
+### 2026-11-12 lessons triage (fifth run: re-triage of parked entries under single-user thresholds)
+
+21 open entries (1 new, 20 parked). Outcomes: 1 add-note (nested bootstrap-t guidance in `gam-mgcv/references/model-comparison.md`, two reports merged, not checked upstream); 7 already-present (checked by grep and reading target sections); 1 fix (thresholds, done earlier); 11 stay parked (low confidence, new sections or preferences, new-skill ideas with one session each). 5 fully closed files archived; files with parked entries kept.
+Checked: `lint_skills()` for `gam-mgcv` (info only). Not run: `skills-ref validate`.

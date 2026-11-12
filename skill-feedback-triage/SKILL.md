@@ -61,8 +61,17 @@ read the lesson files first and use an export only to verify a claim; the parsin
    than dropping them silently. Entries whose status is `closed` were dispositioned by an
    earlier run (a mixed file stays in the inbox whole, so they reappear in `read_lessons()`);
    leave them out of the table and the counts, and do not re-grep or re-propose them.
-   `parked` entries are only evidence: re-open one only when a `new` entry reports the same
-   thing (a second independent report).
+   `parked` entries are evidence, but they go stale: later edits (or earlier ones the entry
+   missed) often cover them (reported once: about a third of 20 parked entries were already
+   present in the skills at re-triage). **Every run**, before building the table, run
+   `parked_recheck(L)` (add `all_skills = TRUE, flag_share = 0.6` to also search neighbouring
+   skills). It scores each parked entry's distinctive words against the named skill's files and
+   lists likely-stale candidates. It is a screen, not a verdict: read the target section of each
+   flagged entry, then give it `already-present` (or `add-note`/`fix`, under the thresholds in
+   [references/triage-method.md](references/triage-method.md)) or keep it parked. With many
+   parked entries, hand the mechanical reading to a low-effort subagent and review its verdicts.
+   Parked entries that survive stay parked; re-open one earlier only on a new report of the
+   same thing.
 2. **Group.** Merge duplicates into one issue and count independent projects and sessions
    per issue. Keep `generality: likely-user-specific` entries out of skill edits unless a
    second project shows the same thing.
