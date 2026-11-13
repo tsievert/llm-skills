@@ -80,6 +80,16 @@ Rules:
 - rsync writes each file to a temp name and renames it, so a copy interrupted
   mid-file does not leave a truncated destination file (unless `--inplace` is used).
 - Never keep the only copy of a checkpoint on node-local disk.
+- Staging a project that concurrent jobs also write to (an index file such as a
+  metadata YAML plus per-item companion files) can copy an index entry without its
+  companion, and the job then fails on load (reported once, two of four simultaneous
+  jobs; cause inferred from code, fix untested). Suggested pattern, not yet verified
+  on a cluster: writers take `flock -x` on one project-level lock file for index
+  updates and sync-back, staging takes `flock -s` on the same file, so it never sees
+  a half-registered item; alternatively stage the bulk data without the index files
+  and stage index plus companions together under the lock, or prune index entries
+  lacking companions after staging. Check that `flock` works on the shared filesystem
+  (rule 4 above).
 
 ## Periodic sync so cancelled jobs keep their progress
 

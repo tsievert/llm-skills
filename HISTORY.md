@@ -1414,3 +1414,8 @@ Checked: `lint_skills()` (info only). Not checked: `skills-ref validate`, upstre
 
 21 open entries (1 new, 20 parked). Outcomes: 1 add-note (nested bootstrap-t guidance in `gam-mgcv/references/model-comparison.md`, two reports merged, not checked upstream); 7 already-present (checked by grep and reading target sections); 1 fix (thresholds, done earlier); 11 stay parked (low confidence, new sections or preferences, new-skill ideas with one session each). 5 fully closed files archived; files with parked entries kept.
 Checked: `lint_skills()` for `gam-mgcv` (info only). Not run: `skills-ref validate`.
+
+### 2026-11-13 lessons triage (sixth run)
+
+17 open entries (6 new, 11 parked; 45 already closed). Outcomes: 1 fix (trigger wording for failed-job-log requests added to the descriptions of `hpc-job-scripts`, `hpc-resource-allocation`, `hpc-cluster-docs`, `deeplabcut-hpc`; `deeplabcut-hpc` description trimmed to stay under 1024 characters, a first edit broke the YAML with a colon-space and went over the limit, caught by the linter); 3 add-note (second report of the CTD crop/driver-branch mismatch in `training-sweeps.md`; staging-race and shared-lock pattern in `arrays-and-scratch.md`, marked untested); 1 park (Git Bash CRLF detection, not reproduced: grep and `cat -A` did show the carriage returns); 1 no-change (use case); 1 already-present (staged-workflow ordering, parked entry).
+Checked: `lint_skills()` and `skills-ref validate` for the four edited skills (pass; info only for description length). Not verified: the trigger change in a live conversation, the `flock` pattern on a cluster, `check_skill_clashes()` (descriptions only extended, not run).

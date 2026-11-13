@@ -1,6 +1,6 @@
 ---
 name: hpc-cluster-docs
-description: Identifies which HPC cluster and scheduler (Slurm, PBS/Torque, LSF, SGE) the user runs on and looks up that site's official documentation before any job script, resource request, or HPC Python code is written or reviewed. Use first whenever a task mentions Slurm, sbatch, srun, qsub, bsub, partitions, queues, modules, job arrays, "the cluster", or "HPC", unless a cluster profile is already known from memory or the conversation.
+description: Identifies which HPC cluster and scheduler (Slurm, PBS/Torque, LSF, SGE) the user runs on and looks up that site's official documentation before any job script, resource request, or HPC Python code is written or reviewed. Use first whenever a task mentions Slurm, sbatch, srun, qsub, bsub, partitions, queues, modules, job arrays, "the cluster", or "HPC", or when the user shares job logs or Slurm output files (slurm-*.out, *.err) to debug, even without naming Slurm; unless a cluster profile is already known from memory or the conversation. Sizing requests is hpc-resource-allocation.
 ---
 
 # HPC cluster identification and documentation lookup
