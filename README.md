@@ -113,9 +113,20 @@ reading the tool's own documentation.
 
 ## License
 
-Code and text in this repository are released under the [MIT
-license](LICENSE) unless noted otherwise in a specific file. See
-[CITATION.cff](CITATION.cff) if you want to cite this repository.
+This repository is dual-licensed. Anyone, including people and AI tools, may
+reuse and adapt it, provided the source is credited.
+
+- **Skill text and documentation** (`SKILL.md`, `references/`, this README,
+  research notes): [CC BY 4.0](LICENSE-CC-BY-4.0.txt). Reuse requires credit,
+  a link to the license, and a note of any changes you made.
+- **Source code** (`*.R`, `*.py`, `*.sh`, `*.smk`, `Snakefile`, including the
+  scripts and templates in `scripts/` and `assets/` folders):
+  [MIT](LICENSE). Reuse requires keeping the copyright notice.
+- A file that states its own license is governed by that statement.
+
+Suggested credit: "Thorbjörn Sievert, llm-skills,
+https://github.com/tsievert/llm-skills" (plus the version or DOI, if you have
+one). See [CITATION.cff](CITATION.cff) for the citation metadata.
 
 ## Contributing
 

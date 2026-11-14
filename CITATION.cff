@@ -6,7 +6,9 @@
 cff-version: 1.2.0
 message: If you use these skills, please cite them as below.
 type: software
-license: MIT
+license:
+- CC-BY-4.0
+- MIT
 title: 'llm-skills: Custom Agent Skills for Posit Assistant'
 version: 0.1.0
 authors:
