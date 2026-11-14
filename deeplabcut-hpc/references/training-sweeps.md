@@ -24,11 +24,18 @@ Source: https://deeplabcut.github.io/DeepLabCut/docs/pytorch/architectures.html.
 
 A candidate must match the project type (single- versus multi-animal); do not propose a multi-animal-only model for a single-animal project without checking the docs.
 
+Verified on a CPU install of DLC 3.0.2 (one report; the architectures page lists the same names): top-down models are `rtmpose_s/m/x` (no `top_down_` prefix), `top_down_cspnext_s/m/x`, `top_down_hrnet_w18/32/48` and `top_down_resnet_50/101`; bare `cspnext_*` is a backbone name, not a top-down model. 34 model names and 3 detectors were returned, so still print `available_models()` for the installed version.
+
+## Interpreting a benchmark export (reported twice, one project)
+
+Before ranking shuffles by mAP or RMSE, tabulate for each: training method (bottom-up, top-down, conditioned top-down), detector, conditioning shuffle (CTD), scheduler type and milestones against the epochs actually run, and the spread within same-config replicate groups (that spread is the noise level for any difference). Reported errors when skipped: a gap that was really a method difference was explained by crop sampling (confounded guess), and scheduler milestones were called misaligned when a cosine schedule had completed. Training-curve (in-training) mAP is not comparable across methods, and for CTD it was far above the later benchmark evaluation (one report; cause unverified), so report CTD gain relative to its conditioner shuffle using evaluated numbers. Partial runs: see the walltime check above.
+
 ## Orchestrator checks
 
 - One shuffle per candidate, numbered from 1; create each with `create_training_dataset(config, Shuffles=[n], net_type=...)`, then train with `train_network(config, shuffle=n, ...)`.
 - Evaluate with `evaluate_network(config, shuffles=[n], plotting=False)` (`Shuffles=` still works as an alias since 3.0.0).
 - Give every task its own output path and config copy (see pitfalls 1 and 8 in `SKILL.md`).
+- Keep the orchestrator to the next planned submission only (reported twice, one project): no per-round variables or round history. Move finished and failed shuffle numbers to the refuse-reuse list, never reuse a failed number, and archive old versions outside the script.
 - Compare candidates by the same metric on the same split; the default `runner.key_metric` is `test.mAP`.
 - Check walltime feasibility before listing candidates (reported once): estimate seconds per epoch for each `net_type` from a short or partial run (`sacct` Elapsed divided by the last epoch) and compare epochs x pace with the partition limit. In one benchmark several hrnet bottom-up runs ended "partial, cause unknown" after 90 to 170 of 600 epochs because they hit a 48 h limit; treat a partial run with epochs far below target as a walltime hit until the user's `sacct` output says otherwise. If epochs are cut, check that `LRListScheduler` milestones (in epochs) still fall inside the shortened run; or use resume chaining. Without `sacct`, the first-to-last timestamp span of a GPU-monitoring CSV gives hours per run; a span equal to the limit for every partial run confirms walltime kills (reported once). If the user's first message contains a benchmark export with partial runs, load this skill before proposing reruns.
 - Evaluate a shuffle in the same DLC build that trained it. `evaluate_network` in the release env rejected a dev-branch config with `extra_forbidden` errors (`runner.load_scheduler_state_dict`, `train_settings.dataloader_kwargs`) because `PoseConfig` forbids unknown keys (reported once; fix applied in a script, not run on a cluster).

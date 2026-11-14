@@ -88,6 +88,10 @@ it also captures cases where `--parsable` itself was rejected before producing a
 shell assignment even when `sbatch`'s own exit status is nonzero, unless that status is
 checked explicitly (as `submit()` does).
 
+## Keep the script to the next run
+
+Reported twice (one project): a sweep orchestrator that kept every past round of candidates and long evidence comments became bloated. Hold only what the script submits now; archive old versions outside it, and keep a list of used IDs for the duplicate guard so finished or failed IDs are never reused.
+
 ## Passing values that contain commas
 
 `sbatch --export=ALL,KEY=VAL,...` splits on commas, so a value such as `"3,snapshot-250"` is truncated silently (found by code review in a sweep orchestrator, not by a failed job). Pass such values through the environment instead: `env KEY="3,snapshot-250" sbatch --export=ALL job.sh` (verified locally that the whole value arrives; not run on a real scheduler), or read them from a small env file in the job script.

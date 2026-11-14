@@ -35,6 +35,10 @@ Contents: YAML description traps, CRLF line endings, links, hooks, naming, front
   with the full file content is a reliable escape hatch — but that `write` call itself commonly
   reintroduces CRLF on a file that was LF before it, so always re-check line endings (`file
   <path>` if untracked) immediately after, not just before, the next edit (reported 2026-10-26).
+- **Colon plus space in an unquoted description, and the 1024 limit.** A `: ` inside a plain-scalar
+  description fails with "mapping values are not allowed in this context" (use a dash). Trigger-broadening
+  edits on a description near the limit overflow it: trim first and re-run `lint_skills()` after every
+  description edit (reported once).
 - **Apostrophe in a single-quoted description.** A bare apostrophe (a possessive such as
   "user's") ends the YAML scalar and the linter reports "YAML does not parse". Avoid
   apostrophes in descriptions or double them (`''`), and run `lint_skills()` after every
