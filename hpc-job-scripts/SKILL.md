@@ -120,6 +120,7 @@ guess or proceed on assumptions.
 | Job slower with more CPUs | Code is not parallel, or threads x processes oversubscribe |
 | `$SLURM_CPUS_PER_TASK` empty | `--cpus-per-task` not set |
 | Requeued job lost its progress | Script restarts from the top; no checkpoint resume logic |
+| Jobs submitted by a wrapper fail on the compute node with `FileNotFoundError` for a generated config or input | The wrapper wrote it to `/tmp` or the login node's `$TMPDIR` (private to that node) or deleted it right after `sbatch` returned; jobs read it later. Write generated files under shared project storage and delete them only after all jobs have finished (reported once) |
 | Results corrupted or missing rows in an array | Tasks append to / overwrite a shared file; use per-task files |
 | A chained stage ran even though the previous one failed | The failed stage's script exited 0 anyway (swallowed exception/return code); `afterok` trusted it |
 | A later stage in a chain silently never got submitted | An earlier `sbatch` call itself failed (bad partition/typo) and the orchestrator fed its empty/error output into the next `--dependency` unchecked |

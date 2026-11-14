@@ -34,7 +34,15 @@ What the helper handles (all tested with cffr 1.4.2, 2026-10-23):
 - `cff_write(validate = TRUE)` once wrote an invalid file silently, so the helper validates the written file and prints `instancePath` and `message` of each schema error before failing. An invalid SPDX licence (`GPL3`, correct is `GPL-3.0-only`) and a malformed author were both rejected.
 - `date-released` must be ISO; YAML reads an unquoted key `n` as FALSE (same trap as in config files).
 - The user, not the assistant, supplies authors, ORCIDs, licence and title. Never infer them.
+- `cffr`-written files may have CRLF endings on Windows, so an exact-string edit can report "string not found" on visible text. Edit with a CR-aware command or rewrite the file with `write_citation_cff()` (reported once).
 - GitHub shows "Cite this repository" from a root `CITATION.cff` (APA and BibTeX only). `preferred-citation` points to a paper instead; `type: dataset` gives a data citation string.
+
+## Licences (the user chooses; the assistant lays out trade-offs)
+
+- MIT is permissive and only requires keeping the copyright and licence notice, which is a weak form of credit. CC BY 4.0 requires attribution and suits text, documentation and data, but Creative Commons advises against it for software. A repository of mixed text and scripts is often dual-licensed: CC BY 4.0 for text, MIT for scripts.
+- Layout for a dual licence (worked once, not an official template): a `LICENSE` file whose preface states which licence covers which files, the full CC BY legal text in a separate file (for example `LICENSE-CC-BY-4.0.txt`), the MIT text for the code, and a README section repeating the scope.
+- In `CITATION.cff`, `license` takes a list of SPDX ids, but the CFF schema guide says multiple licences mean OR (the reuser may pick one), not "per file type" (checked 2026-11-14 at the schema guide). A list is therefore only approximately right for a dual licence; say so in the README.
+- Check per-file licence metadata (for example skill or document frontmatter) for conflicts with the new repository licence, and check that `release_check()` still finds the `LICENSE`.
 
 ## Zenodo-GitHub integration
 

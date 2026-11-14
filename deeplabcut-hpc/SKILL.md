@@ -1,12 +1,14 @@
 ---
 name: deeplabcut-hpc
-description: Sets up and runs DeepLabCut (DLC) pose estimation on HPC clusters and headless GPU machines - environment install, training and video-analysis batch scripts, pytorch_config.yaml settings, DLC failure modes and failed training logs. Use when the user mentions DeepLabCut, DLC, train_network, analyze_videos, pose_cfg.yaml, pytorch_config.yaml, or markerless pose estimation, esp. with Slurm or GPUs. Also use to retrain, resubmit, or build an orchestrator/sweep over DLC training or video-analysis scripts (shuffles, model variants), even if the request does not say "DeepLabCut" or "Slurm" (also "model training run" error logs), and to review a benchmark JSON/export, compare shuffles or net_type results (mAP/RMSE tables), or decide whether a model needs more epochs - check scripts or project files for deeplabcut or pytorch_config.yaml first. Combine with hpc-* skills. For metrics or statistics on the tracked output use animal-behaviour-tracking-analysis; for behavioural syllables use keypoint-moseq.
+description: Sets up and runs DeepLabCut (DLC) pose estimation on HPC clusters and headless GPU machines - environment install, training and video-analysis batch scripts, pytorch_config.yaml settings, DLC failure modes and failed training logs. Use when the user mentions DeepLabCut, DLC, train_network, analyze_videos, pose_cfg.yaml, pytorch_config.yaml, or markerless pose estimation, esp. with Slurm or GPUs. Also use to retrain, resubmit, or build an orchestrator/sweep, benchmark suite or sbatch loop over DLC training or video-analysis scripts (shuffles, model variants), even if the request does not say "DeepLabCut" or "Slurm", and to review a benchmark JSON/export, compare shuffles or net_type results (mAP/RMSE tables), or decide whether a model needs more epochs. Combine with hpc-* skills. For metrics or statistics on the tracked output use animal-behaviour-tracking-analysis; for behavioural syllables use keypoint-moseq.
 metadata:
   prompt_signals: 'deeplabcut|DeepLabCut|\banalyze_videos\b|\btrain_network\b|pytorch_config\.yaml|pose_cfg\.yaml'
   file_signals: 'import deeplabcut|pytorch_config\.yaml|pose_cfg\.yaml|deeplabcut_version|test_mAP|training_state|evaluation_state|dlc_.*benchmark.*\.json|gpu_usage_.*\.csv'
 ---
 
 # DeepLabCut on HPC
+
+**Before writing or reviewing any submit command, sbatch loop or orchestrator, load `hpc-cluster-docs` and `hpc-job-scripts`** (details in Step 2). Reported once: both were skipped for an orchestrator task and the user had to ask whether all needed skills were loaded.
 
 DeepLabCut changes quickly (3.0 made PyTorch the default and is deprecating TensorFlow; latest release 3.0.2 on 2026-09-23, checked 2026-10-29). **Do not rely on memory for function signatures or config keys.** Verify against the live docs first, then write code.
 
