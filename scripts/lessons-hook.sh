@@ -21,7 +21,9 @@ INBOX="$LESSONS_DIR/inbox"
 STATE="$LESSONS_DIR/state"
 USAGE="$LESSONS_DIR/usage.tsv"
 REPO_DIR="${LLM_SKILLS_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-TURN_LIMIT="${LESSONS_TURN_LIMIT:-2}"   # Stop events after the first skill load (pilot: low; raise later)
+TURN_LIMIT="${LESSONS_TURN_LIMIT:-2}"   # Stop events after the first skill load before the first reminder
+REPEAT_EVERY="${LESSONS_REPEAT_EVERY:-5}"   # further Stop events between repeat reminders
+CORR_PATTERN="(^|[^a-z])(no[,.!]|wrong|incorrect|that.s not|that is not|not what i|actually|instead|you (missed|forgot|should)|don.t do|doesn.t work|did(n.t| not) work|still (fails|broken|error))"
 ERR_PATTERN='Error( in|:)|Traceback|Execution halted|could not find function|there is no package|ModuleNotFoundError|command not found|No such file or directory|unused argument|object .* not found'
 
 payload=$(cat 2>/dev/null) || exit 0
@@ -42,14 +44,25 @@ session_skills() { [ -f "$USAGE" ] && awk -F'\t' -v s="$sid" '$2 == s {print $4}
 count_lines() { [ -f "$1" ] && echo $(( $(wc -l < "$1") )) || echo 0; }
 
 case "$event" in
+  UserPromptSubmit)
+    # Count correction-like prompts (a proxy for "user corrected the assistant"); count only, no text.
+    [ -n "$(session_skills)" ] || exit 0
+    prompt=${payload#*\"prompt\"}
+    if printf '%s' "$prompt" | grep -qiE "$CORR_PATTERN"; then
+      date +%s >> "$STATE/$sid.corrections"
+    fi
+    ;;
   PostToolUse)
     tool=$(jstr tool_name)
     if [ "$tool" = "skill" ]; then
       name=$(jstr skill)
       [ -n "$name" ] && [ -f "$REPO_DIR/$name/SKILL.md" ] || exit 0
       printf '%s\t%s\t%s\t%s\n' "$(date +%Y-%m-%dT%H:%M:%S)" "$sid" "$project" "$name" >> "$USAGE"
-      # Loading the capture skill means lessons are being written: no reminder needed.
-      [ "$name" = "skill-lessons" ] && touch "$STATE/$sid.captured"
+      # Loading the capture skill counts as a reminder done now; the next one comes after
+      # REPEAT_EVERY more turns (or a new error/correction), not never.
+      if [ "$name" = "skill-lessons" ]; then
+        printf '%s %s %s\n' "$(count_lines "$STATE/$sid.turns")" "$(count_lines "$STATE/$sid.errors")" "$(count_lines "$STATE/$sid.corrections")" > "$STATE/$sid.reminded"
+      fi
       # Housekeeping: drop per-session state older than 30 days.
       find "$STATE" -maxdepth 1 -type f -name '*.*' -mtime +30 -delete 2>/dev/null
     else
@@ -65,19 +78,28 @@ case "$event" in
     skills=$(session_skills | paste -sd, -)
     [ -n "$skills" ] || exit 0
     date +%s >> "$STATE/$sid.turns"
-    [ -f "$STATE/$sid.reminded" ] && exit 0
-    [ -f "$STATE/$sid.captured" ] && exit 0
-    ls "$INBOX"/*_"$sid8".md >/dev/null 2>&1 && exit 0
     errs=$(count_lines "$STATE/$sid.errors")
     turns=$(count_lines "$STATE/$sid.turns")
-    if [ "$errs" -ge 1 ] || [ "$turns" -ge "$TURN_LIMIT" ]; then
-      touch "$STATE/$sid.reminded"
-      file="$INBOX/${project}_$(date +%Y%m%d-%H%M%S)_${sid8}.md"
+    corr=$(count_lines "$STATE/$sid.corrections")
+    fire=0
+    if [ ! -f "$STATE/$sid.reminded" ]; then
+      # First reminder: any error or correction, or TURN_LIMIT turns.
+      { [ "$errs" -ge 1 ] || [ "$corr" -ge 1 ] || [ "$turns" -ge "$TURN_LIMIT" ]; } && fire=1
+    else
+      # Repeat reminders: new error or correction since the last one, or REPEAT_EVERY more turns.
+      read -r last_turns last_errs last_corr < "$STATE/$sid.reminded"
+      { [ "$errs" -gt "${last_errs:-0}" ] || [ "$corr" -gt "${last_corr:-0}" ] \
+        || [ $(( turns - ${last_turns:-0} )) -ge "$REPEAT_EVERY" ]; } && fire=1
+    fi
+    if [ "$fire" -eq 1 ]; then
+      printf '%s %s %s\n' "$turns" "$errs" "$corr" > "$STATE/$sid.reminded"
+      existing=$(ls "$INBOX"/*_"$sid8".md 2>/dev/null | head -n1)
+      file=${existing:-$INBOX/${project}_$(date +%Y%m%d-%H%M%S)_${sid8}.md}
       # JSON-safe path: forward slashes only (a Windows path would need escaped backslashes).
       file=$(cygpath -m "$file" 2>/dev/null || printf '%s' "$file")
-      file=${file//\\//}
-      printf '%s\t%s\t%s\t%s\terrors=%s\tturns=%s\n' "$(date +%Y-%m-%dT%H:%M:%S)" "$sid" "$project" "$skills" "$errs" "$turns" >> "$LESSONS_DIR/reminders.tsv"
-      reason="Lessons check (automatic hook; skills used this session: ${skills}; error-like tool results: ${errs}). Load the skill-lessons skill and write to ${file}: (1) ALWAYS one use-case entry (type use-case): a generic one to three sentence summary of what the user was doing with the skill(s), the outcome, and any friction; no data values, names or paths. (2) Additionally one lesson entry per unanticipated error, failed advice or code, user correction, version or API mismatch, or missing guidance. Do not repeat your earlier answer; keep any reply to one short sentence."
+      file=${file//\//}
+      printf '%s\t%s\t%s\t%s\terrors=%s\tcorrections=%s\tturns=%s\n' "$(date +%Y-%m-%dT%H:%M:%S)" "$sid" "$project" "$skills" "$errs" "$corr" "$turns" >> "$LESSONS_DIR/reminders.tsv"
+      reason="Lessons check (automatic hook; skills used this session: ${skills}; error-like tool results: ${errs}; correction-like user prompts: ${corr}; turns: ${turns}). Load the skill-lessons skill and write to ${file} (append if it exists): (1) a use-case entry if none exists yet in that file (type use-case): generic one to three sentences on what the user was doing with the skill(s), outcome, friction; no data values, names or paths. (2) Review the WHOLE conversation so far, not only recent turns, and add one lesson entry for each unanticipated error or warning, failed advice or code, workaround, user correction or override, version or API mismatch, missing guidance, or recommendation that held up (worked-well) that is not yet recorded. Prefer too many entries over too few; use generality: unsure when in doubt. Do not repeat your earlier answer; keep any reply to one short sentence."
       printf '{"decision":"block","reason":"%s"}\n' "$reason"
     fi
     ;;

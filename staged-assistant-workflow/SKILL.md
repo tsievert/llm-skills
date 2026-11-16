@@ -118,7 +118,6 @@ design decision, not a mechanical default.
 
 ## Capture lessons (self-improvement rule)
 
-If a step of this pattern breaks down in practice (a gate that didn't catch a real failure, a
-status function that gave a misleading "next stage", a hand-off file that turned out to need more
-than one input), record a generic, anonymised entry via `skill-lessons`. This skill has been used
-once so far; entries here matter more than most for deciding whether the pattern generalises.
+Recording lessons is part of using this skill, not an optional extra. Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as any of these happens, without waiting for the end of the session or a hook reminder: an error or warning this skill did not anticipate; advice or code that failed or needed a workaround; a user correction or override; a package version or API that differs from what the skill states; guidance the task needed but the skill lacks; or a recommendation that held up on real data (`worked-well`). In long conversations, re-scan earlier turns for unrecorded items before finishing. Prefer too many entries over too few: when unsure, record it with `generality: unsure` and let triage decide. Also write one `use-case` entry per session. Mention each entry in one sentence. Entries are hypotheses for `skill-feedback-triage`, not facts.
+
+Specific to this skill: also record a gate that did not catch a real failure, a status function that gave a misleading "next stage", or a hand-off file that needed more than one input. This skill has been used once so far, so entries here matter more than most for deciding whether the pattern generalises.

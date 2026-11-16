@@ -10,7 +10,7 @@ handles two events, chosen from the `hook_event_name` in the JSON payload on std
 | Event | Matcher | Action |
 |---|---|---|
 | `PostToolUse` | `skill` | Appends `timestamp, session, project folder, skill` to `~/.posit/lessons/usage.tsv`, only for skills that exist in this repo. Loading `skill-lessons` marks the session as captured. |
-| `PostToolUse` | optional `executeCode\|executeR\|bash` | Counts error-like tool responses (a pattern in `ERR_PATTERN`), only in sessions that already loaded a repo skill. Stores a count, never text. Costs about 0.5 s per call on Windows (Git Bash start-up), so it is off by default. |
+| `PostToolUse` | `executeCode|executeR|bash` | Counts error-like tool responses (`ERR_PATTERN`) in sessions that loaded a repo skill. Stores a count, never text (~0.5 s per call on Windows). |
 | `Stop` | none | If a repo skill was used and no entry exists yet, once per session, when an error was counted or `LESSONS_TURN_LIMIT` (pilot default 2) Stop events have passed, appends a row to `reminders.tsv` and returns `{"decision":"block","reason":...}`. The reason asks the assistant to load `skill-lessons` and write to a named inbox path: always a `use-case` summary, plus lesson entries if any. |
 
 `Stop` ignores `matcher`. `stop_hook_active: true` always exits quietly so a block can
@@ -41,9 +41,19 @@ with a warning, so keep entries to `type`, `command`, `timeout`.
 | `state/<session>.{errors,turns,reminded,captured}` | per-session counters and flags, deleted after 30 days |
 | `state/DEBUG` | create this empty file to dump raw hook payloads to `state/debug-payloads.jsonl` (may hold private content; delete afterwards) |
 
+## Repeat reminders (changed 2026-11-16)
+
+Originally one reminder per session, and loading `skill-lessons` or any existing inbox file silenced it for good, so long
+conversations recorded only early lessons. Now:
+
+- First reminder: an error-like tool result, a correction-like user prompt (`CORR_PATTERN`, counted by the `UserPromptSubmit` handler, count only), or `LESSONS_TURN_LIMIT` turns.
+- Repeats: a new error or correction since the last reminder, or `LESSONS_REPEAT_EVERY` (default 5) further Stop events. Loading `skill-lessons` or writing an entry resets the clock instead of ending reminders.
+- The reminder asks the assistant to review the whole conversation, append to the existing session file and prefer too many entries over too few.
+- Settings: add this script to `UserPromptSubmit` and to `PostToolUse` with matcher `executeCode|executeR|bash`; before that, `errors=` was always 0 because only `skill` was matched. `reminders.tsv` now has a `corrections=` column.
+
 ## Tuning
 
-- `LESSONS_TURN_LIMIT` (pilot default 2; raise once capture is shown to work): Stop events (after the first repo-skill load) before a reminder
+- `LESSONS_TURN_LIMIT` (pilot default 2): Stop events (after the first repo-skill load) before a reminder
   without an error. Lower is more reminders, higher misses more user corrections.
 - `LESSONS_DIR`, `LLM_SKILLS_DIR`: override the data and repo locations (used for tests).
 - Add the tool matcher to `PostToolUse` only if the turn limit proves too blunt.

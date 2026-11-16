@@ -157,8 +157,4 @@ explanation to a sentence or two and point to a reference file for depth rather 
 
 ## Capture lessons (self-improvement rule)
 
-If while using this skill an error it did not anticipate occurs, its advice or code fails, the user corrects it, a
-package version or API differs from what it states, or it lacks guidance the task needs, record a generic,
-anonymised entry by following the `skill-lessons` skill: no project data, IDs or paths; write it when the issue is
-resolved and mention it in one sentence. Skip one-off user preferences. Entries are hypotheses for later triage in
-the llm-skills repo (`skill-feedback-triage`), not facts.
+Recording lessons is part of using this skill, not an optional extra. Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as any of these happens, without waiting for the end of the session or a hook reminder: an error or warning this skill did not anticipate; advice or code that failed or needed a workaround; a user correction or override; a package version or API that differs from what the skill states; guidance the task needed but the skill lacks; or a recommendation that held up on real data (`worked-well`). In long conversations, re-scan earlier turns for unrecorded items before finishing. Prefer too many entries over too few: when unsure, record it with `generality: unsure` and let triage decide. Also write one `use-case` entry per session. Mention each entry in one sentence. Entries are hypotheses for `skill-feedback-triage`, not facts.

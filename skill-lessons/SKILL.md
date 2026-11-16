@@ -27,6 +27,12 @@ Do not record: one-off user preferences, quirks of one dataset, questions that w
 answered, or anything the user asked not to share. If unsure whether it generalises, record
 it with `generality: unsure`; triage decides.
 
+Bias toward recording: the user prefers too many entries over too few. Log minor
+workarounds, warnings you had to suppress, and recommendations that held up too (`worked-well`),
+using `generality: unsure` when in doubt. In long conversations, do not wait for the hook: after
+each resolved problem or user correction, append an entry to the session file at once, and when a
+lessons reminder arrives, re-scan the whole conversation (not just recent turns) for unrecorded items.
+
 Write the entry when the issue is resolved (or clearly unresolved), not at the end of the
 session, because sessions can end abruptly. Tell the user in one sentence that an entry was
 recorded and where.
@@ -138,10 +144,11 @@ path. If the front matter already exists in the file, append only the `##` block
 
 - A `PostToolUse` hook logs each load of a repo skill to `~/.posit/lessons/usage.tsv`
   (timestamp, session, project folder, skill). That log needs no model cooperation.
-- A `Stop` hook reminds the assistant once per session to write a use-case summary and any
-  lessons, after an error-like tool result or `LESSONS_TURN_LIMIT` turns (pilot default 2).
-  Each reminder is logged to `~/.posit/lessons/reminders.tsv`. Loading this skill
-  suppresses the reminder (the use-case entry is then still expected from this skill).
+- A `Stop` hook reminds the assistant to write a use-case summary and any lessons, after an
+  error-like tool result, a correction-like user prompt or `LESSONS_TURN_LIMIT` turns (pilot
+  default 2), and again after each new error/correction or `LESSONS_REPEAT_EVERY` (default 5)
+  further turns. Each reminder is logged to `~/.posit/lessons/reminders.tsv`. Loading this
+  skill only resets the repeat clock.
   Setup, tests and limits: [references/hook-setup.md](references/hook-setup.md).
 - The inbox is read by `skill-feedback-triage`. Entries are hypotheses until reproduced.
 
