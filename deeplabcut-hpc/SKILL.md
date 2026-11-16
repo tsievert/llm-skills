@@ -2,7 +2,7 @@
 name: deeplabcut-hpc
 description: Sets up and runs DeepLabCut (DLC) pose estimation on HPC clusters and headless GPU machines - environment install, training and video-analysis batch scripts, pytorch_config.yaml settings, DLC failure modes and failed training logs. Use when the user mentions DeepLabCut, DLC, train_network, analyze_videos, pose_cfg.yaml, pytorch_config.yaml, or markerless pose estimation, esp. with Slurm or GPUs. Also use to retrain, resubmit, or build an orchestrator/sweep, benchmark suite or sbatch loop over DLC training or video-analysis scripts (shuffles, model variants), even if the request does not say "DeepLabCut" or "Slurm", to review or rank a benchmark JSON/export (even analysis-only), compare shuffles or net_type results, decide whether a model needs more epochs, or reproduce a DLC bug locally and draft an upstream issue. Combine with hpc-* skills. For metrics or statistics on the tracked output use animal-behaviour-tracking-analysis; for behavioural syllables use keypoint-moseq.
 metadata:
-  prompt_signals: 'deeplabcut|DeepLabCut|\banalyze_videos\b|\btrain_network\b|pytorch_config\.yaml|pose_cfg\.yaml'
+  prompt_signals: 'deeplabcut|DeepLabCut|\banalyze_videos\b|\btrain_network\b|pytorch_config\.yaml|pose_cfg\.yaml|benchmark.{0,20}(json|export)|\bnet_type\b'
   file_signals: 'import deeplabcut|pytorch_config\.yaml|pose_cfg\.yaml|deeplabcut_version|test_mAP|training_state|evaluation_state|dlc_.*benchmark.*\.json|gpu_usage_.*\.csv'
 ---
 
