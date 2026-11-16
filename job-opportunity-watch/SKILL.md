@@ -39,7 +39,8 @@ options(jobwatch.dir = "<data folder>")      # holds links.csv, job_profile.yml,
 jw_status()                                   # the table, the next stage and which reference to read
 ```
 
-If the user's memory file does not name the data folder, ask once and offer to note it. Do not rely on what an
+`JW_ROOT` (headless runs) is that same data folder, for example `D:/job-watch`, never the project root; a wrong
+value fails s0 with `profile_missing`/`links_missing`. If the user's memory file does not name the data folder, ask once and offer to note it. Do not rely on what an
 earlier conversation did: the run folder, `summary.md` and `jw_status()` are the hand-off.
 
 - **Headless stages (s0-s3, s6):** `targets::tar_make(script = "<skill-dir>/assets/pipeline/_targets.R", store =

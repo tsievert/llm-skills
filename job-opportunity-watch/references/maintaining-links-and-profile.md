@@ -48,6 +48,11 @@ All of them make a timestamped backup next to the file first. For the profile, e
 `yaml::read_yaml()` to check it parses, and tell the user which backup to restore from if needed. Section
 labels must match the existing label exactly or a new section is created at the end.
 
+After a confirmed profile change, re-check this week's decided rows: list the s4 rows (and title-level rejections)
+whose rejection depended on the old rule and amend them with `jw_s4_amend()` (`rerender = TRUE`). Expect the
+"profile changed mid-week" warning. Rows rejected only by title carry no reason, so rescan the titles with a regex
+for the new rule.
+
 ## Never
 
 Edit either file without a yes for that exact change; delete links; change hard requirements to make an

@@ -45,7 +45,9 @@ read-only; link posts, do not profile individuals).
 One row per lead: `lead_id`, `platform` (bluesky, mastodon, web), `query`, `query_type`, a short `text`
 excerpt (no author names, no profiles), `url`, `lead_status` (lead, rejected, verified), `note` and `found` (date the lead was seen). `query_type` must be one of `hashtag`, `text`, `author+tag`, `web_keywords` (use `web_keywords` for a web-search lead); `jw_write_stage()` does not check it, so a wrong value only fails at the s5 close (rule `s5_qtype`). A lead
 becomes an opportunity only after its employer page is classified in s4 terms; carry verified leads into the
-next s4 batch, never straight into the ledger.
+next s4 batch, never straight into the ledger. Limit: once s4 has closed there is no function to add a row for an
+item outside the pending set (`jw_s4_amend()` edits existing ids only, and a foreign id fails `s4_coverage`), so
+report such a verified lead in the summary or chat and tell the user it has no ledger row.
 
 ## Skip or close
 

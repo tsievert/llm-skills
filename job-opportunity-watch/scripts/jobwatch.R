@@ -982,7 +982,7 @@ jw_tags_read <- function() {
 # to recognise low-volume tags, not accumulated across runs).
 jw_tags_record <- function(platform, tag, hits = 0L, useful = 0L, note = NA_character_,
                             query_type = NA_character_, posts_per_month = NA_real_) {
-  stopifnot(platform %in% c("bluesky", "mastodon"))
+  stopifnot(platform %in% c("bluesky", "mastodon", "web"))
   if (!is.na(query_type)) stopifnot(query_type %in% .jw_tag_query_types)
   tag <- sub("^#", "", tag)
   x <- jw_tags_read(); now <- jw_now()

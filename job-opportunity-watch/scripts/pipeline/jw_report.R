@@ -40,14 +40,14 @@ jw_preflight <- function(week = jw_week_id(), root = jw_root(), run_tests = TRUE
   tf <- file.path(root, ".write-test"); ok <- tryCatch({ writeLines("x", tf); unlink(tf); TRUE }, error = function(e) FALSE, warning = function(w) FALSE)
   if (!ok) prob("data_dir_not_writable", "data folder is not writable from this R session")
   pf <- file.path(root, "job_profile.yml")
-  if (!file.exists(pf)) prob("profile_missing", "job_profile.yml not found")
+  if (!file.exists(pf)) prob("profile_missing", paste0("job_profile.yml not found in ", root, " (JW_ROOT must be the data folder, not the project root)"))
   else {
     raw <- readBin(pf, "raw", file.size(pf))
     if (length(raw) && raw[length(raw)] != as.raw(10)) prob("profile_no_final_newline", "profile does not end with a newline; it may be truncated", "warn")
     y <- tryCatch(suppressWarnings(yaml::read_yaml(pf)), error = function(e) NULL)
     if (is.null(y) || is.null(y$career_search_profile)) prob("profile_unparseable", "profile is not valid YAML or lacks career_search_profile")
   }
-  if (!file.exists(file.path(root, "links.csv"))) prob("links_missing", "links.csv not found (convert links.txt first)")
+  if (!file.exists(file.path(root, "links.csv"))) prob("links_missing", paste0("links.csv not found in ", root, " (JW_ROOT must be the data folder; convert links.txt first)"))
 
   if (run_tests && !is.null(tests_dir) && dir.exists(tests_dir) && requireNamespace("testthat", quietly = TRUE)) {
     Sys.setenv(JW_PREFLIGHT = "1"); on.exit(Sys.unsetenv("JW_PREFLIGHT"), add = TRUE)  # lets slow tests skip themselves

@@ -95,7 +95,7 @@ the file matches the current column vector exactly.
 
 ## social_tags.tsv
 
-One row per (`platform`, `tag`); `platform` is `bluesky` or `mastodon`. Columns: `query_type` (`hashtag`, `text`,
+One row per (`platform`, `tag`); `platform` is `bluesky`, `mastodon` or `web` (web-search keyword queries, with `query_type = "web_keywords"`). Columns: `query_type` (`hashtag`, `text`,
 `author+tag`, `web_keywords`), `first_used`, `last_used`, `n_runs`, `n_hits` (posts judged job-relevant), `n_useful`
 (of those, how many led to a verified opportunity or an accepted link), `last_useful`, `posts_per_month` (a rough,
 overwritten-each-run estimate, so a tag that is structurally low-volume is not retried every week expecting more),
