@@ -72,3 +72,12 @@ Open research items (round 2): install DLC 3.0.2 in a uv venv and verify `Shuffl
 | local bash test | run | `${X:-d}` gives d for empty X; `${X-d}` gives empty. |
 
 Outcomes: dataloader caveat, CTD/top-down pre-flight and shell-default notes added; dev-branch env note already present; top-down head `input_size` for heatmap nets parked (patch untested).
+
+## Triage round 2026-11-16 (lessons inbox)
+
+| Source | Status | Finding |
+|---|---|---|
+| https://github.com/DeepLabCut/DeepLabCut/issues/3592 | read (search listing via gh) | Open issue: default top-down rtmpose_x config has 256 crop vs 384 head input_size and crashes at the first step; matches one lessons report. |
+| https://docs.astral.sh/uv/concepts/indexes/ | read | Default `first-index` limits candidates to the first index containing a package; `unsafe-best-match` is pip-like but exposes dependency confusion. |
+
+Outcomes: trigger wording broadened, defaults section and uv note added to references.
