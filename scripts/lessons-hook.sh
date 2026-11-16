@@ -97,7 +97,7 @@ case "$event" in
       file=${existing:-$INBOX/${project}_$(date +%Y%m%d-%H%M%S)_${sid8}.md}
       # JSON-safe path: forward slashes only (a Windows path would need escaped backslashes).
       file=$(cygpath -m "$file" 2>/dev/null || printf '%s' "$file")
-      file=${file//\//}
+      file=$(printf '%s' "$file" | sed 's#\\#/#g')
       printf '%s\t%s\t%s\t%s\terrors=%s\tcorrections=%s\tturns=%s\n' "$(date +%Y-%m-%dT%H:%M:%S)" "$sid" "$project" "$skills" "$errs" "$corr" "$turns" >> "$LESSONS_DIR/reminders.tsv"
       reason="Lessons check (automatic hook; skills used this session: ${skills}; error-like tool results: ${errs}; correction-like user prompts: ${corr}; turns: ${turns}). Load the skill-lessons skill and write to ${file} (append if it exists): (1) a use-case entry if none exists yet in that file (type use-case): generic one to three sentences on what the user was doing with the skill(s), outcome, friction; no data values, names or paths. (2) Review the WHOLE conversation so far, not only recent turns, and add one lesson entry for each unanticipated error or warning, failed advice or code, workaround, user correction or override, version or API mismatch, missing guidance, or recommendation that held up (worked-well) that is not yet recorded. Prefer too many entries over too few; use generality: unsure when in doubt. Do not repeat your earlier answer; keep any reply to one short sentence."
       printf '{"decision":"block","reason":"%s"}\n' "$reason"

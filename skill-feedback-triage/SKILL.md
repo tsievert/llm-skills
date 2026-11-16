@@ -55,6 +55,8 @@ read the lesson files first and use an export only to verify a claim; the parsin
    lesson_overview(L, U)   # per skill: loads, sessions, projects, entries by type
    lesson_dupes(L)         # candidate duplicates (heuristic, check by reading)
    ```
+   Set `options(width = 200)` first: `lesson_overview()` is wide and wraps badly otherwise. To read entries,
+   loop over the new and parked rows and print each non-empty field (reported once; no helper exists yet).
    Report coverage first: skills never loaded in real projects (still untested on real
    data), skills loaded often with no entries (either fine or the reminder is not working;
    say which is unknown), and entries per load. Fix or report malformed entries rather

@@ -108,7 +108,9 @@ Helpers for stubborn links (all in `jobwatch.R`, none edits `links.csv`):
 - JSON-LD: `jw_probe_one()` now also reads schema.org `JobPosting` objects from
   `<script type="application/ld+json">` (including `@graph` and `ItemList`), so a page that exposes vacancies that
   way no longer looks like a menu. Tested on synthetic pages only; the one live page checked (University of
-  Iceland) had no JobPosting data.
+  Iceland) had no JobPosting data. Later, a user report found that reading JobPosting JSON-LD (title, employer,
+  deadline, keywords) from the ads of a German job aggregator worked well for judging consultancy and
+  planning-office vacancies (one report, not re-tested here).
 
 Other findings from the check: the ECRO job-offers page was not dead (the host resolves elsewhere and appears
 in web search; the failure was this machine's DNS), `english.hi.is/vacancies` listed one real vacancy whose
