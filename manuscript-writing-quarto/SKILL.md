@@ -84,6 +84,12 @@ output, line-number injection rendered to an actual PDF, link checking, Language
 with a non-default language variant, and the `contribution` CRAN package (graphical contributions figure)
 mentioned as an alternative.
 
+## Practical notes from use
+
+- Table cross-references from `kable(caption = )` need a `tbl-` chunk label, and one chunk can carry only one label, so split a chunk that emits two tables.
+- `knitr::opts_knit$set(root.dir = )` takes effect from the next chunk; in a qmd in a subfolder put it in its own first chunk before any `source()`.
+- When Results prose pulls numbers inline from a cached values file, put a `stopifnot()` guard block for the qualitative claims (signs, which contrasts are flagged) in the setup chunk: the render fails if a refit changes the claim. Two sessions; no failure caught yet.
+
 ## Related skills
 
 - `manuscript-writing-coach`: chat-only coaching of the paper's argument, section content and wording; spelling, grammar, bibliography and character linting stay in this skill.

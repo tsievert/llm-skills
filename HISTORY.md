@@ -1468,3 +1468,11 @@ Checked: `bash -n`, synthetic-payload tests (silent before a skill load, first r
 - Fixes: `manuscript-figures-ggplot` direct-labels row (label layers widen the scale; explicit `coord_cartesian(..., expand = FALSE, clip = "off")`; reproduced on ggplot2 4.0.4) and an export-check step (assert `panel_params` ranges; `check_pdf()` misses layout defects). Add-notes: `show.legend = TRUE` on ribbons (layer flag confirmed, rendered keys not inspected) and the coarse permutation-null step size (1/n_null) in `gam-mgcv/references/ncv-and-bam-notes.md`.
 - Parked: empty manual fill scale warning; shell append for CRLF memory files. The seven earlier parked entries were re-checked by grep and stay parked.
 - Checked: `lint_skills()` (info only), `skills-ref validate` for both skills. Not checked: ggplot2 NEWS or issue tracker for the legend and scale behaviour; no trigger tests.
+
+## 2026-11-17 (later): lessons triage (32 new, 9 parked, 41 closed earlier)
+
+- Outcomes (41 open entries): 4 fix, 17 add-note, 4 reject, 7 no-change, 9 park (the two earlier parked entries on empty fill scales and shell append were resolved as add-notes).
+- Fixes: `check_pdf()` false "not all fonts embedded" (reproduced; real cause is `readLines()` stopping at NUL bytes, not second font subsets; now reads raw bytes and counts FontName and FontFile entries; tested on one- and two-subset PDFs), `labs(dictionary)` translates titles only (reproduced on ggplot2 4.0.4, docs checked), file-count command in `skill-feedback-triage`.
+- Add-notes: figure pitfalls (colour meaning reuse, label codes, symbol fonts, conditional scales), Quarto notes (tbl- labels, root.dir, guard blocks), p-value floor and significant-only wording in `multiplicity.md`, heredoc append fallback in `skill-lessons`, three triage workflow notes.
+- Parked: ggtext quoted font family, staged Results drafting, Gantt timeline, study-lookup routing, GAM baseline covariates, cross-socket bam slowdown, two new-skill suggestions and the no-targets appendix.
+- Checked: `lint_skills()` (info only), `skills-ref validate` for five skills. Not checked: Quarto and knitr behaviour (documented, not reproduced), ggtext quoting, trigger tests.

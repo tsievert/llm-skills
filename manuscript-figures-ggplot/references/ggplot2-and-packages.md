@@ -24,7 +24,8 @@ argument from memory, run `?ggplot2::theme` or read https://ggplot2.tidyverse.or
   plot (labels included); with `panel.*` the legend and axes add to it.
 - **Labels:** `labs(dictionary = c(var = "Label (unit)"))` or `attr(x, "label")` give consistent axis titles from
   a data dictionary; pairs with the `data-repository-readme` data dictionary. Labels stop applying when the aesthetic
-  is an expression (for example `log(x)`).
+  is an expression (for example `log(x)`). The dictionary translates titles only, not factor values (facet strips,
+  legend keys); see `ggplot2-hacks.md` for value labels.
 - **Boxplot parts:** `median.linewidth`, `whisker.linetype`, `staplewidth`, `box.colour` etc. Violin quantiles are now
   computed from the data, drawn with `quantile.linetype` (default off).
 - **facet_wrap(dir = "br")** and 8 direction options; `facet_wrap(space = "free_x")` when one row.

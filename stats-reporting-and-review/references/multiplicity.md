@@ -33,6 +33,11 @@ p.adjust(p_values, method = "holm")   # or "bonferroni", "hochberg", "hommel", "
 - State the chosen method and the family it was applied over (which tests were grouped together) explicitly —
   an unstated correction family is as uninformative as no correction.
 
+## Reporting wording (resampling p-values, significant-only reporting)
+
+- A bootstrap or permutation p is at least $$1/(B+1)$$; state that floor as the smallest attainable p and read a value at the floor as "at most" that, not as an exact value.
+- When the user asks to report only significant results and a block has none, write absence of evidence ("no contrast was flagged; smallest p = ..."), never "did not change X"; with small samples this is an overclaim. If two analyses disagree on an exception, say so without interpreting it. Two reports, not tested on further data.
+
 ## Niche alternative
 
 `FDRestimation::p.fdr()` computes an actual FDR estimate (distinct from a BH-adjusted p-value) and allows

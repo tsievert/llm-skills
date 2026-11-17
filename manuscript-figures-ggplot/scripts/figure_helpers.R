@@ -146,9 +146,15 @@ check_pdf <- function(path, font_range = NULL, stroke_range = NULL) {
   status <- system2(qpdf, c("--qdf", "--object-streams=disable", shQuote(path), shQuote(tmp)),
                     stdout = FALSE, stderr = FALSE)
   if (status > 1) stop("qpdf failed on ", path, call. = FALSE)
-  x <- readLines(tmp, warn = FALSE, encoding = "latin1")
-  fonts <- trimws(sub("^\\s*/BaseFont\\s*/", "", grep("^\\s*/BaseFont", x, value = TRUE)))
-  embedded <- sum(grepl("/FontFile", x))
+  # readLines() stops at NUL bytes in the binary font streams and silently drops later objects
+  # (tested: a PDF with two font subsets showed 1 of 2 descriptors), so read raw bytes.
+  raw <- readBin(tmp, "raw", file.size(tmp))
+  txt <- rawToChar(raw[raw != as.raw(0)])
+  Encoding(txt) <- "latin1"
+  x <- strsplit(txt, "\r?\n")[[1]]
+  fonts <- unique(trimws(sub("^\\s*/FontName\\s*/", "", grep("^\\s*/FontName\\s", x, value = TRUE))))
+  # One /FontFile* entry per font descriptor means every font is embedded
+  embedded <- sum(grepl("^\\s*/FontFile", x))
   tm <- grep(" Tm$", x, value = TRUE)
   sizes <- sort(unique(round(abs(as.numeric(
     vapply(strsplit(tm, " "), \(p) if (abs(as.numeric(p[1])) > 0) p[1] else p[2], "")

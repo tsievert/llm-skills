@@ -80,7 +80,9 @@ One file per session in the global inbox, so projects and sessions never collide
 
 (`USERPROFILE/.posit/lessons/inbox` on Windows.) If a hook message gave a full path, use
 exactly that path. Without one, use `lesson_file()` below (it ends in `_manual`). Several
-entries from one session go into the same file, one `##` block each.
+entries from one session go into the same file, one `##` block each. If the helper cannot write there,
+the `write` tool for the first entry and a bash heredoc append (`cat >> file`) for later ones is an accepted
+fallback on Windows (it avoids edit-tool exact-match failures on CRLF files); two reports.
 
 ## Entry format
 

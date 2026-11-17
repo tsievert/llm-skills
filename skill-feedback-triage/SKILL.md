@@ -28,7 +28,7 @@ mkdir -p .posit/assistant/lessons-work
 cp -r ~/.posit/lessons/inbox ~/.posit/lessons/usage.tsv .posit/assistant/lessons-work/
 cp ~/.posit/lessons/dispositions.tsv .posit/assistant/lessons-work/ 2>/dev/null   # per-entry ledger; absent on the first run
 rm -rf .posit/assistant/lessons-work/inbox/processed
-ls ~/.posit/lessons/inbox | wc -l; ls .posit/assistant/lessons-work/inbox | wc -l   # counts must match (minus processed)
+ls -p ~/.posit/lessons/inbox | grep -v / | wc -l; ls .posit/assistant/lessons-work/inbox | wc -l   # counts must match (-p/grep -v excludes the processed folder)
 ```
 
 Delete `.posit/assistant/lessons-work` again once the run is archived.
@@ -72,6 +72,10 @@ read the lesson files first and use an export only to verify a claim; the parsin
    flagged entry, then give it `already-present` (or `add-note`/`fix`, under the thresholds in
    [references/triage-method.md](references/triage-method.md)) or keep it parked. With many
    parked entries, hand the mechanical reading to a low-effort subagent and review its verdicts.
+   `likely_stale` is often a false positive for entries on broad topics (one run: 6 of 7 flagged, guidance
+   actually absent for most), so grep two or three distinctive terms before reading. When printing all
+   entries, print new and parked in two batches or write the listing to a scratch file and `read` it:
+   about 17 KB overflows the code tool's output.
    Parked entries that survive stay parked; re-open one earlier only on a new report of the
    same thing.
 2. **Group.** Merge duplicates into one issue and count independent projects and sessions
@@ -131,7 +135,7 @@ read the lesson files first and use an export only to verify a claim; the parsin
    - [ ] Record the watermark with `triage_watermark_set(max(U$time))`; skip it if `U` is empty. Do it before deleting the work folder, because `U` is read from its `usage.tsv` copy; if the folder is already gone, take the last timestamp from the real `~/.posit/lessons/usage.tsv` with bash. The next run then counts only newer rows, so runs months apart do not double-count. Never truncate or edit `usage.tsv`.
    - [ ] Copy the ledger back: `cp .posit/assistant/lessons-work/dispositions.tsv ~/.posit/lessons/dispositions.tsv`. The ledger is never committed or truncated.
    - [ ] Delete `.posit/assistant/lessons-work`.
-   - [ ] Add a Log entry to `HISTORY.md` (counts, outcomes, what was not verified) with generic wording only. Commit skill edits, never lesson files.
+   - [ ] Add a Log entry to `HISTORY.md` (counts, outcomes, what was not verified) with generic wording only. Commit skill edits, never lesson files. The watermark line in `AGENTS.md` and the `HISTORY.md` entry belong in the same commit; CRLF-to-LF warnings on Windows are expected and harmless (review the `AGENTS.md` diff first).
 
 ## What the data can and cannot say
 

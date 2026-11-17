@@ -47,7 +47,9 @@
 | `scale_x_continuous(guide = guide_axis(check.overlap = TRUE))` or `guide_axis(n.dodge = 2)` | Avoid overlapping tick labels (on the cheat sheet and in posts) | Tested |
 | `str_wrap()`, `lineheight`, `glue()` in labels | Multi-line labels with controlled spacing (used in about 60 scripts) | Not tested; standard |
 | `labs(alt = "...")` and `ggplot2::get_alt_text()` | Alt text for accessibility; Springer Nature recommends alt text | Tested |
-| `labs(dictionary = c(var = "Label (unit)"))` | One dictionary for all axis/legend titles | Tested |
+| `labs(dictionary = c(var = "Label (unit)"))` | One dictionary for all axis/legend titles. It only replaces automatically derived titles (matched by variable name); it does not relabel facet strips, legend keys or other discrete values: use a named lookup with `as_labeller()` or `scale_*(labels = )` for those | Tested; value relabelling confirmed not to work on ggplot2 4.0.4 (one report, reproduced) |
+| `scale_fill_manual()` on a layer that can have zero rows: add the scale only when the layer has data (warning "No shared levels found..."); leave `drop` at its default so unused states do not appear as blank legend keys | Two reports; not reproduced |
+| `geom_richtext()`/`element_markdown()` per-character font: quote family names with spaces, `style='font-family:"DejaVu Sans"'` | One report, not reproduced |
 | `guides(colour = guide_colourbar(position = "bottom", theme = theme_sub_legend(key.width = unit(1, "null"), title.position = "top")))` | Colourbar stretched across the panel width, from the styling article | Tested: renders |
 | Per-category transparency: `aes(alpha = grp)` + `scale_alpha_manual(values = c(...))` | Highlight one group, fade the rest (post) | Tested |
 | `scale_colour_identity()`, `scale_alpha_identity()` | Use colours stored in the data (highlight columns) rather than a legend; used in 15 scripts. No legend, so say in the caption what the colours mean | Tested |
