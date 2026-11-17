@@ -5,36 +5,21 @@ Contents: YAML description traps, CRLF line endings, links, hooks, naming, front
 - **Unquoted `#` in a description.** YAML ends a plain scalar at ` #`, so "Covers #SBATCH
   directives" silently cuts the description there (verified with two parsers). Quote the
   whole value, or write "SBATCH". Linter check: `description`.
-- **CRLF in scripts and Markdown.** Tools on Windows can leave CRLF in the working copy even
-  though `.gitattributes` forces LF in the index (`git ls-files --eol` shows `i/lf w/crlf`). A
-  script copied to the cluster from the working copy then fails, and multi-line string
-  replacements in `SKILL.md` or reference files report "string not found" while single-line
-  ones work. Run `git ls-files --eol <file>` before a multi-line edit. Fix with
-  `sed -i 's/\r$//' <file>` in Git Bash. `.gitattributes` only forces `eol=lf` for `.sh`, `.py`,
-  `.md` and `.R`; a new file type needs its own rule added there first. CRLF also comes back
-  *after* a clean edit (a `write` or `edit` call can reintroduce it even on an already-LF file),
-  and this can bite mid-task, not just at commit time — a later `edit` on the same file can fail
-  with "string not found" purely because the prior `edit`/`write` call put CRLF back. Treat
-  `git ls-files --eol <file>` as a near-default check before *every* edit attempt on a file this
-  session has already touched, not only reactively after a failure; also check again at the end
-  of a batch, not only before: run `git ls-files --eol -o -m --exclude-standard <skill>` (covers
-  new and modified files, not just the one you just touched) before lint and commit. If a
-  multi-line `old_string` still fails to match after confirming the file is LF and a fresh
-  re-read looks byte-identical, retry with a shorter, unique single-line anchor from the same
-  spot rather than repeating the same large string — this has worked even when the root cause of
-  the mismatch was not CRLF and stayed unexplained. A plain-text append to an already-CRLF file
-  can also need an explicit `\r\n` separator, since incremental edits can leave LF-only spans
-  inside an otherwise-CRLF file. Don't check for stray CRLF with `grep -c $'\r'`: grep's own
-  CRLF autodetection can mask the count and report 0 matches on a file that still has CRLF
-  (reported once, 2026-10-24); `git ls-files --eol` is the reliable check, as above. For a file
-  not yet tracked by git (new, uncommitted), `git ls-files --eol` prints nothing at all rather
-  than flagging a problem, which can look like "nothing to check" when the file is actually
-  CRLF — use `file <path>` instead for untracked files (reported 2026-10-26). If a multi-line
-  `edit` keeps reporting "string not found" against text a fresh `read`/`grep` confirms is
-  present byte-for-byte, and CRLF is ruled out, falling back to `write(..., overwrite = TRUE)`
-  with the full file content is a reliable escape hatch — but that `write` call itself commonly
-  reintroduces CRLF on a file that was LF before it, so always re-check line endings (`file
-  <path>` if untracked) immediately after, not just before, the next edit (reported 2026-10-26).
+- **No `python` in bash on Windows.** The command resolves to a Store shortcut, so scripted edits fail. Use the `edit` tool or R,
+  and do not combine an append and a dependent edit in one command (the first part may apply alone).
+- **CRLF in scripts and Markdown.** Tools on Windows can leave CRLF in the working copy even though
+  `.gitattributes` forces LF in the index (`git ls-files --eol` shows `i/lf w/crlf`). Symptoms: a script
+  copied to the cluster fails, and multi-line `edit` calls report "string not found" while single-line ones work.
+  - `.gitattributes` forces `eol=lf` only for `.sh`, `.py`, `.md` and `.R`; a new file type needs its own rule first.
+  - Any `edit` or `write` call can reintroduce CRLF, even on an LF file and mid-task. Check
+    `git ls-files --eol <file>` before every edit of a file already touched this session, and run
+    `git ls-files --eol -o -m --exclude-standard <skill>` before lint and commit.
+  - Untracked files: `git ls-files --eol` prints nothing, so use `file <path>`. Do not use `grep -c $'\r'`
+    (grep's CRLF autodetection can report 0).
+  - Fix with `sed -i 's/\r$//' <file>` in Git Bash. A plain append to a CRLF file may need an explicit `\r\n`.
+  - If a multi-line `old_string` still fails with LF confirmed and a fresh `read` matching, retry with a short,
+    unique single-line anchor; as a last resort `write(..., overwrite = TRUE)` the whole file, then re-check line
+    endings immediately.
 - **Colon plus space in an unquoted description, and the 1024 limit.** A `: ` inside a plain-scalar
   description fails with "mapping values are not allowed in this context" (use a dash). Trigger-broadening
   edits on a description near the limit overflow it: trim first and re-run `lint_skills()` after every
@@ -51,7 +36,7 @@ Contents: YAML description traps, CRLF line endings, links, hooks, naming, front
   `UserPromptSubmit` `prompt` at the first `\"` inside it. If a hook needs to match a
   pattern against free text, run the match against the whole raw payload instead of trying
   to isolate the field first (see `skill-trigger-hook.sh` at the repo root and
-  `skill-trigger-hook.md` (same folder)).
+  `hooks-reference.md` (same folder)).
 - **`~` in R on Windows** is `Documents`, not the profile directory. The scripts use
   `USERPROFILE`.
 - **Name clash with a built-in** (e.g. `report`, `create-skill`): the user copy silently

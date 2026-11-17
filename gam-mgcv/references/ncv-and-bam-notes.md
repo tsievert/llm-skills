@@ -18,9 +18,8 @@ one `bs = "re"` term). Items marked "reported" come from a real project and were
 
 ## Failures and memory in simulation or sharded NCV fits
 
-Reported once (synthetic small-n data): NCV fits can fail intermittently (non-finite NCV score) and parallel NCV
-fits can exhaust memory. In any simulation study, count failed fits and report them with the results; keep the
-error text per seed, budget memory per worker when sharding locally, and retry an allocation error once.
+NCV fits can fail intermittently (non-finite NCV score, reported once) and parallel NCV fits can exhaust memory. Counting
+failures, per-seed error files and memory budgets: [coverage-simulation.md](coverage-simulation.md).
 
 ## Resampling or bootstrapping at fixed smoothing parameters
 
@@ -69,9 +68,9 @@ real shift when estimates and curves barely changed (one report, 8 units, 70 spl
 
 - `sandwich::bread()` on a `bam`/`gam` returns the penalised bread (`n * Vp / scale`) while `estfun()` is
   unpenalised, so `vcovCL()` is conditional on the smoothing parameters. In one synthetic simulation
-  (repeated sessions within animals, 50 data sets) it was too wide by session (SE about twice the empirical
-  SD) and about 1.14 times by animal with poor simultaneous coverage; a bootstrap by the clustering unit
-  with fixed `sp` (fREML refit above) was best calibrated (about 0.93). One design only; treat as a caution.
+  (repeated sessions within animals, 50 data sets) it was too wide by session and about 1.14 times the
+  empirical SD by animal, while a bootstrap by the clustering unit with fixed `sp` (fREML refit above) was best
+  calibrated; numbers and caveats in [coverage-simulation.md](coverage-simulation.md).
 - Hand-built clustered sandwich (verified, mgcv 1.9-5, synthetic quasi-log and `Gamma(log)` `bam(discrete = TRUE)`
   fits: max difference to `vcov(m, sandwich = TRUE)` was 0 with one cluster per row). Building the score from
   `m$weights * m$residuals` disagreed by a factor of about 0.1 to 2; use the family quasi-score, divided by
@@ -92,9 +91,7 @@ real shift when estimates and curves barely changed (one report, 8 units, 70 spl
   Not for extended families (`tw`, `gaulss`): mgcv builds their score from `dDeta()` or a family `sandwich`
   function. The small-sample factor uses the row count, not the cluster count, so with few clusters the
   result stays optimistic (see the bootstrap caution above).
-- A 9-data-set pilot looked well calibrated (SE ratio 1.04 to 1.14); 50 data sets gave 0.83 to 0.93. Report
-  the Monte Carlo SE of a coverage estimate (about `sqrt(p * (1 - p) / n)`) and avoid conclusions from
-  fewer than about 30 replicates.
+- Pilot size and Monte Carlo SE when checking coverage: [coverage-simulation.md](coverage-simulation.md).
 
 ## Checking that select = TRUE penalised a term out
 

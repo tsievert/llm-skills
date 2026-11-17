@@ -40,6 +40,8 @@ duplicating it here.
 - `research/recipe-notes-ledger.md`: `recipe-notes-formatter`.
 - `research/manuscript-writing-quarto-ledger.md`: planned `manuscript-writing-quarto` (Quarto manuscript/journal templates, CRediT helper via CRAN `CRediTas`, spelling/linting via `hunspell`/`spelling`).
 - `research/stats-reporting-and-review-ledger.md`: `stats-reporting-and-review` (effect sizes via `effectsize`/`report`, power via `pwr`/`simr`, pre-registration via `prereg` — `preregr` was archived from CRAN 2026-07-28, multiplicity); records the cross-skill finding that `report()`'s auto-generated prose conflicts with `manuscript-writing-quarto`'s "no autonomous prose" rule.
+- `research/skill-maintenance-review-2026-11-17.md`: **active task list** for the usage/bloat/overlap review of existing
+  skills (12 tasks with status). When the user says to continue the maintenance review, read it first and update it.
 - **Always protocol research (standing rule, added 2026-10-24).** Whenever research is done for a skill or decision (web
   searches, page fetches, API checks, local tests), record it in `research/` in the same turn, before answering at length.
   Use one ledger per skill or topic (append to an existing one if the topic matches). Format that is easy to digest: a
@@ -177,7 +179,7 @@ skill, a research round, or a triage run, append an entry there (not here).
 
 ## Lessons triage state
 
-- Lessons usage watermark: 2026-11-17T19:56:20
+- Lessons usage watermark: 2026-11-17T22:20:25
 
 The watermark above is read/written by `skill-feedback-triage/scripts/read_lessons.R`'s
 `triage_watermark()`/`triage_watermark_set()`, which default to `agents = "AGENTS.md"` —

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Hook that enforces an explicit, pending "trigger the appropriate skill" instruction
-# (see github-skill-maintenance/references/skill-trigger-hook.md and the lesson logged
+# (see github-skill-maintenance/references/hooks-reference.md and the lesson logged
 # 2026-10-24, ~/.posit/lessons/inbox/anon_20261024-162307_manual.md).
 #
 # Handles three events, configured in ~/.posit/assistant/settings.json:

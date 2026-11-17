@@ -97,8 +97,7 @@ Plotting, partial effects, simultaneous intervals, group comparisons, derivative
 - Whole-response predictions: `predict(m, newdata, type = "link", se.fit = TRUE)`, then back-transform with `family(m)$linkinv`, which gives valid intervals on the response scale.
 - Exclude random effects from predictions with `exclude = "s(g)"` (and supply a dummy level); hold other covariates at typical values.
 - Excluding random effects gives a typical-unit curve, not the group mean, and under a log link the two can differ several-fold. Ask early which the user wants, and avoid bare "population-level" (ambiguous). The explanation and the wording are in the `gam-interpretation` skill (its uncertainty-and-inference and phrasing references).
-- Group-mean contrast from a conditional fit with `bs = "re"`/`"fs"` terms: predict every observed unit (or session) at every grid value with its own random effects included, then average per cell (needs `predict()` on units x grid rows). One project (mgcv 1.9-5, Tweedie/Gamma log link, 162 units): this stayed within 0.8 bootstrap SD of the marginal fit, while the typical-unit curve (random terms excluded) was off by up to 5.7 SD. Single report, not re-run here.
-- Averaging a group-mean prediction over the observed values of an additive covariate (for example age) under a log link does not need units x grid rows: predict the grid with the covariate at a reference value, then multiply by `mean(exp(eta_i - eta_ref))`, where `eta_i` and `eta_ref` are link-scale predictions of one reference grid row at each unit's covariate value and at the reference value. Valid only for additive terms with no interaction with the covariate. Verified 2026-11-09 on a Poisson bam (mgcv 1.9-5, synthetic): matches brute force to rounding error.
+- Group-mean contrasts from conditional fits with random terms, and averaging over an additive covariate under a log link (tested recipes, single reports): `gam-interpretation` (its uncertainty-and-inference reference, section "Random effects and held-fixed covariates").
 - Do not extrapolate outside the data.
 
 ## Large data
@@ -108,6 +107,8 @@ Plotting, partial effects, simultaneous intervals, group comparisons, derivative
 Before queueing several expensive fits, time one on a short row ladder (for example 640, 1,280, 2,560 rows) and extrapolate. `fs` and large `sz` terms are slow in `gam()`, and location-scale families are `gam()` only. Row-ladder recipe, `callr::r_bg()` background-fit rules and timings: [references/workflow-and-long-fits.md](references/workflow-and-long-fits.md).
 
 ## Reporting
+
+For simulation checks of band or SE coverage (replicate counts, Monte Carlo SE, seeds, failed fits): [references/coverage-simulation.md](references/coverage-simulation.md).
 
 State family and link, smoother types and k, estimation method, the diagnostics checked (and any remaining concerns), edf per smooth, and plots of partial effects with intervals. Be proportionate: a wiggly smooth with wide intervals is not evidence of a real feature. Report the unresolved issues (low k-index, concurvity, dependence) rather than hiding them. For bootstrap simultaneous (max-t) bands, state B and the critical-value rank, and use B of at least 1,000 for a final value ([references/model-comparison.md](references/model-comparison.md)).
 
@@ -128,8 +129,8 @@ Load [references/resources.md](references/resources.md) for the curated list. Sh
 
 ## Explain the reasoning (teaching rule)
 
-The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why this method, setting or tool was chosen, which alternative was rejected and why, which check or step was skipped, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.
+Teach, don't replace the user's thinking: say briefly (a sentence or two) why things were or were not done, name the trade-off and which decision is the user's, and point to a reference for depth.
 
 ## Capture lessons (self-improvement rule)
 
-Recording lessons is part of using this skill, not an optional extra. Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as any of these happens, without waiting for the end of the session or a hook reminder: an error or warning this skill did not anticipate; advice or code that failed or needed a workaround; a user correction or override; a package version or API that differs from what the skill states; guidance the task needed but the skill lacks; or a recommendation that held up on real data (`worked-well`). In long conversations, re-scan earlier turns for unrecorded items before finishing. Prefer too many entries over too few: when unsure, record it with `generality: unsure` and let triage decide. Also write one `use-case` entry per session. Mention each entry in one sentence. Entries are hypotheses for `skill-feedback-triage`, not facts.
+Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as something unanticipated happens: an error or warning, advice or code that failed, a user correction, a version or API mismatch, missing guidance, or a recommendation that held up (`worked-well`). Also write one `use-case` entry per session. When unsure, record it with `generality: unsure`. Entries are hypotheses for `skill-feedback-triage`.

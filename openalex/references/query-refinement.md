@@ -51,6 +51,8 @@ roughly in order of effort:
   one known seminal paper surfaced the real terminology used in that niche
   (e.g. an anchor phrase like "Grueneberg ganglion") far more reliably than
   guessing synonyms from memory.
+- **Some works have no abstract in OpenAlex (title only).** Mark claims about them as unverified, or fetch the full
+  text (`fulltext.md`), instead of judging relevance from the title.
 - **Pull real abstracts rather than guessing specific terminology from
   memory**, even for things that feel like general domain knowledge (e.g.
   common compound names in a chemical family) — sampling actual abstracts in

@@ -1,0 +1,13 @@
+# Species and frame-rate checks
+
+What is documented: the Nature Methods paper (Weinreb et al. 2024) demonstrates mice (2D and 3D keypoints), rats (3D motion capture) and fruit flies (2D LEAP keypoints at 100 fps, where a different target timescale gave motifs from tens to hundreds of ms). A 2026-10 literature search of the citing papers found **no confirmed use on other species** (infants, zebrafish, macaques, marmosets, livestock and others only cite it or use their own models). Say that kpms is untested by this skill and unreported in what was searched for those animals, then work through these checks with the user:
+
+1. **Keypoints**: enough informative points to read the behaviour from the keypoints alone (benchmarks use 7 to 21; a maintainer called 3 "really pushing it" for single-animal syllables). Drop unreliable points (rodent tails). Anterior and posterior points must exist and be rarely occluded: heading and egocentric alignment depend on them.
+2. **Target duration in frames**: kappa is tuned to a median syllable duration, so the target is `duration x fps`. About 400 ms is the rodent rule of thumb (12 frames at 30 fps, 10 at 25, 8 at 20). For another species take the timescale of its movement units from the literature or the user, then confirm with grid movies. Do not compare durations or syllable numbers across species or frame rates.
+3. **Frame rate**: set the real `fps` in the config (0.8.0 uses it for velocities and durations). At 100-200 fps the same target is many more frames, so kappa may need to be higher than the docs scan (upper end 1e7, "typically high enough" per a maintainer). Rescan kappa; never copy a value from another setup (published values span 1e-6 to 1e10).
+4. **Downsampling** (for example 200 to 40 fps) is documented but one thread on it (#153) was never resolved; if used, compare `len(coordinates[key])` with video frame counts and delete stale `error_annotations.csv` first. See `common-problems.md` in this folder.
+5. **Body size and setup**: animals of very different size (adults and pups) need separate models; a changed camera or keypoint set needs a refit, not `apply_model`.
+6. **Stationary periods** (long sleep or inactivity) are hard for the autoregressive model and can end fits in NaNs; mask still periods with a centroid-speed rule and model the active periods.
+7. **Tracking quality per group**: compare NaN proportions between groups before reading differences in usage as behaviour.
+
+Cross-checking with a simple alternative (speed and immobility from `animal-behaviour-tracking-analysis`) is cheap and worth doing for a new species.

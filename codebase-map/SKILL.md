@@ -124,7 +124,7 @@ literally) — useful for testing, but outside this skill's intended scope.
 - `github-skill-maintenance`: the hook architecture (`PostToolUse`, `additionalContext`,
   fail-open, per-session dedupe state under `~/.posit/`) follows the same pattern as this
   repo's own skill-lessons and skill-trigger-hook hooks — see that skill's own
-  skill-trigger-hook.md reference for the general hook design this one reuses.
+  hooks-reference.md reference (in github-skill-maintenance) for the general hook design this one reuses.
 - `agents-md-maintenance`: owns general hygiene of the rest of a project's
   `AGENTS.md`/`DATABOT.md` (bloat, staleness, structure). This skill only ever touches its own
   narrow pointer section to `.codemap/`; hand off for everything else in the file.
@@ -141,4 +141,4 @@ trade-off, and point to a reference file for depth rather than lecturing.
 
 ## Capture lessons (self-improvement rule)
 
-Recording lessons is part of using this skill, not an optional extra. Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as any of these happens, without waiting for the end of the session or a hook reminder: an error or warning this skill did not anticipate; advice or code that failed or needed a workaround; a user correction or override; a package version or API that differs from what the skill states; guidance the task needed but the skill lacks; or a recommendation that held up on real data (`worked-well`). In long conversations, re-scan earlier turns for unrecorded items before finishing. Prefer too many entries over too few: when unsure, record it with `generality: unsure` and let triage decide. Also write one `use-case` entry per session. Mention each entry in one sentence. Entries are hypotheses for `skill-feedback-triage`, not facts.
+Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as something unanticipated happens: an error or warning, advice or code that failed, a user correction, a version or API mismatch, missing guidance, or a recommendation that held up (`worked-well`). Also write one `use-case` entry per session. When unsure, record it with `generality: unsure`. Entries are hypotheses for `skill-feedback-triage`.

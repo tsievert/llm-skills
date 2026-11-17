@@ -30,17 +30,7 @@ When something fails or looks odd (calibration widget, NaNs, odd durations, `app
 
 ## Species and frame-rate checks
 
-What is documented: the Nature Methods paper (Weinreb et al. 2024) demonstrates mice (2D and 3D keypoints), rats (3D motion capture) and fruit flies (2D LEAP keypoints at 100 fps, where a different target timescale gave motifs from tens to hundreds of ms). A 2026-10 literature search of the citing papers found **no confirmed use on other species** (infants, zebrafish, macaques, marmosets, livestock and others only cite it or use their own models). Say that kpms is untested by this skill and unreported in what was searched for those animals, then work through these checks with the user:
-
-1. **Keypoints**: enough informative points to read the behaviour from the keypoints alone (benchmarks use 7 to 21; a maintainer called 3 "really pushing it" for single-animal syllables). Drop unreliable points (rodent tails). Anterior and posterior points must exist and be rarely occluded: heading and egocentric alignment depend on them.
-2. **Target duration in frames**: kappa is tuned to a median syllable duration, so the target is `duration x fps`. About 400 ms is the rodent rule of thumb (12 frames at 30 fps, 10 at 25, 8 at 20). For another species take the timescale of its movement units from the literature or the user, then confirm with grid movies. Do not compare durations or syllable numbers across species or frame rates.
-3. **Frame rate**: set the real `fps` in the config (0.8.0 uses it for velocities and durations). At 100-200 fps the same target is many more frames, so kappa may need to be higher than the docs scan (upper end 1e7, "typically high enough" per a maintainer). Rescan kappa; never copy a value from another setup (published values span 1e-6 to 1e10).
-4. **Downsampling** (for example 200 to 40 fps) is documented but one thread on it (#153) was never resolved; if used, compare `len(coordinates[key])` with video frame counts and delete stale `error_annotations.csv` first. See [references/common-problems.md](references/common-problems.md).
-5. **Body size and setup**: animals of very different size (adults and pups) need separate models; a changed camera or keypoint set needs a refit, not `apply_model`.
-6. **Stationary periods** (long sleep or inactivity) are hard for the autoregressive model and can end fits in NaNs; mask still periods with a centroid-speed rule and model the active periods.
-7. **Tracking quality per group**: compare NaN proportions between groups before reading differences in usage as behaviour.
-
-Cross-checking with a simple alternative (speed and immobility from `animal-behaviour-tracking-analysis`) is cheap and worth doing for a new species.
+kpms is documented for mice, rats and fruit flies only; no confirmed use on other species was found. For any other species, or a frame rate far from 30 fps, work through the seven checks (keypoints, target duration in frames, real `fps`, downsampling, body size, stationary periods, tracking quality per group) in [references/species-and-frame-rate.md](references/species-and-frame-rate.md) before fitting, and say that this skill has not tested it.
 
 ## What runs where
 
@@ -90,6 +80,8 @@ There is no CRAN package for keypoint-MoSeq itself; the fitting side is Python o
 - [references/downstream-analysis.md](references/downstream-analysis.md): R and Python recipes, transitions, validation and reporting, the kpms built-in analysis.
 - [references/syllable-statistics.md](references/syllable-statistics.md): kpms built-in tests versus export, models per question, cautions, and what published studies did.
 - [references/use-cases-and-literature.md](references/use-cases-and-literature.md): publication, use cases found in citing papers, non-rodent evidence, comparisons with other tools, open questions.
+- [references/species-and-frame-rate.md](references/species-and-frame-rate.md): seven checks for non-rodent species and other frame rates.
+- [references/tested-and-not-tested.md](references/tested-and-not-tested.md): versions and tests run, what is unverified.
 - `scripts/kpms_headless_fit.py`: resumable headless fit (run with `--help`).
 - `scripts/kpms_summarise_results.py`: results.h5 to bouts/usage/transitions CSV.
 - `scripts/kpms_results.R`: same summaries in R plus a frame-level reader.
@@ -97,7 +89,7 @@ There is no CRAN package for keypoint-MoSeq itself; the fitting side is Python o
 
 ## Not verified
 
-kpms 0.8.6 (2026-11-09, Windows, uv venv Python 3.12, jax 0.12.0.1, jax-moseq 0.3.9, CPU, synthetic 6 x 1500 frame DLC csv): installed cleanly (orjson included); `kpms_headless_fit.py` fresh and resumed unchanged (resume at iteration 6/8); `results.h5` holds float32 centroid/heading/latent_state and int32 syllable; `kpms_summarise_results.py` and `kpms_results.R` both read it and agree (209 bouts, 486 usage rows, 194 transition rows); kpms' CSV export syllables equal the h5; `compute_moseq_df`/`compute_stats_df` run (float32 columns). Not run on 0.8.6: GPU (so the float32 speed and memory claims are upstream's), grid movies, calibration, `apply_model`, float64 mode. Earlier tests: kpms 0.6.6, 0.8.0, 0.8.3 and 0.8.4 (CPU; 0.6.6 and 0.8.0 with pandas<3; 0.8.0, 0.8.3 and 0.8.4 only a short fit, resume, `kpms_summarise_results.py`, the R reader and `compute_moseq_df`/`compute_stats_df`, pandas 3.1.0 on 0.8.3 and 0.8.4, not the full list below; 0.8.4 also `run_kruskal` warnings and permutation p-values) on synthetic DLC-format CSVs: fresh fit, resume in the AR and full phases, concurrent seed fits, results extraction, R and Python summaries agree with each other and with kpms' CSV export. **Not tested:** GPU runs, kpms 0.8.x concurrent seed fits, Slurm, 0.8.3's SLEAP/Lightning Pose/`.h5` loaders (the DLC csv loader was tested on synthetic multi-animal data, including a silent bodyparts-order mismatch across files, see the workflow reference), real behavioural data, `apply_model`, grid movies, location-aware mode, the calibration widget, any species other than those in the paper. The troubleshooting content in `common-problems.md` comes from reading upstream issues and papers (2026-10-29), not from reproducing the problems. If something fails on the cluster, trust the live docs and `help()` for the installed version over this file and tell the user which part was wrong.
+Tested on CPU with synthetic DLC-format data only (kpms 0.6.6 to 0.8.6): fresh fit, resume, results extraction, R and Python summaries. Not tested: GPU, Slurm, real behavioural data, `apply_model`, grid movies, calibration widget, other species. Details and versions: [references/tested-and-not-tested.md](references/tested-and-not-tested.md). If something fails on the cluster, trust the live docs and `help()` for the installed version over this file and tell the user which part was wrong.
 
 ## Related skills
 
@@ -112,8 +104,8 @@ kpms 0.8.6 (2026-11-09, Windows, uv venv Python 3.12, jax 0.12.0.1, jax-moseq 0.
 
 ## Explain the reasoning (teaching rule)
 
-The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why this method, setting or tool was chosen, which alternative was rejected and why, which check or step was skipped, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.
+Teach, don't replace the user's thinking: say briefly (a sentence or two) why things were or were not done, name the trade-off and which decision is the user's, and point to a reference for depth.
 
 ## Capture lessons (self-improvement rule)
 
-Recording lessons is part of using this skill, not an optional extra. Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as any of these happens, without waiting for the end of the session or a hook reminder: an error or warning this skill did not anticipate; advice or code that failed or needed a workaround; a user correction or override; a package version or API that differs from what the skill states; guidance the task needed but the skill lacks; or a recommendation that held up on real data (`worked-well`). In long conversations, re-scan earlier turns for unrecorded items before finishing. Prefer too many entries over too few: when unsure, record it with `generality: unsure` and let triage decide. Also write one `use-case` entry per session. Mention each entry in one sentence. Entries are hypotheses for `skill-feedback-triage`, not facts.
+Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as something unanticipated happens: an error or warning, advice or code that failed, a user correction, a version or API mismatch, missing guidance, or a recommendation that held up (`worked-well`). Also write one `use-case` entry per session. When unsure, record it with `generality: unsure`. Entries are hypotheses for `skill-feedback-triage`.

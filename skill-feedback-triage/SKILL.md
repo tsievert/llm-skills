@@ -19,19 +19,9 @@ GitHub or R-universe installs need the user's permission).
 | Usage log | `~/.posit/lessons/usage.tsv` | `time, session, project, skill`, written by the hook; append-only, never emptied; a watermark line in `AGENTS.md` marks what earlier runs counted; per-run narrative entries go to `HISTORY.md` |
 | Format | the `skill-lessons` skill | headings `## <skill>: <title>` then `- field: value` |
 
-The assistant's R session is blocked from paths outside the project, so copy first with
-bash (gitignored, so lesson text is never committed):
-
-```bash
-rm -rf .posit/assistant/lessons-work    # a leftover copy re-triages already archived files
-mkdir -p .posit/assistant/lessons-work
-cp -r ~/.posit/lessons/inbox ~/.posit/lessons/usage.tsv .posit/assistant/lessons-work/
-cp ~/.posit/lessons/dispositions.tsv .posit/assistant/lessons-work/ 2>/dev/null   # per-entry ledger; absent on the first run
-rm -rf .posit/assistant/lessons-work/inbox/processed
-ls -p ~/.posit/lessons/inbox | grep -v / | wc -l; ls .posit/assistant/lessons-work/inbox | wc -l   # counts must match (-p/grep -v excludes the processed folder)
-```
-
-Delete `.posit/assistant/lessons-work` again once the run is archived.
+Copy the inbox, usage log and dispositions into the git-ignored `.posit/assistant/lessons-work` with bash
+(the R session cannot read the home folder), check the file counts match, and delete the copy once the run is
+archived: [references/work-copy.md](references/work-copy.md). A leftover copy re-triages archived files.
 
 If the user collected files from other machines or projects, they go into the same
 `inbox` copy; names do not collide by design.
@@ -39,6 +29,16 @@ If the user collected files from other machines or projects, they go into the sa
 **Dropped-off conversation exports.** If the user also provides conversation-export JSON files,
 read the lesson files first and use an export only to verify a claim; the parsing recipe is in
 [references/conversation-exports.md](references/conversation-exports.md).
+
+## Gates (the table is not shown without these)
+
+1. **Research row per issue.** Every issue that could end as `fix` or `add-note` has a recorded research row
+   (reproduction, upstream, CRAN, OpenAlex for method claims, skill text read) in a ledger under `research/`,
+   shown as a column in the table. No row: the outcome is `park` or `needs-info`, never `fix`.
+2. **Placement.** A fix replaces or merges with existing text, carries no provenance ("reported once",
+   dates), and a one-project finding goes to a `references/` file, not the SKILL.md body.
+3. **Size.** Compare the target SKILL.md size before and after; above about 12 KB, move something out in the
+   same change. Details: [references/triage-method.md](references/triage-method.md).
 
 ## Workflow
 
@@ -55,57 +55,24 @@ read the lesson files first and use an export only to verify a claim; the parsin
    lesson_overview(L, U)   # per skill: loads, sessions, projects, entries by type
    lesson_dupes(L)         # candidate duplicates (heuristic, check by reading)
    ```
-   Set `options(width = 200)` first: `lesson_overview()` is wide and wraps badly otherwise. To read entries,
-   loop over the new and parked rows and print each non-empty field (reported once; no helper exists yet).
-   Report coverage first: skills never loaded in real projects (still untested on real
-   data), skills loaded often with no entries (either fine or the reminder is not working;
-   say which is unknown), and entries per load. Fix or report malformed entries rather
-   than dropping them silently. Entries whose status is `closed` were dispositioned by an
-   earlier run (a mixed file stays in the inbox whole, so they reappear in `read_lessons()`);
-   leave them out of the table and the counts, and do not re-grep or re-propose them.
-   `parked` entries are evidence, but they go stale: later edits (or earlier ones the entry
-   missed) often cover them (reported once: about a third of 20 parked entries were already
-   present in the skills at re-triage). **Every run**, before building the table, run
-   `parked_recheck(L)` (add `all_skills = TRUE, flag_share = 0.6` to also search neighbouring
-   skills). It scores each parked entry's distinctive words against the named skill's files and
-   lists likely-stale candidates. It is a screen, not a verdict: read the target section of each
-   flagged entry, then give it `already-present` (or `add-note`/`fix`, under the thresholds in
-   [references/triage-method.md](references/triage-method.md)) or keep it parked. With many
-   parked entries, hand the mechanical reading to a low-effort subagent and review its verdicts.
-   `likely_stale` is often a false positive for entries on broad topics (one run: 6 of 7 flagged, guidance
-   actually absent for most), so grep two or three distinctive terms before reading. When printing all
-   entries, print new and parked in two batches or write the listing to a scratch file and `read` it:
-   about 17 KB overflows the code tool's output.
-   Parked entries that survive stay parked; re-open one earlier only on a new report of the
-   same thing.
+   Set `options(width = 200)` first. Give `L` a numbered key (`L$n <- seq_len(nrow(L))`) once and print every
+   listing from that object, in batches (about 17 KB overflows the code tool's output). Report coverage first
+   (skills never loaded; skills loaded often with no entries: fine, or the reminder fails, unknown). Fix or
+   report malformed entries rather than dropping them; `closed` entries stay out of the table. Every run, run
+   `parked_recheck(L)` before the table (verdicts: [references/triage-method.md](references/triage-method.md));
+   survivors stay parked until a new report of the same thing.
 2. **Group.** Merge duplicates into one issue and count independent projects and sessions
    per issue. Keep `generality: likely-user-specific` entries out of skill edits unless a
    second project shows the same thing.
-3. **Treat every entry as a hypothesis.** For each issue:
-   - reproduce it on a small synthetic example in the scratch directory, or say why not
-     (needs the user's data, a cluster, a GPU); a `bug` entry naming a script is always
-     reproduced with a cheap test of that code path before it is parked or rejected, even at low
-     confidence (reading the code for a check is not evidence that the check covers every path);
-   - check upstream (package NEWS, docs, GitHub issues; see
-     [references/triage-method.md](references/triage-method.md)). This is required for every
-     proposed fix that states a package's behaviour, even when a local reproduction succeeded, and
-     it is done before the triage table is shown, not after approval (reported once: the user had to
-     ask for the documentation search after the table);
-   - check the skill text the entry blames: is the claim wrong, missing, or just not read?
-     Grep the named skill (and `HISTORY.md`) for the entry's key terms **before building the
-     table**; a `suggested-change` that an earlier run already applied gets the outcome
-     `already-present` (no edit) instead of a proposed fix (reported once: several entries were
-     only found to be done during the edit step). Grep alone misses paraphrased guidance
-     (reported once): for every proposed fix, read the target section of the named skill, not
-     just the grep hits. An entry about a built-in skill that has no folder in this repo
-     (for example `quarto-authoring`) is `reject` before the table;
-   - check CRAN for a package that would remove the problem.
-   - `type: new-skill-suggestion` entries (skill slot `new-skill`) propose a skill that
-     doesn't exist, so there is nothing to reproduce: instead, check for overlap with an
-     existing skill's territory (`github-skill-maintenance/references/skill-boundaries.md`),
-     whether a second, independent report backs the same proposal (one request is weak
-     evidence), and whether the scope in `suggested-change` is narrow enough to describe in
-     a skill `description`.
+3. **Treat every entry as a hypothesis.** Run the research checklist in
+   [references/triage-method.md](references/triage-method.md) for each issue and record it in the ledger
+   (see Gates; ledger skeleton: [assets/research-ledger-template.md](assets/research-ledger-template.md)). A `bug` entry naming a script is reproduced with a cheap test of that code path before it is
+   parked or rejected. Grep the named skill and `HISTORY.md` for the entry's key terms before building the
+   table, then read the target section: a `suggested-change` already applied is `already-present`; an entry
+   about a built-in skill with no folder here (for example `quarto-authoring`) is `reject`.
+   `type: new-skill-suggestion` entries (slot `new-skill`) have nothing to reproduce: check overlap with
+   existing territory (`github-skill-maintenance/references/skill-boundaries.md`), whether a second
+   independent report backs it, and whether the scope fits one skill `description`.
 4. **Decide per issue.** Outcomes: `fix` (skill text, script or reference changes),
    `add-note` (caveat or "verified on" line), `needs-info` (ask the user to rerun a
    command and paste the output), `reject` (user-specific, or the skill was right), `park`
@@ -115,10 +82,12 @@ read the lesson files first and use an export only to verify a claim; the parsin
    is made here, deliberately, rather than on the spot in whatever session first noticed
    the need).
    Evidence thresholds are in the reference.
-5. **Show the triage table and ask.** Columns: issue, skills, reports (projects),
-   reproduced, upstream finding, proposed outcome and change. Wait for the user's choice
+5. **Show the triage table and ask.** One row per issue, not per entry, listing its entry numbers
+   (`L$n`) so the outcome column can be built from them. Columns: issue, entries, skills, reports
+   (projects), research (ledger row and checklist result), proposed outcome and change, target file and
+   size after the change. Wait for the user's choice
    (the `AskUser` tool suits batches) before editing any skill.
-6. **Edit, then verify.** After approval, change the skills (for a `new-skill` outcome, load
+6. **Edit, then verify.** After approval, change the skills under the placement and size gates (for a `new-skill` outcome, load
    `create-skill` and build the new skill folder, including the standing sections this repo
    requires: subagent-delegation note where it fits, "Related skills", "Explain the
    reasoning", "Capture lessons"), then load and follow `github-skill-maintenance`
@@ -128,17 +97,21 @@ read the lesson files first and use an export only to verify a claim; the parsin
    while errors remain.
 7. **Archive.** Work through this checklist in order, in the real inbox (not the copy):
    - [ ] The user has seen the triage table (no archiving or watermark before that).
-   - [ ] Build the keep list from the triage table: every file that contains a `park` row of this run **and** every file with a parked-status entry from earlier runs (`unique(L$file[L$status == "parked"])`; reported once: a bulk move archived such files). Do not build it from memory.
-   - [ ] Move all other processed files with bash: `mv ... inbox/processed/`, passing the names directly. If a list file written from R on Windows is read by a bash loop, its lines end in CRLF and every `mv` fails on a name ending in `\r`; strip with `tr -d '\r'` first (reported once). Do the moves before deleting the work folder, since the lists come from it. A file that mixes resolved and parked entries stays in the inbox whole (never split it) until every entry in it has a disposition other than `park`: the parked entry is what future runs need to see, and splitting risks losing the resolved entries' context.
-   - [ ] Build one outcome column on the entry table (one value per row) and check that every row got exactly one
-     value (`table(L$outcome, useNA = "ifany")`) before calling `dispositions_add()`; title regexes overlap and
-     miscounted once (reported once).
+   - [ ] Build the keep list from the triage table: every file that contains a `park` row of this run **and** every file with a parked-status entry from earlier runs (`unique(L$file[L$status == "parked"])`). Do not build it from memory.
+   - [ ] Move all other processed files with `mv ... inbox/processed/`, naming files directly (strip CRLF from list files read in bash with `tr -d '\r'`), before deleting the work folder. A file that mixes resolved and parked entries stays in the inbox whole until every entry in it has a disposition other than `park`.
+   - [ ] Key outcomes by entry number (`L$n`), never by row position of a re-filtered table, and build them on the same `L` that was printed. Build one outcome column on the entry table (one value per row) and check that every row got exactly one
+     value (`table(L$outcome, useNA = "ifany")`) before calling `dispositions_add()`.
    - [ ] Record a disposition for **every** entry of this run, including use-case entries and entries in files you archive, so mixed files stay quiet next time. One call per outcome: `dispositions_add(L[rows, ], "fix" | "reject" | ..., ".posit/assistant/lessons-work/dispositions.tsv")`. `park` and `needs-info` keep an entry open. Allowed values: `fix`, `add-note`, `already-present`, `reject`,
      `no-change`, `new-skill`, `park`, `needs-info`; use-case entries get `no-change` (`use-case` is not a value and errors).
-   - [ ] Record the watermark with `triage_watermark_set(max(U$time))`; skip it if `U` is empty. Do it before deleting the work folder, because `U` is read from its `usage.tsv` copy; if the folder is already gone, take the last timestamp from the real `~/.posit/lessons/usage.tsv` with bash. The next run then counts only newer rows, so runs months apart do not double-count. Never truncate or edit `usage.tsv`.
+   - [ ] Record the watermark with `triage_watermark_set(max(U$time))` before deleting the work folder (skip if `U` is empty; if the folder is gone, take the last timestamp from the real `usage.tsv`). Never truncate or edit `usage.tsv`.
    - [ ] Copy the ledger back: `cp .posit/assistant/lessons-work/dispositions.tsv ~/.posit/lessons/dispositions.tsv`. The ledger is never committed or truncated.
    - [ ] Delete `.posit/assistant/lessons-work`.
-   - [ ] Add a Log entry to `HISTORY.md` (counts, outcomes, what was not verified) with generic wording only. Commit skill edits, never lesson files. The watermark line in `AGENTS.md` and the `HISTORY.md` entry belong in the same commit; CRLF-to-LF warnings on Windows are expected and harmless (review the `AGENTS.md` diff first).
+   - [ ] Add a generic-wording Log entry to `HISTORY.md` (counts, outcomes, what was not verified). Commit skill edits, never lesson files; the `AGENTS.md` watermark line and the `HISTORY.md` entry go in the same commit (CRLF-to-LF warnings are harmless).
+
+## Usage and maintenance review (no triage)
+
+When the user asks which skills are used or edited most, or whether skills are bloated, do not archive,
+move the watermark or write dispositions. Follow [references/usage-review.md](references/usage-review.md).
 
 ## What the data can and cannot say
 
@@ -165,7 +138,7 @@ generically and tell the user the entry slipped through.
 
 ## Capture lessons (self-improvement rule)
 
-Recording lessons is part of using this skill, not an optional extra. Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as any of these happens, without waiting for the end of the session or a hook reminder: an error or warning this skill did not anticipate; advice or code that failed or needed a workaround; a user correction or override; a package version or API that differs from what the skill states; guidance the task needed but the skill lacks; or a recommendation that held up on real data (`worked-well`). In long conversations, re-scan earlier turns for unrecorded items before finishing. Prefer too many entries over too few: when unsure, record it with `generality: unsure` and let triage decide. Also write one `use-case` entry per session. Mention each entry in one sentence. Entries are hypotheses for `skill-feedback-triage`, not facts.
+Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as something unanticipated happens: an error or warning, advice or code that failed, a user correction, a version or API mismatch, missing guidance, or a recommendation that held up (`worked-well`). Also write one `use-case` entry per session. When unsure, record it with `generality: unsure`. Entries are hypotheses for `skill-feedback-triage`.
 
 Specific to this skill: also record a failing workflow step, a misbehaving script, or a user correction of the triage process itself.
 

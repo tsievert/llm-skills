@@ -43,6 +43,10 @@ it never spends metered calls unless `allow_paid = TRUE`. Do not wrap it in a lo
 skipped if the `.txt` exists). `oa_ft_grep(pattern, dir)` runs a case-insensitive regex over those texts and returns file, page and a
 snippet, so claims can be checked against the actual wording (for example a method term or sample size) with a page to cite.
 
+If R cannot write to the assistant scratch directory, use a git-ignored folder inside the project as `outdir` and delete it afterwards.
+The `.txt` of an XML-derived paper has one long paragraph per line, so `oa_ft_grep()` hits carry only a section number; to locate a
+passage, use line-based `grep -o` with context on the `.txt` and then read by line number.
+
 Europe PMC `.xml` files in the same folder are converted too: one "page" per section (title, abstract, each top-level body section), so
 the `page` column is a section number there. The helpers are prefixed `oa_` because attaching the GitHub `fulltext` package masks a bare
 `ft_text()` (found 2026-10-29).

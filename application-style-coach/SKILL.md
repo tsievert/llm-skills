@@ -12,12 +12,12 @@ document.
 ## Standing rules
 
 1. **Chat only.** Feedback goes in the conversation. Never write or edit the user's application files with any tool.
-   The flag script only reads. Exception (reported once, user-approved in practice): when the user explicitly asks
+   The flag script only reads. Exception: when the user explicitly asks
    for a new file, such as a format conversion that copies their existing text into a new layout, create only that new
    file, leave every existing file untouched, keep all facts verbatim, and flag apparent inconsistencies in chat
    instead of fixing them. Coaching itself stays chat-only. A prompt-only skeleton (headings, prompts as comments,
    placeholders, no drafted prose) for a new document counts as such a new file when the user asks for it.
-   Second exception (reported once): when the user explicitly asks to insert a fact they supplied into an existing
+   Second exception: when the user explicitly asks to insert a fact they supplied into an existing
    file, make only that minimal edit, add no wording beyond their facts, ask for any missing fact first, and say
    afterwards exactly what changed.
 2. **Facts belong to the user.** Never add, remove, strengthen or invent merits, numbers, titles, dates or
@@ -29,6 +29,8 @@ document.
    references exist or are correct. Formatting consistency of a list is fine; its truth is not checked here.
    Formatting metadata the user supplies (a pasted DOI, BibTeX entry or DOI record) into the list's style is
    allowed; the user verifies that the result is correct.
+   A request such as "is there a study that shows ..." is a separate literature search the user asks for (use
+   `openalex`); coaching resumes on how to use the source.
 5. **The call wins.** Read the call (ad, funder instructions) before judging. Its limits, documents, structure
    and bans on metrics override this skill and TENK. TENK is the default CV layout only where the call names no
    format.
@@ -62,36 +64,27 @@ document.
 1. **Identify the document and the call.** Which document (letter, CV, statement or plan, teaching portfolio,
    list of publications), which position or funder, deadline. Ask for the call text or link, and for the
    local-language version if one exists; if the user gives a link you may fetch it. With no call, say that the
-   feedback is generic and what you could not check (limits, required items). A summarising fetch gives only a
-   paraphrase, so when exact wording matters offer to save a plain-text copy of the call in the application folder
-   (via `rvest`, with source URL, fetch date and language version; de-duplicate nested list items), since the ad can
-   change or disappear after the deadline. A call often exists in several copies (employer ad, job boards, unit
-   page, search summaries) that differ on required documents: compare at least two, treat the employer's full ad as
-   authoritative, list differences, say which version you read and ask the user to confirm with the contact.
+   feedback is generic and what you could not check (limits, required items). A summarising fetch gives only a paraphrase; for exact wording and the several copies of a call, follow
+   "Saving and comparing the call" in [references/documents-and-calls.md](references/documents-and-calls.md).
 2. **Read the document** from a pasted text or a path (read only). For a mechanical first pass, optionally run
    the flag script (see below) and use its hits as prompts, not verdicts. Read the whole document (title, summary,
    objectives) before coaching any passage and name its central theme and terms first; judge logic flow as
-   claim-to-claim links between neighbouring sentences, not the purpose of each sentence alone (reported once: the
-   user corrected line-by-line coaching of related sentences).
+   claim-to-claim links between neighbouring sentences, not the purpose of each sentence alone.
 3. **Check against the call**: document present or missing, limits (pages, words, whole-package size), required
    elements, file naming, sensitive data, metrics allowed or banned. Label every requirement with its source (this
    call, the university's general guidance, TENK) and never present general-guidance items, such as what finalists
    are assessed on later, as call requirements. Also compare any template or scaffold structure (a section list from an earlier draft or a
    default) with the call's actual limits and criteria before coaching content; say which parts come from the
-   template and which from the call, and offer to merge or cut template sections that cannot fit the limit (reported
-   twice; the user stated that the call always overrides default templates). For a CV also run
+   template and which from the call, and offer to merge or cut template sections that cannot fit the limit. For a CV also run
    [references/tenk-cv-checks.md](references/tenk-cv-checks.md).
 4. **Coach.** Pick about five to seven nudges from
    [references/phrasing-nudges.md](references/phrasing-nudges.md) and
    [references/documents-and-calls.md](references/documents-and-calls.md), ordered: call requirements, verifiability
-   and integrity, clarity and framing, polish. Use the nudge format (quote, pattern, question, optional example). When the document is a readable text file
-   (.qmd, .md, .txt), add the line number next to each quote and re-read the file just before each round, because
-   the user edits between rounds and old numbers go stale. In each re-read of an edited .qmd/.md, also check that
-   every `]` closing a Pandoc citation is followed by a space or punctuation (`[@key]has` renders as a
-   label-not-found error at build time, for example in Typst); say so in the first line of the round.
+   and integrity, clarity and framing, polish. Use the nudge format (quote, pattern, question, optional example). For readable text files (.qmd, .md, .txt) add line numbers and re-read before each round; see "Re-reading text sources" in
+   [references/documents-and-calls.md](references/documents-and-calls.md).
    For a reorder request, give the full new order as a numbered list with old and new line numbers in the first
-   answer, and say plainly if it barely differs from the original. For a length-cutting request, before offering an
-   example check antecedents, cross-references and whether the section's argument still holds, and state that check.
+   answer, and say plainly if it barely differs. For a length-cutting request, check antecedents, cross-references and
+   whether the argument still holds, and state that check.
    Offer more on request.
 5. **Close** with what was checked and what was not (no call, limits not measurable, publications not verified,
    which language version of the call you read) and invite a second pass after the user revises. When the user has
@@ -181,4 +174,4 @@ point to a reference file for depth rather than lecturing.
 
 ## Capture lessons (self-improvement rule)
 
-Recording lessons is part of using this skill, not an optional extra. Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as any of these happens, without waiting for the end of the session or a hook reminder: an error or warning this skill did not anticipate; advice or code that failed or needed a workaround; a user correction or override; a package version or API that differs from what the skill states; guidance the task needed but the skill lacks; or a recommendation that held up on real data (`worked-well`). In long conversations, re-scan earlier turns for unrecorded items before finishing. Prefer too many entries over too few: when unsure, record it with `generality: unsure` and let triage decide. Also write one `use-case` entry per session. Mention each entry in one sentence. Entries are hypotheses for `skill-feedback-triage`, not facts.
+Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as something unanticipated happens: an error or warning, advice or code that failed, a user correction, a version or API mismatch, missing guidance, or a recommendation that held up (`worked-well`). Also write one `use-case` entry per session. When unsure, record it with `generality: unsure`. Entries are hypotheses for `skill-feedback-triage`.

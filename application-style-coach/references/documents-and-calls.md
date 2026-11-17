@@ -123,3 +123,14 @@ Formatting only; the assistant does not check whether publications exist or whet
 - A CV lists decided funding and verifiable outputs only. Pending grant applications and claims about unpublished
   data are not CV items; the letter may mention them, so a letter-CV gap there is not an error (reported once: a
   user corrected this).
+
+
+## Saving and comparing the call
+
+A summarising fetch gives only a paraphrase, so when exact wording matters offer to save a plain-text copy of the call in the application folder (via `rvest`, with source URL, fetch date and language version; de-duplicate nested list items), since the ad can change or disappear after the deadline. A call often exists in several copies (employer ad, job boards, unit page, search summaries) that differ on required documents: compare at least two, treat the employer's full ad as authoritative, list differences, say which version you read and ask the user to confirm with the contact.
+
+
+## Re-reading text sources
+
+When the document is a readable text file (.qmd, .md, .txt), add the line number next to each quote and re-read the file just before each round, because the user edits between rounds and old numbers go stale. In each re-read of an edited .qmd/.md, also check that every `]` closing a Pandoc citation is followed by a space or punctuation (`[@key]has` renders as a label-not-found error at build time, for example in Typst); say so in the first line of the round. For a reorder request, give the full new order as a numbered list with old and new line numbers in the first answer, and say plainly if it barely differs from the original. For a length-cutting request, before offering an example check antecedents, cross-references and whether the section's argument still holds, and state that check.
+

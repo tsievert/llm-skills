@@ -344,3 +344,12 @@ Template findings: depending on the whole `config` list invalidated every dynami
 branches ran); `tar_seed()` is deprecated (use `tar_seed_get()`); CRLF vs LF rewrite of a file target reruns dependants. Hazard: copying an renv project onto itself
 truncated shared-cache entries (63 repaired from the installed library, verified with `diff -r`). Still open: items in 11.5 that concern real Slurm, NFS, Python chunks in
 reports, `tar_map`/`tar_rep`, and P3M snapshot restore. The skill's sources are in `r-reproducible-pipeline/references/sources.md`.
+
+## Round 2026-11-17: no-targets appendix and cache provenance (maintenance review task 10)
+
+The entry "lightweight alternative without targets or renv" and the new-skill suggestion "analysis-cache-provenance" are the same
+proposal reported twice from one project (cached `.rds` with a metadata list of formula, data hash, package versions and seed; two cache
+classes, verified and legacy; a stage table with gates; child Quarto documents that only read caches). Outcome: kept parked as one
+issue; the entry itself says "unresolved until the skeleton stage is built" and to record a new-skill suggestion only if the pattern
+works. No skill text. Overlap to check if it is revived: `staged-assistant-workflow` (stage table, gates) and the `targets` tool-choice
+reference (`r-reproducible-pipeline/references/tool-choice.md`), so the proposal is likely a reference there, not a new skill.

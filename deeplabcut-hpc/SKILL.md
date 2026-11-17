@@ -63,18 +63,20 @@ Copy the whole project folder (config.yaml, `dlc-models*`, `training-datasets`, 
 
 ## DLC-specific pitfalls to check in every script
 
-1. **Absolute `project_path` in `config.yaml`.** A project created on another machine (e.g. Windows) has the wrong path. Update it before running, for example with `deeplabcut.auxiliaryfunctions.read_config` / `write_config` (pattern in the BatchProcessing recipe), or edit the YAML. In arrays, never have several tasks rewrite the same config.yaml concurrently; give each task its own copy or fix the path once before submitting.
-2. **No display on compute nodes.** Set `MPLBACKEND=Agg` in the job script. Prefer `plotting=False` in `evaluate_network` for unattended runs. Never import or launch the GUI.
-3. **Engine selection.** `engine: pytorch` (or `tensorflow`) in `config.yaml` decides which engine new training datasets use. Confirm it before `create_training_dataset`.
-4. **Training length is in epochs for PyTorch.** Control it via `train_network(..., epochs=...)` or `train_settings.epochs` in `pytorch_config.yaml`. Other keys documented in `pytorch_config.yaml`: `train_settings.batch_size` (default 1), `train_settings.dataloader_workers` (default 0), `runner.snapshots.save_epochs` (25), `runner.snapshots.max_snapshots` (5), `runner.gpus` (list), top-level `device` (`auto`), top-level `resume_training_from` (path to a `snapshot-NNN.pt`). Verify against the docs for the installed version; one report found the 3.0.2 code defaults differ from the docs (batch 8, covering off), see `references/pytorch-config-tuning.md`.
-5. **Dataloader workers.** The default is 0, which starves the GPU. Raise `dataloader_workers` to at most `--cpus-per-task` (leave one core free). More workers are not always faster: if the main training process sits near 100% CPU while workers idle, extra workers will not help and very high counts can be slower (reported once; an upstream issue, DeepLabCut #3547, shows 28 workers slower than 6 with the main process at 98.5% CPU). Then profile the main process (`py-spy`), and test `dataloader_pin_memory` on/off, crop size, evaluation interval and torch thread counts before adding workers. Use `parallelly`-style logic from `hpc-python-code` to read the Slurm allocation, not `os.cpu_count()`.
-6. **Batch size.** Raise `batch_size` to use the GPU's memory; confirm with `nvidia-smi`/job monitoring rather than guessing. Out-of-memory errors on the GPU are fixed by reducing batch size or image size, not by requesting more host memory.
-7. **Checkpoint and resume.** Snapshots are saved every `save_epochs`. Set `save_epochs` low enough that a time-limit kill loses little, and resume with `resume_training_from` (config) or `train_network(..., snapshot_path=...)` pointing to the last snapshot. In the 3.0.2 runner source a resumed `fit()` treats the epoch count as additional epochs (`starting_epoch + epochs`), so set `epochs` to the remaining number in a requeue script and check the log after the first resume (read from source, not run). Write the resume logic so a requeued job continues instead of restarting (see `hpc-job-scripts` for requeue and `--signal`).
-8. **Multiple shuffles/projects.** One GPU per training run by default. `runner.gpus: [0, 1]` in `pytorch_config.yaml` enables multi-GPU training, which in 3.0.2 is `torch.nn.DataParallel` on one node with `device: cuda` (no DistributedDataParallel; read from the source, not run; the config docs give no scaling advice), so request `--gres=gpu:N` on one node and treat scaling as untested. Use job arrays with one shuffle or project per task, each with isolated output (the BatchProcessing recipe uses a `sys.argv[1]` index per GPU). Start shuffle numbering at 1, not 0: DLC's own API defaults (`train_network`, `evaluate_network`, `analyze_videos`) and GUI behavior both treat 1 as the practical floor, and a custom orchestrator that picks 0 for its first/baseline run has been reported to cause downstream confusion (reported 2026-10-26).
-9. **`analyze_videos` caching.** Already-analyzed videos are skipped, so reruns after a failure are cheap and safe. Use `destfolder` to write results to scratch/project storage. Per-video work parallelizes well as an array (one video or folder per task).
-10. **Video I/O.** Decoding is CPU-bound; request enough CPUs for analysis jobs. Stage large videos to node-local scratch when the shared filesystem is slow (see `hpc-job-scripts/references/arrays-and-scratch.md`).
-11a. **Re-split and evaluation (reported by 2 sessions, not yet confirmed on a cluster).** After `create_training_dataset` or any re-split, `metadata.yaml` can record another engine, and `evaluate_network` then falls back to TensorFlow (`ModuleNotFoundError: tensorflow` on a PyTorch project). Check the engine entries in `metadata.yaml`, pass the engine explicitly in headless evaluation (`engine=Engine.PYTORCH`, from `deeplabcut.core.engine`); the argument is `shuffles=[n]` in 3.0.2, and the old `Shuffles=` still works as a renamed-parameter alias since 3.0.0 (read from `compat.py`, so prefer `shuffles=`); extra PyTorch options such as `snapshotindex` pass through `**torch_kwargs`, and treat evaluation results older than the shuffle's `Documentation_data` pickle as stale (compare mtimes). Also, evaluation writes some files (the combined results CSV) outside the per-shuffle folder; a name-glob sync-back from node-local scratch loses them. Sync each job's outputs into a job-specific path (one writer per path) and let downstream checks fall back to the per-snapshot CSVs.
-11. **Model downloads.** Pretrained backbones and SuperAnimal weights are downloaded on first use, which fails on compute nodes without internet. Run one short training or model-creation step on a login node (or pre-download weights) before submitting, and point the cache to shared storage if the home quota is small.
+Full detail for items marked (detail) is in [references/pitfall-details.md](references/pitfall-details.md).
+
+1. **Absolute `project_path` in `config.yaml`.** A project created on another machine (e.g. Windows) has the wrong path. Fix it before running (`deeplabcut.auxiliaryfunctions.read_config` / `write_config`, as in the BatchProcessing recipe, or edit the YAML). In arrays, never let several tasks rewrite the same config.yaml; give each task its own copy or fix it once before submitting.
+2. **No display on compute nodes.** Set `MPLBACKEND=Agg` in the job script, prefer `plotting=False` in `evaluate_network`, never launch the GUI.
+3. **Engine selection.** `engine: pytorch` (or `tensorflow`) in `config.yaml` decides the engine of new training datasets. Confirm it before `create_training_dataset`.
+4. **Training length is in epochs (PyTorch)**: `train_network(..., epochs=...)` or `train_settings.epochs`. Verify key names and defaults for the installed version; 3.0.2 code defaults differed from the docs in one report (detail).
+5. **Dataloader workers.** Default 0 starves the GPU. Raise `dataloader_workers` to at most `--cpus-per-task` minus one, but more is not always faster; profile the main process before adding workers (detail).
+6. **Batch size.** Raise `batch_size` to use GPU memory, confirmed by monitoring. GPU out-of-memory is fixed by smaller batch or image size, not more host memory.
+7. **Checkpoint and resume.** Set `save_epochs` low enough that a time-limit kill loses little; resume with `resume_training_from` or `snapshot_path`. A resumed run treats `epochs` as additional epochs, so pass the remaining number in a requeue script (detail; see `hpc-job-scripts` for requeue and `--signal`).
+8. **Shuffles, projects, GPUs.** One GPU per run by default; multi-GPU is single-node `DataParallel` and untested for scaling. Use job arrays with isolated output per task. Start shuffle numbering at 1, not 0 (detail).
+9. **`analyze_videos` caching.** Already-analyzed videos are skipped, so reruns are cheap. Use `destfolder` for scratch/project storage; parallelise per video or folder as an array.
+10. **Video I/O.** Decoding is CPU-bound; request enough CPUs. Stage large videos to node-local scratch when the shared filesystem is slow (see `hpc-job-scripts/references/arrays-and-scratch.md`).
+11. **Model downloads.** Backbones and SuperAnimal weights download on first use, which fails on compute nodes without internet. Run one short model-creation step on a login node (or pre-download) and point the cache to shared storage if the home quota is small.
+12. **Re-split and evaluation (2 sessions, not confirmed on a cluster).** After `create_training_dataset` or a re-split, `metadata.yaml` can record another engine and `evaluate_network` falls back to TensorFlow. Pass `engine=Engine.PYTORCH` and `shuffles=[n]` explicitly, treat old evaluation results as stale, and sync outputs per job path, since some files are written outside the shuffle folder (detail).
 
 ## Tuning `pytorch_config.yaml` and designing sweeps
 
@@ -116,49 +118,11 @@ deeplabcut.evaluate_network(a.config, shuffles=[a.shuffle], plotting=False)
 
 ## When something fails: search upstream before improvising
 
-DLC moves fast, so an unexpected error is often a known bug, a regression in the installed version, or already fixed on `main`. Before inventing a workaround:
-
-1. Get from the user the cluster's DLC version (`deeplabcut.__version__`), the engine, the PyTorch/CUDA versions, and the exact error message (first and last lines of the traceback). The searches below run locally, where the internet is available.
-2. Search issues, open and closed, for the error text or function name (the `gh` CLI is preferred when installed; it was not on PATH on the maintainer machine, where the keyless REST API worked: `https://api.github.com/repos/DeepLabCut/DeepLabCut/releases`, `/pulls/<n>`, `/issues/<n>`):
-   - `gh search issues --repo DeepLabCut/DeepLabCut "<error text>" --sort updated`
-   - `gh issue view <number> --repo DeepLabCut/DeepLabCut --comments`
-3. Search pull requests for fixes in progress or merged:
-   - `gh search prs --repo DeepLabCut/DeepLabCut "<keyword>" --sort updated`
-   - `gh pr view <number> --repo DeepLabCut/DeepLabCut`
-   - If a code comment or config cites a specific issue number as the source for an in-progress
-     upstream feature, don't trust that citation at face value: check for superseding or merged PRs
-     too, not just the originally cited issue. Fast-moving repos often ship a different final design
-     (e.g. a different config shape) than the first proposal (reported once, 2026-10-26).
-4. Check recent commits and releases for relevant changes:
-   - `gh api "repos/DeepLabCut/DeepLabCut/commits?per_page=30"`
-   - `gh release list --repo DeepLabCut/DeepLabCut`
-   - For a suspect file, `gh api "repos/DeepLabCut/DeepLabCut/commits?path=<file path>&per_page=10"`
-5. Check the forum for usage and cluster questions: https://forum.image.sc/tag/deeplabcut
-6. Compare dates with the installed version. If a fix is merged but unreleased, offer these options and let the user choose: pin an older release, install the pre-release (`pip install --pre deeplabcut`), or install from `main` (`pip install git+https://github.com/DeepLabCut/DeepLabCut.git`). Installing from `main` is less stable.
-7. Report what you found with links, and say plainly whether an issue is confirmed, only similar, or not found. Do not present a workaround from an unrelated or unresolved issue as established. If nothing matches, say so before trying your own diagnosis.
-
-**A feature-support check that returns `False` needs interpretation, not just the result.** A
-snippet that introspects the installed package for a named config field (e.g. checking a
-`pytorch_config.yaml` key exists) can correctly report `False` for two different reasons: the
-change hasn't merged anywhere yet, or it merged to a **non-default branch** the user's install
-doesn't track — a plain "unsupported" result doesn't distinguish these (reported once, 2026-10-26).
-When reporting a `False` result, check which branch the fix merged into (step 3/4 above), not just
-whether a PR merged at all, and say so explicitly. The installed version string is a cheap second
-signal: a clean release tag (no dev/commit suffix) despite the user describing a from-source-control
-install can itself indicate the install didn't pick up recent `main` commits.
+DLC moves fast, so an unexpected error is often a known bug, a regression, or already fixed on `main`. Get the DLC version, engine, PyTorch/CUDA versions and the exact traceback from the user, then search issues, PRs, commits, releases and the forum before inventing a workaround. Report plainly whether a match is confirmed, only similar, or not found. A `False` from a feature-support check can also mean the fix merged to a non-default branch. Commands, option list and details: [references/upstream-search.md](references/upstream-search.md).
 
 ## Not verified
 
-This skill was written from the official docs only (re-checked against the 3.0.2 docs and release notes on 2026-10-29; see `research/deeplabcut-hpc-ledger.md` in the llm-skills repo). Nothing here has been run on a real cluster. If a command or key fails on the cluster, trust the live docs and the cluster version's `help()` output (ask the user to paste it) over this file, and tell the user which part was wrong.
-
-**Real-use evidence (2026-10-24, user project, two independent sessions):** diagnosing a
-multi-animal-to-single-animal project split that produced fewer annotated frames than expected
-(cross-referencing a Slurm console log, a JSON manifest/validation report and a checksum
-manifest), and building a small orchestrator to submit multiple training jobs with varying
-hyperparameters, checked against HPC and DLC best practices (headless-plotting backend,
-dataloader-worker sizing, a shared-resource race condition in one script — all fixed and
-verified locally with `bash -n`, the bundled sbatch linter, and dry runs, no cluster access
-needed). Still not run on a real cluster.
+Written from the official docs only (re-checked against 3.0.2 docs and release notes on 2026-10-29; see `research/deeplabcut-hpc-ledger.md` in the llm-skills repo, which also holds the real-use evidence). Two local sessions reviewed scripts with `bash -n`, the sbatch linter and dry runs; nothing has run on a real cluster. If a command or key fails there, trust the live docs and the cluster version's `help()` output (ask the user to paste it) over this file, and say which part was wrong.
 
 ## Related skills
 
@@ -167,8 +131,8 @@ needed). Still not run on a real cluster.
 
 ## Explain the reasoning (teaching rule)
 
-The aim is to teach the user long-term, not to replace their own thinking. When using this skill, say briefly why things were done or not done: why this method, setting or tool was chosen, which alternative was rejected and why, which check or step was skipped, and which assumptions were made. Keep each explanation to a sentence or two, name the trade-off or the decision that belongs to the user, and point to a reference for depth rather than lecturing.
+Teach, don't replace the user's thinking: say briefly (a sentence or two) why things were or were not done, name the trade-off and which decision is the user's, and point to a reference for depth.
 
 ## Capture lessons (self-improvement rule)
 
-Recording lessons is part of using this skill, not an optional extra. Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as any of these happens, without waiting for the end of the session or a hook reminder: an error or warning this skill did not anticipate; advice or code that failed or needed a workaround; a user correction or override; a package version or API that differs from what the skill states; guidance the task needed but the skill lacks; or a recommendation that held up on real data (`worked-well`). In long conversations, re-scan earlier turns for unrecorded items before finishing. Prefer too many entries over too few: when unsure, record it with `generality: unsure` and let triage decide. Also write one `use-case` entry per session. Mention each entry in one sentence. Entries are hypotheses for `skill-feedback-triage`, not facts.
+Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as something unanticipated happens: an error or warning, advice or code that failed, a user correction, a version or API mismatch, missing guidance, or a recommendation that held up (`worked-well`). Also write one `use-case` entry per session. When unsure, record it with `generality: unsure`. Entries are hypotheses for `skill-feedback-triage`.

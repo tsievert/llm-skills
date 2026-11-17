@@ -133,3 +133,16 @@ Not yet built — this is the first research round. Read this before searching a
   README, the `quarto-journals` org README and two of its member repos (elsevier, jss) in full, the
   `Morrison-Lab/qmt` README, and the `hunspell`/`spelling` CRAN pages. No local tests, no files written
   outside this ledger and the `AGENTS.md` todo-row edit from the same session. Skill itself not started.
+
+## Round 2026-11-17: guard blocks and movable sensitivity blocks (maintenance review task 10)
+
+One issue, one project, reported in several entries: "draft Results prose with inline value pulls, qualitative claims guarded by
+`stopifnot()` in the setup chunk, and an outcome-organised sensitivity block the author may later move". Merged decision:
+
+| Piece | Outcome | Where |
+|---|---|---|
+| Guard block for qualitative claims, extended to sensitivity blocks, non-empty input check | already in `SKILL.md` as one pitfall bullet (the three earlier add-note entries are one bullet, not three) | `manuscript-writing-quarto/SKILL.md` |
+| Staged Results drafting plan, movable-block marking (`MOVE-DECISION` comment, self-contained subsections, one sentence listing null checks) | parked: one project, confidence low, partly project convention; no new text | this ledger |
+| Only-significant reporting with a one-line list of non-significant contrasts | parked, same reason (reporting rules belong to the author's journal, not this skill) | this ledger |
+
+Revisit when a second project reports the movable-block pattern; then add a short reference file, not a SKILL.md paragraph.

@@ -20,7 +20,7 @@ content is the user's: the assistant asks questions and points at patterns; it d
    built only from facts the user gave, same hedge level as the user's own, at most two alternatives, never a whole
    paragraph. Assistant-written examples tend to drift toward stronger claims; keep them no stronger than the user's.
 4. **Never insert references.** Flag where a source is probably needed and ask "which source supports this?"; never
-   suggest, look up or add one. Never edit the `.bib`. Comparing a sentence with the full text of a paper the user
+   suggest, look up or add one. A request to find a study is a separate literature search the user asks for (`openalex`). Never edit the `.bib`. Comparing a sentence with the full text of a paper the user
    cites is allowed as a question for the user (see [references/bib-and-fulltext.md](references/bib-and-fulltext.md)).
 5. **The journal wins.** Read the target journal's instructions first (structure, word limits, combined
    Results and Discussion, reporting checklists, AI policy). They override this skill.
@@ -76,9 +76,9 @@ Two checks stay in chat because they depend on context a word list cannot see:
   this rule set is untested, so say it is a question list.
 - **Check your own quantitative statements.** Before giving feedback that states a length share ("the sensitivity
   block is half the draft") or a timing or count, verify it with a quick count (words per heading, cached values).
-  One review misstated both and needed an explicit correction afterwards (reported once).
+
 - **Partial drafts (for example Results only).** The abstract-number script and several section checks need an
-  abstract, Methods or Introduction. Skip what cannot run and list it under "not checked" in the close (reported once).
+  abstract, Methods or Introduction. Skip what cannot run and list it under "not checked" in the close.
 
 ## Abstract-versus-body number check
 
@@ -162,4 +162,4 @@ explanation to a sentence or two and point to a reference file for depth rather 
 
 ## Capture lessons (self-improvement rule)
 
-Recording lessons is part of using this skill, not an optional extra. Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as any of these happens, without waiting for the end of the session or a hook reminder: an error or warning this skill did not anticipate; advice or code that failed or needed a workaround; a user correction or override; a package version or API that differs from what the skill states; guidance the task needed but the skill lacks; or a recommendation that held up on real data (`worked-well`). In long conversations, re-scan earlier turns for unrecorded items before finishing. Prefer too many entries over too few: when unsure, record it with `generality: unsure` and let triage decide. Also write one `use-case` entry per session. Mention each entry in one sentence. Entries are hypotheses for `skill-feedback-triage`, not facts.
+Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as something unanticipated happens: an error or warning, advice or code that failed, a user correction, a version or API mismatch, missing guidance, or a recommendation that held up (`worked-well`). Also write one `use-case` entry per session. When unsure, record it with `generality: unsure`. Entries are hypotheses for `skill-feedback-triage`.

@@ -25,8 +25,8 @@ and say what it would change.
    source("github-skill-maintenance/scripts/lint_skills.R")
    lint_skills()                     # or lint_skills(skills = "gam-mgcv")
    ```
-   Errors break the spec or a standing rule, warnings are likely problems, info is for
-   judgement. Output columns: skill, level, check, message. The `shadowed-name` check parses each
+   Errors break the spec or a standing rule, warnings are likely problems (including a SKILL.md over 16 KB), info is for
+   judgement (a SKILL.md over 12 KB and provenance phrases such as "reported once" are info). Output columns: skill, level, check, message. The `shadowed-name` check parses each
    `.R` file under `scripts/` and `assets/` and flags top-level functions named like an export of base R's
    default packages (warn) or of a common installed package (info), because sourcing such a script
    silently replaces the original (e.g. a test helper called `pf` masks `stats::pf`). Rename to a
@@ -66,7 +66,7 @@ and say what it would change.
    a skill the linter rejects (it does not see the truncated-description problem below).
    Run it from the repo root with the skill's own directory name, not `.` — running it from
    inside the skill's directory with `validate .` fails with "Directory name '' must match
-   skill name ..." even when the `SKILL.md` is valid (reported 2026-10-27).
+   skill name ..." even when the `SKILL.md` is valid.
 3. **Version claims.** When asked for a periodic check, or after a package release:
    ```r
    source("github-skill-maintenance/scripts/check_versions.R")
@@ -78,13 +78,11 @@ and say what it would change.
    packages that are not installed are skipped on purpose, and `deeplabcut` is only found
    when written as `deeplabcut <version>`. Treat it as a candidate list. It returns a data frame
    with a `file` column covering the whole repo (hundreds of rows): assign it and filter to the
-   changed skill's files instead of printing it all (reported 2026-10-28).
+   changed skill's files instead of printing it all.
 4. **Sync and hook setup.** Read-only audit of settings, the sync hook, the lessons hooks
    (PostToolUse `skill` and Stop), the skill-trigger hook (UserPromptSubmit, PostToolUse
-   `skill`, Stop) and the file-signal hook (PostToolUse `skill` and `read|grep|bash`; see
-   [skill-trigger-hook.md](references/skill-trigger-hook.md) for the first,
-   [file-signal-hook.md](references/file-signal-hook.md) and
-   [prompt-signal-channel.md](references/prompt-signal-channel.md) for the second),
+   `skill`, Stop) and the file-signal hook (PostToolUse `skill` and `read|grep|bash`; both are described in
+   [references/hooks-reference.md](references/hooks-reference.md)),
    the data folders, stamp and git state:
    ```r
    source("github-skill-maintenance/scripts/check_sync_setup.R")
@@ -139,4 +137,4 @@ The aim is to teach the user long-term, not to replace their own thinking. When 
 
 ## Capture lessons (self-improvement rule)
 
-Recording lessons is part of using this skill, not an optional extra. Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as any of these happens, without waiting for the end of the session or a hook reminder: an error or warning this skill did not anticipate; advice or code that failed or needed a workaround; a user correction or override; a package version or API that differs from what the skill states; guidance the task needed but the skill lacks; or a recommendation that held up on real data (`worked-well`). In long conversations, re-scan earlier turns for unrecorded items before finishing. Prefer too many entries over too few: when unsure, record it with `generality: unsure` and let triage decide. Also write one `use-case` entry per session. Mention each entry in one sentence. Entries are hypotheses for `skill-feedback-triage`, not facts.
+Load the `skill-lessons` skill and append a generic, anonymised entry (no project data, IDs or paths) as soon as something unanticipated happens: an error or warning, advice or code that failed, a user correction, a version or API mismatch, missing guidance, or a recommendation that held up (`worked-well`). Also write one `use-case` entry per session. When unsure, record it with `generality: unsure`. Entries are hypotheses for `skill-feedback-triage`.

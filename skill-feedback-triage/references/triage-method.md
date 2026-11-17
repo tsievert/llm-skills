@@ -1,15 +1,15 @@
 # Triage method
 
-Contents: evidence thresholds, reproducing, upstream checks, classifying the cause, writing
-the fix, measuring whether the loop works.
+Contents: evidence thresholds, research checklist, where a change goes (size and provenance gates), reproducing,
+upstream checks, classifying the cause, measuring whether the loop works, re-checking parked entries.
 
 ## Evidence thresholds (starting point, adjust with experience)
 
 | Situation | Outcome |
 |---|---|
 | Reproduced on synthetic data, or error text clearly names a skill claim as wrong | `fix`, even from one report |
-| Same issue in 2 or more projects, not reproduced | `fix` or `add-note`, worded as "reported, not reproduced" |
-| One report, `generality: general`, `confidence` medium or higher, change is a cheap additive note (a bullet or sentence, no behaviour change) | `add-note`, worded as "reported once" |
+| Same issue in 2 or more projects, not reproduced | `fix` or `add-note`; say "not reproduced" only if it changes how the reader should act |
+| One report, `generality: general`, `confidence` medium or higher, change is a cheap additive note (a bullet or sentence, no behaviour change) | `add-note`, placed in a `references/` file (see "Where a change goes") |
 | One report, `confidence: low`, `generality: unsure`, or the change alters behaviour or adds bulk | `park` (but a `bug` entry naming a script is reproduced first; one quick test, not code reading) |
 | `generality: likely-user-specific` and no second report | `reject` or `park` |
 | Needs a cluster, GPU or the user's data to check | `needs-info`: give the exact command and ask for the pasted output |
@@ -22,6 +22,36 @@ that user, not different people; two files from the same project count once. Bec
 second reporter will never exist, a one-report gate alone would stall most guidance gaps:
 weigh the cost and generality of the change (see the cheap-note row) instead of waiting
 for repetition.
+
+## Research checklist (required per issue before the table)
+
+Every issue that could end as `fix` or `add-note` needs a research row in the ledger
+(`research/<skill-or-topic>-ledger.md`; start from `assets/research-ledger-template.md`). The table
+shows the row as a "research" column. No row means the outcome is `park` or `needs-info`. A row
+records, each with a status (done, not applicable with a reason, not possible with a reason):
+
+1. Reproduction on a small synthetic example, or why not (needs data, cluster, GPU).
+2. Upstream: package NEWS or docs, issue tracker, for any claim about a package's behaviour.
+3. CRAN or Bioconductor: a package that removes the problem.
+4. OpenAlex, for a claim about a scientific method (user standing rule); read the source, not the title.
+5. The named skill's own text read (not only grepped), including references.
+
+Split what the sources support from claims with no source; only the supported part can become a fix.
+Research is recorded in the same turn it is done, not summarised afterwards.
+
+## Where a change goes (size and provenance gates)
+
+- **Replace or merge, never append.** Find the existing sentence or bullet on the topic and rewrite it. A new
+  bullet is allowed only when nothing in the file covers the topic.
+- **One-project findings go to a `references/` file** (or are parked). SKILL.md gets a fix only when the issue
+  was reproduced or seen in two or more projects, and then at most one line plus a pointer.
+- **No provenance in skill text.** Phrases such as "reported once", "two sessions", "one project", dates and
+  entry stories belong in the ledger or `HISTORY.md`. The skill states the rule, not who found it.
+- **Size budget.** Before and after editing a SKILL.md, compare `file.size()`; above about 12 KB new detail
+  goes to a reference by default, and `lint_skills()` warns above 16 KB. A fix that grows a SKILL.md past
+  the budget moves something else out in the same change.
+- **Shared boilerplate has one canonical text** (the "Capture lessons" and "Explain the reasoning" sections);
+  change it by script across all skills in one commit, never by editing one copy.
 
 ## Reproducing
 
@@ -74,3 +104,13 @@ exists, either nothing went wrong or the reminder fails; test by looking at
 `state/*.reminded` flags (reminder fired) against inbox files (reminder followed). A
 persistent gap means the turn limit or wording needs changing (see
 `../skill-lessons/references/hook-setup.md`).
+
+## Re-checking parked entries
+
+Parked entries go stale: later edits often cover them (one run: about a third of 20 were already
+present). `parked_recheck(L)` scores each entry's distinctive words against the named skill's files;
+add `all_skills = TRUE, flag_share = 0.6` to also search neighbouring skills. It is a screen, not a
+verdict. `likely_stale` over-fires right after a review that wrote new reference text, and is often a false positive for broad topics (one run: 6 of 7 flagged, guidance
+absent for most), so grep two or three distinctive terms first, then read the target section. Give a
+confirmed one `already-present` (or `add-note`/`fix` under the thresholds above) or keep it parked.
+Grep misses paraphrased guidance, so read the section for every proposed fix.

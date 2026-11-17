@@ -81,3 +81,9 @@ Outcomes: dataloader caveat, CTD/top-down pre-flight and shell-default notes add
 | https://docs.astral.sh/uv/concepts/indexes/ | read | Default `first-index` limits candidates to the first index containing a package; `unsafe-best-match` is pip-like but exposes dependency confusion. |
 
 Outcomes: trigger wording broadened, defaults section and uv note added to references.
+
+## Maintenance trim 2026-11-17
+
+Moved out of `SKILL.md` (no content dropped): pitfalls 4, 5, 7, 8, 11a detail to `references/pitfall-details.md`; the upstream-search procedure to `references/upstream-search.md`. Real-use evidence moved here from the former "Not verified" section:
+
+- 2026-10-24, two independent sessions on a user project: diagnosing a multi-animal-to-single-animal project split that gave fewer annotated frames than expected (Slurm console log, JSON manifest/validation report, checksum manifest), and building a small orchestrator to submit several training jobs with varying hyperparameters, reviewed against HPC and DLC practice (headless plotting backend, dataloader-worker sizing, a shared-resource race in one script). All fixed and checked locally with `bash -n`, the bundled sbatch linter and dry runs. Still never run on a real cluster.

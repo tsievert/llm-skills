@@ -221,7 +221,14 @@ lint_one_skill <- function(dir) {
   if (n_body > 500) add("error", "size", sprintf("Body is %d lines (limit 500); move detail to references/.", n_body))
   else if (n_body > 400) add("info", "size", sprintf("Body is %d lines; approaching the 500-line limit.", n_body))
 
+  # Byte budget: SKILL.md is loaded whole on activation; spec recommends under 5000 tokens
+  n_bytes <- file.size(file.path(dir, "SKILL.md"))
+  if (!is.na(n_bytes) && n_bytes > 16000) add("warn", "size_bytes", sprintf("SKILL.md is %.1f KB (budget 16 KB); move detail to references/.", n_bytes / 1000))
+  else if (!is.na(n_bytes) && n_bytes > 12000) add("info", "size_bytes", sprintf("SKILL.md is %.1f KB; above the 12 KB soft budget.", n_bytes / 1000))
+
   body <- paste(fm$body, collapse = "\n")
+  prov <- regmatches(body, gregexpr("(?i)reported (once|by|in) |\\b(one|two|three) (report|reports|sessions|projects?)\\b", body, perl = TRUE))[[1]]
+  if (length(prov)) add("info", "provenance", sprintf("%d provenance phrase(s) in SKILL.md (e.g. '%s'); who reported what belongs in the ledger or HISTORY.md.", length(prov), trimws(prov[1])))
 
   # --- links and paths ---
   if (grepl("(scripts|references|assets)\\\\", body)) add("warn", "paths", "Backslash path in SKILL.md; use forward slashes.")

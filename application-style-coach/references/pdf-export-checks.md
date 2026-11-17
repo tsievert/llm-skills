@@ -66,3 +66,8 @@ Always read the call; these are examples.
 Visual layout, heading wording against a template, readability, whether links point to the right place, PDF/A or
 accessibility tagging (no source found that Finnish calls require it, so do not claim it is required), and any rules
 that appear only in the Finnish text of the call (see [local-language-sources.md](local-language-sources.md)).
+
+
+## Limits that exclude references
+
+When the call limits a document to N pages excluding references (or other back matter), `pdf_checks()` totals are not enough. With `pdftools::pdf_text()` find the page holding the references heading, then report the body pages and the word count on the last body page, so a near-overflow is visible. Check whole-package limits and per-document limits separately.
