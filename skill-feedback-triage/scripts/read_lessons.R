@@ -269,7 +269,8 @@ parked_recheck <- function(lessons, repo = getwd(), min_chars = 6, all_skills = 
     txt <- vapply(f, function(x) tolower(paste(readLines(x, warn = FALSE), collapse = " ")), "")
     hits <- vapply(txt, function(t) sum(vapply(w, grepl, TRUE, x = t, fixed = TRUE)), 0)
     best <- if (length(hits)) which.max(hits) else NA_integer_
-    data.frame(skill = p$skill[i], title = substr(p$title[i], 1, 60), terms = length(w),
+    data.frame(n = if ("n" %in% names(p)) p$n[i] else NA_integer_,
+               skill = p$skill[i], title = substr(p$title[i], 1, 60), terms = length(w),
                best_hits = if (is.na(best)) 0 else hits[[best]],
                share = if (length(w) && !is.na(best)) round(hits[[best]] / length(w), 2) else 0,
                best_file = if (is.na(best)) NA else sub(paste0("^", normalizePath(repo, "/"), "/?"), "", f[best]),

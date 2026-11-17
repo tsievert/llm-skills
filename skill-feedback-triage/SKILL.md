@@ -59,7 +59,7 @@ read the lesson files first and use an export only to verify a claim; the parsin
    listing from that object, in batches (about 17 KB overflows the code tool's output). Report coverage first
    (skills never loaded; skills loaded often with no entries: fine, or the reminder fails, unknown). Fix or
    report malformed entries rather than dropping them; `closed` entries stay out of the table. Every run, run
-   `parked_recheck(L)` before the table (verdicts: [references/triage-method.md](references/triage-method.md));
+   `parked_recheck(L)` before the table (`likely_stale` flag: [references/triage-method.md](references/triage-method.md));
    survivors stay parked until a new report of the same thing.
 2. **Group.** Merge duplicates into one issue and count independent projects and sessions
    per issue. Keep `generality: likely-user-specific` entries out of skill edits unless a
