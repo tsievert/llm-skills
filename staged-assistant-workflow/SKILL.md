@@ -54,7 +54,9 @@ cluster back end that this pattern does not try to reinvent.
 4. **Completeness gates, not just "no error".** Between stages, check that every expected item is
    accounted for exactly once (e.g. "every source in the roster produced exactly one row, with
    status in {ok, error, skipped}") rather than only checking the stage didn't throw. A stage that
-   silently drops rows is a worse failure than one that errors loudly.
+   silently drops rows is a worse failure than one that errors loudly. Write at least a minimal gate (tests pass,
+   caches fresh) for every stage before declaring it verified: with no gate, "done" only means the output files exist,
+   and a stage with outputs but no gate can read "not started" in the status function (reported once).
 5. **Resumable per-item batches.** For a stage that processes many items (classify N postings,
    screen N candidates), write partial output per item or per small batch (not all-or-nothing), so
    a stage interrupted partway can resume from what's already written rather than restarting.

@@ -37,6 +37,12 @@ that skill owns the document; this skill only produces the underlying numbers.
    [references/multiplicity.md](references/multiplicity.md). `stats::p.adjust()` across a family of
    tests/outcomes; `emmeans(..., adjust = )` within a family of pairwise contrasts (already the convention in
    `mixed-models-glmm`). State the decision rule (family-wise vs. FDR) rather than defaulting silently.
+   Resampling inference (bootstrap or permutation, reported once, not tested here): a p-value cannot be smaller
+   than about 1/(B+1), so report that floor next to any p at the floor; max-t bands are simultaneous intervals and
+   should be worded as such. A p-value near the threshold can move across replicate subsets (one case: 0.03 to 0.09
+   while the adjusted result stayed above 0.05); report the range and do not call it a crossing. Check that headline
+   claims rest on the pre-declared statistic; if the text uses another statistic of the family to claim an effect,
+   label it exploratory or ask the user.
 5. **Reviewer-response drafting**, if asked — see [references/reviewer-response.md](references/reviewer-response.md).
    A point-by-point structure and tone guidance, not an automated tool; every substantive response is the
    user's own argument, drafted for their edit.

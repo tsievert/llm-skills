@@ -50,6 +50,9 @@ rendered on a cluster, fonts differ (Arial is usually missing); see the font not
 6. **Report.** Say what was checked (size, fonts embedded, text and stroke ranges, CVD preview, raw data shown,
    n and interval definition in the legend) and what was not (journal page unread, no print proof, fonts not tested
    on the journal's system). Draft the legend text: what is plotted, n, interval definition, test or model.
+   Caption checklist (reported once): what is plotted, panels in order, the encoding of line status and colour, n or
+   B, the interval definition, and a pointer to Methods for statistic details instead of repeating them. In Quarto
+   put the caption in `fig-cap` or the image-bracket text and avoid square brackets inside it.
 7. **Revision rounds.** Keep the figure code in the repository so a reviewer's change is an edit and a re-run; log
    hand edits made outside R.
 

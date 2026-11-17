@@ -88,7 +88,9 @@ mentioned as an alternative.
 
 - Table cross-references from `kable(caption = )` need a `tbl-` chunk label, and one chunk can carry only one label, so split a chunk that emits two tables.
 - `knitr::opts_knit$set(root.dir = )` takes effect from the next chunk; in a qmd in a subfolder put it in its own first chunk before any `source()`.
-- When Results prose pulls numbers inline from a cached values file, put a `stopifnot()` guard block for the qualitative claims (signs, which contrasts are flagged) in the setup chunk: the render fails if a refit changes the claim. Two sessions; no failure caught yet.
+- When Results prose pulls numbers inline from a cached values file, put a `stopifnot()` guard block for the qualitative claims (signs, which contrasts are flagged) in the setup chunk: the render fails if a refit changes the claim. Two sessions; no failure caught yet. Sensitivity blocks need guards too (each qualitative claim: nothing resolves, shifts below a threshold, depends on a setting). Assert non-empty input first (`stopifnot(length(x) > 0, all(x == 5))`): `all()` on a NULL is `TRUE`, so a missing value passes vacuously (reported in two sessions). Also scan the rendered text for empty inline results, and update a cached values file only through the project's save/load helpers (a field added to a wrapper's top level left inline pulls empty without an error; reported once).
+- Multi-line `edit` calls fail with "string not found" on CRLF files while single-line ones work (reported in two sessions): check line endings first and see `github-skill-maintenance` for the fix.
+- A wrapper that calls `source(file, local = TRUE)` defines the modules in the wrapper's own environment, so the caller later fails with "could not find function" (an older global copy can mask it). Source globally, or `sys.source()` into an explicit environment and call through it (reported once, when regenerating a values file).
 
 ## Related skills
 

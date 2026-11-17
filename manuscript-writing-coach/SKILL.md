@@ -74,6 +74,11 @@ Two checks stay in chat because they depend on context a word list cannot see:
   other studies, general or causal claims ("is known to", "previous studies"), and tools, software or species
   introduced without a source. Skip textbook background. No validated detector exists and the false-positive rate of
   this rule set is untested, so say it is a question list.
+- **Check your own quantitative statements.** Before giving feedback that states a length share ("the sensitivity
+  block is half the draft") or a timing or count, verify it with a quick count (words per heading, cached values).
+  One review misstated both and needed an explicit correction afterwards (reported once).
+- **Partial drafts (for example Results only).** The abstract-number script and several section checks need an
+  abstract, Methods or Introduction. Skip what cannot run and list it under "not checked" in the close (reported once).
 
 ## Abstract-versus-body number check
 
