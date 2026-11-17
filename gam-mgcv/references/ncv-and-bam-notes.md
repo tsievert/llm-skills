@@ -51,6 +51,10 @@ other label-dependent summary, then refit. A covariate computed once from the tr
 re-labelling distribution invalid. Add a test that the covariate changes under a flip and stays centred
 (one project, mgcv 1.9-5, all refits converged; design note, not a simulation of the size of the error).
 
+With few units the permutation null is coarse: p moves in steps of 1/n_null (floor 2/n_null in one design). Report
+the step size, and do not read a change such as 0.20 to 0.31 after a preprocessing tweak (a thinner time grid) as a
+real shift when estimates and curves barely changed (one report, 8 units, 70 splits).
+
 ## Failures to expect and report (reported, not reproduced)
 
 - mgcv 1.9-5's ChangeLog lists several NCV fixes. Re-run 2026-11-04 on 1.9-5: 0 of 30 small fits failed (n = 100, three smooths, `gamSim(1)`). The design differs from the report below, so a fix is plausible but unproven; still count failures.

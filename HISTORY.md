@@ -1461,3 +1461,10 @@ Checked: `bash -n`, synthetic-payload tests (silent before a skill load, first r
 
 - New entries all came from the earlier triage session: 1 add-note (read-entries tip in `skill-feedback-triage/SKILL.md`), 2 already-present (hook path fix and synthetic-payload test recipe), 1 reject (shell quoting), 1 use-case. Parked entries unchanged.
 - Checked: `lint_skills()` (no errors or warnings), `skills-ref validate`. No reproduction needed (shell and workflow notes).
+
+## 2026-11-17: lessons triage (11 new, 7 parked unchanged, 35 closed earlier)
+
+- New: 2 fix, 2 add-note, 2 park, 1 reject, 4 no-change (use-case and worked-well).
+- Fixes: `manuscript-figures-ggplot` direct-labels row (label layers widen the scale; explicit `coord_cartesian(..., expand = FALSE, clip = "off")`; reproduced on ggplot2 4.0.4) and an export-check step (assert `panel_params` ranges; `check_pdf()` misses layout defects). Add-notes: `show.legend = TRUE` on ribbons (layer flag confirmed, rendered keys not inspected) and the coarse permutation-null step size (1/n_null) in `gam-mgcv/references/ncv-and-bam-notes.md`.
+- Parked: empty manual fill scale warning; shell append for CRLF memory files. The seven earlier parked entries were re-checked by grep and stay parked.
+- Checked: `lint_skills()` (info only), `skills-ref validate` for both skills. Not checked: ggplot2 NEWS or issue tracker for the legend and scale behaviour; no trigger tests.

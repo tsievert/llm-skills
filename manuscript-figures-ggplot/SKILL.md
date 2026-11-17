@@ -45,6 +45,8 @@ rendered on a cluster, fonts differ (Arial is usually missing); see the font not
    ```
    Open the exported file (not the RStudio viewer) and read it at the printed size. `check_pdf()` flags text or
    strokes outside the limits you pass in; some flags are legitimate (for example Nature allows 8 pt panel labels).
+   It does not see layout defects (grey legend boxes, an axis widened by outside labels; one report found both only by
+   viewing the PNG). Assert layout facts in a test, e.g. `ggplot_build(p)$layout$panel_params[[1]]$x.range`.
 6. **Report.** Say what was checked (size, fonts embedded, text and stroke ranges, CVD preview, raw data shown,
    n and interval definition in the legend) and what was not (journal page unread, no print proof, fonts not tested
    on the journal's system). Draft the legend text: what is plotted, n, interval definition, test or model.
