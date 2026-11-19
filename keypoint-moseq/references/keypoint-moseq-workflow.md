@@ -47,6 +47,7 @@ Source: kpms stable docs (modeling tutorial for notebook version "0.8", FAQs, ad
 | 0.8.7: code unchanged from 0.8.6; the JAX compilation cache (added in 0.8.6) now has one folder per compression method (`zstd` or `zlib`), so environments that compress differently stop printing "Error reading persistent compilation cache entry" for each other's entries | 0.8.7 | No API change; old cache files left directly in the cache folder (`~/.cache/keypoint_moseq/jax` on Linux) are unused and can be deleted. Release notes read 2026-11-19, not run locally |
 | Recordings loaded from a directory are sorted | 0.6.13 | Noise calibration reproducible across machines |
 
+When updating the latest-version claim, grep the whole skill folder for the old version string first (SKILL.md release range and tested-range line, this table's heading); the table's last row is not always the newest release, so insert by version.
 
 ## Pipeline (interactive Python API, as in the tutorial)
 
@@ -156,6 +157,7 @@ Load the checkpoint, load and outlier-filter new keypoints, `format_data`, then 
 2. Grep the scripts for argument and function names in the version-change table above (renamed arguments are silently ignored).
 3. List manual memory knobs that newer versions replace (for example automatic segmenting in 0.8.x).
 4. Hard-coded caps (file counts, frames) hide why they were chosen: ask the user for logs or JSON summaries of the last runs to recover the real ceiling, and record the GPU model with it.
+5. Port each step by its intent, with the new-version defaults (float32, automatic message passing and segmenting, no mixed-map); keep old memory knobs only as opt-in experiment flags. An explicit `parallel_message_passing=False` disables the 0.8.6 segmenting benefit. Document each legacy step's intent before porting.6. Find silent renames mechanically: diff function signatures (AST) of the old sdist and the new wheel. Functions with `**kwargs` swallow renamed arguments without error; those without raise `TypeError`. `min_duration` also changed units (frames to seconds). Keep an AST test that old argument names do not appear in ported scripts.7. `fit_model(num_iters=N)` is the END iteration index, not an additional count: 300 with `start_iter=50` means 250 more. `fit_pca` caps frames by default (`PCA_fitting_num_frames=1000000`), so a very-large-memory PCA request may be obsolete; check with `seff` after the first run.8. Ask for a tar of the previous run without bulk data (config, mask metadata, JSON logs): it answers most design questions before asking the user. Check a ported seeded file-selection step by replaying it and comparing the selected list with the previous run.9. A script the orchestrator does not reference may be a missing pipeline step (for example QC or metadata enrichment) rather than legacy: ask about each one that consumes final results. File-reference grep misses scripts launched by computed paths.
 
 ## Advanced options (from the docs, none run here)
 

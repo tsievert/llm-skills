@@ -17,6 +17,7 @@ and run syntax checks or small local tests (the skeleton runs on Windows/macOS/L
 but not on real Slurm: signal/requeue paths, `SLURM_*` variables, cgroup CPU limits and
 shared-filesystem behaviour are untested until the user runs the job and shares the log.
 Local package versions may differ from the cluster's.
+On Windows, `python`/`python3` in Git Bash may be the Microsoft Store stub (silent or "not found" failures): create a venv with `uv venv` and call scripts through `.venv/Scripts/python.exe`. `uv pip download` does not exist.
 
 **Requirement:** whenever information is needed that only the cluster can provide
 (Python/package versions, allocation, logs, file system state), stop and ask the user
@@ -95,6 +96,7 @@ resume, and a completion marker. Adapt it rather than rewriting these parts.
 - [ ] SIGUSR1/SIGTERM handled; atomic checkpoint; resume path tested
 - [ ] Results written to files, stdout kept small
 - [ ] No `pip install`, no hardcoded absolute user paths, no work on import
+- [ ] A script ported before its job script accepts and ignores flags the old sbatch still passes (argparse would exit 2); rename a flag whose old value would silently activate something else
 
 ## Related skills
 

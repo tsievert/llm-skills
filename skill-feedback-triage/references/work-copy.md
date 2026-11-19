@@ -15,3 +15,4 @@ ls -p ~/.posit/lessons/inbox | grep -v / | wc -l; ls .posit/assistant/lessons-wo
 Delete `.posit/assistant/lessons-work` once the run is archived. If the permission layer blocks the `rm -rf`
 (for example after a postponed run), leave the folder and ask the user to approve the deletion; the first
 command above removes a leftover copy at the start of the next run.
+Variant-named leftovers (for example `lessons-work2`) are not touched by that command: check what they contain, then delete them only with the user's approval.
