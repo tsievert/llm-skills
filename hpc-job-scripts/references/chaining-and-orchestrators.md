@@ -57,6 +57,7 @@ output releases downstream steps (add a marker-file check job).
 - **Exit codes.** `python ... | tee log` (even with `set +e`) hides the exit code, so `afterok` releases the next step after a failure. Call python directly; Slurm already captures stdout in the job log.
 - **Two-stage test.** First run the orchestrator against a fake `sbatch` script that prints job IDs and records its arguments (catches defects before any cluster time). Then run `sbatch --test-only` for every step on the cluster (it validates arrays, `--chdir`, `--account`, dependencies and `--export`, and prints start estimates per partition), then one real one-step submission.
 - **Shell pitfalls the fake-sbatch test exposed:** a job-ID counter lost inside a `$(...)` subshell, `[[ ... ]] && cmd` as the last command under `set -e` (exits when the test is false), empty array expansion under `set -u`, and test inputs created in the wrong folder.
+- **`eval "$(tool ...)"` hides failure:** a failing tool leaves an empty string and `eval ""` returns 0, so the job continues with unset variables. Assign first (`out="$(tool ...)" || exit 1`), then `eval "$out"`.
 - **Copy first.** After copying scripts to the cluster, compare file counts and byte sizes with the local folder (`ls | wc -l`, `wc -c`) and run `grep -lU $'\r'` before the first `--test-only`; a partial copy shows up as "script missing" in a preflight.
 
 `--kill-on-invalid-dep=yes` (already in the main chaining bullet) is a different, narrower

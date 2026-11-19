@@ -87,6 +87,7 @@ resume, and a completion marker. Adapt it rather than rewriting these parts.
   deleted when the job ends. Template: `hpc-job-scripts` assets/python-scratch-job.sh.
 - **GPUs.** See the `hpc-gpu-jobs` skill (launch patterns, DataLoader workers,
   monitoring). Check `torch.cuda.is_available()` and fail fast if no GPU is visible.
+- **Patching scripts from Windows.** The edit tool can re-introduce CRLF into an LF script even on a two-line edit (a test suite then drops from all-pass to failing), so run `file script` after every edit. For scripted patches, replace exact strings and `assert s.count(old) == 1` (slicing between two markers found with `str.index` silently deleted a block when an earlier line matched), write with `newline="\n"`, and compare file size and test count afterwards. Do not put `\n` escapes in text that passes through a heredoc or tool call into generated Python source (they became real newlines); build them with `chr(10)` and check with `py_compile`.
 
 ## Review checklist
 

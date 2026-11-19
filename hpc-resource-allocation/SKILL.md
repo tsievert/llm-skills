@@ -45,8 +45,11 @@ not guess or proceed on assumptions.
    job id, not the array id), or read block or replicate timing from the program log.
    Compare `MaxRSS` to `ReqMem`, `Elapsed` to `Timelimit`, and `TotalCPU` to
    `Elapsed x AllocCPUS`. `MaxRSS` for jobs with steps is reported per step; check the right row.
+   `sacct` prints array tasks as `<arrayjob>_<task>` (and `.batch` rows), so looking up a raw `SLURM_JOB_ID` finds nothing. Give `-j <id>` without `grep` (a grep on the truncated `JobName` drops the `.batch` row that holds `MaxRSS`; use `JobName%20`). Take run times per task from `sacct`, not `squeue`, which is easy to attribute to the wrong array task.
 4. **Scale to the real input** and re-measure; memory and time often scale with input size,
    so extrapolate from two sizes, not one.
+   Before advising to cut a request, check the QOS/partition limits with named fields (`sacctmgr -P show qos format=Name,MaxTRESPerJob,MinTRES`; the wide default table truncates). `MinTRES` is a minimum a job must request, so a large-memory QOS cannot be sized down; only another partition helps.
+   Benchmarking a maximum (largest input per fit) is a different task from sizing a request: [references/capacity-benchmark.md](references/capacity-benchmark.md).
 5. **Set the final request** with headroom: memory about 10-20% above measured peak,
    time about 20-50% above measured (time headroom is cheap but very long limits hurt
    backfill scheduling). Document the measured numbers in a comment.

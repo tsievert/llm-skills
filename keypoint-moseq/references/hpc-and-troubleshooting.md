@@ -18,7 +18,7 @@ python -c "import jax, keypoint_moseq as k; print(k.__version__, jax.__version__
 
 `jax.default_backend()` must print `gpu`. The sbatch template aborts otherwise.
 
-On a GPU-less login node the same import can print a long jax CUDA plugin error (`cuInit`, error 303) and then still work and report CPU. It is not an environment fault; set `JAX_PLATFORMS=cpu` there to silence it.
+On a GPU-less login node the same import can print a long jax CUDA plugin error (`cuInit`, error 303) and then still work and report CPU. It is not an environment fault; set `JAX_PLATFORMS=cpu` there to silence it. A CPU-only step can also start with a `SystemError` traceback from `cuda_device_count` in plugin discovery even with `JAX_PLATFORMS=cpu`; it is harmless when the step's status is ok.
 
 If a local `uv`/`python` install is invisible to the assistant's `bash` calls even though a
 separate terminal sees it, this is usually a stale-PATH issue, not a missing install — see
