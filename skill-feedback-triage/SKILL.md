@@ -86,7 +86,9 @@ read the lesson files first and use an export only to verify a claim; the parsin
    (`L$n`) so the outcome column can be built from them. Columns: issue, entries, skills, reports
    (projects), research (ledger row and checklist result), proposed outcome and change, target file and
    size after the change. Wait for the user's choice
-   (the `AskUser` tool suits batches) before editing any skill.
+   (the `AskUser` tool suits batches) before editing any skill. If the run is postponed, save the proposed outcomes
+   keyed by `L$key` (file, skill, title), not by entry number (numbers shift when files are added), and leave
+   dispositions and the watermark untouched.
 6. **Edit, then verify.** After approval, change the skills under the placement and size gates (for a `new-skill` outcome, load
    `create-skill` and build the new skill folder, including the standing sections this repo
    requires: subagent-delegation note where it fits, "Related skills", "Explain the
