@@ -17,7 +17,7 @@ Generic wording only (public repo). Created <date>. Append new rounds as dated s
 
 ## 2. Round <date>: <issue>
 
-Entries covered: <entry numbers or keys>. Outcome proposed: fix / add-note / park / needs-info.
+Entries covered: <entry numbers (valid for one run only) with file, skill and title>. Outcome proposed: fix / add-note / park / needs-info.
 
 ### Checklist
 

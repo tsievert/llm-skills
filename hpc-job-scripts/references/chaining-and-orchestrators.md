@@ -51,6 +51,14 @@ rewriting CRLF files in place by default (make it an explicit opt-in), extractin
 that only sees one variable pattern, and relying on `afterok` alone so a step that exits 0 without producing
 output releases downstream steps (add a marker-file check job).
 
+## Gate jobs, exit codes and testing an orchestrator
+
+- **Gate job.** Make the next step depend (`afterok`) on a small check job that verifies the step's output or status file. Each step script deletes its own stale status file at start, so an old "ok" cannot pass.
+- **Exit codes.** `python ... | tee log` (even with `set +e`) hides the exit code, so `afterok` releases the next step after a failure. Call python directly; Slurm already captures stdout in the job log.
+- **Two-stage test.** First run the orchestrator against a fake `sbatch` script that prints job IDs and records its arguments (catches defects before any cluster time). Then run `sbatch --test-only` for every step on the cluster (it validates arrays, `--chdir`, `--account`, dependencies and `--export`, and prints start estimates per partition), then one real one-step submission.
+- **Shell pitfalls the fake-sbatch test exposed:** a job-ID counter lost inside a `$(...)` subshell, `[[ ... ]] && cmd` as the last command under `set -e` (exits when the test is false), empty array expansion under `set -u`, and test inputs created in the wrong folder.
+- **Copy first.** After copying scripts to the cluster, compare file counts and byte sizes with the local folder (`ls | wc -l`, `wc -c`) and run `grep -lU $'\r'` before the first `--test-only`; a partial copy shows up as "script missing" in a preflight.
+
 `--kill-on-invalid-dep=yes` (already in the main chaining bullet) is a different, narrower
 fix: it stops a dependent job from waiting forever once Slurm itself has marked a
 dependency as unsatisfiable. It does not help with either case above, because in case 1

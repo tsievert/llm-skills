@@ -16,3 +16,5 @@ Delete `.posit/assistant/lessons-work` once the run is archived. If the permissi
 (for example after a postponed run), leave the folder and ask the user to approve the deletion; the first
 command above removes a leftover copy at the start of the next run.
 Variant-named leftovers (for example `lessons-work2`) are not touched by that command: check what they contain, then delete them only with the user's approval.
+
+The ledger copy-back (`cp .posit/assistant/lessons-work/dispositions.tsv ~/.posit/lessons/dispositions.tsv`) must use bash: `file.copy()` from the R session is blocked. A recheck after archiving needs a fresh work copy first (the folder is deleted at archive time; copy the dispositions in again).
