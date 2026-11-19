@@ -80,6 +80,11 @@ Not yet implemented as a script (no CRAN package evaluated for this; `qmt`'s lin
 Action using a generic markdown-link-checker, not an R tool). Note it as a gap if the user asks for a
 pre-submission link check, rather than guessing a tool.
 
+## Computed captions
+
+A computed chunk option such as `#| tbl-cap: !expr 'paste0("Sample of ", n, " animals")'` needs outer single
+quotes when the R expression contains double quotes or colons; unquoted it fails with a YAML "bad indentation" error.
+
 ## Pre-submission pass (suggested order)
 
 1. `spell_check_manuscript()` on every `.qmd`/`.Rmd` file that will ship.

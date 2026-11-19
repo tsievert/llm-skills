@@ -132,6 +132,10 @@ Residual autocorrelation or clustering makes intervals too narrow. gratia's mode
   confidence). Show the headline and the floored (or grid-restricted, for example a minimum number of contributing
   units) versions side by side with critical values, define the floor or restriction before looking at the contrast,
   and do not word borderline contrasts until B is large.
+- Near a max-t threshold, report the Monte Carlo SE of the critical value and each flag's margin in SE units
+  (a flag exceeding it by 0.3% with family-wise p about 0.048 is borderline). If two resampling analyses disagree on
+  a global max-t p although pointwise estimates agree, compare null SDs per time and leave-one-unit-out estimates,
+  and check cumulative outcomes for ties at zero at early times before choosing a story.
 - Omnibus bootstrap statistics on a PCA reduction can depend on the retained-variance threshold (one case: p about 0.4
   at 99% and about 0.01 at 99.9%). Pre-declare the threshold, report the number of components, and add a sup-type
   statistic without PCA as a check.

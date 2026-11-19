@@ -45,6 +45,12 @@ tracker the same week this was written (see Evidence below), so they are not hyp
    orchestrator that could have reported it has long since exited. Check each `sbatch`
    call's own exit status before trusting the ID it printed.
 
+Related weaknesses seen when reviewing an existing orchestrator: classifying failures by substring search of
+whole logs (a bare "oom" or "nan" matches unrelated words; have the Python step write a status file instead),
+rewriting CRLF files in place by default (make it an explicit opt-in), extracting script references with a regex
+that only sees one variable pattern, and relying on `afterok` alone so a step that exits 0 without producing
+output releases downstream steps (add a marker-file check job).
+
 `--kill-on-invalid-dep=yes` (already in the main chaining bullet) is a different, narrower
 fix: it stops a dependent job from waiting forever once Slurm itself has marked a
 dependency as unsatisfiable. It does not help with either case above, because in case 1

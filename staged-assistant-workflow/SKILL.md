@@ -56,7 +56,9 @@ cluster back end that this pattern does not try to reinvent.
    status in {ok, error, skipped}") rather than only checking the stage didn't throw. A stage that
    silently drops rows is a worse failure than one that errors loudly. Write at least a minimal gate (tests pass,
    caches fresh) for every stage before declaring it verified: with no gate, "done" only means the output files exist,
-   and a stage with outputs but no gate can read "not started" in the status function (reported once).
+   and a stage with outputs but no gate can read "not started" in the status function. A gate that runs tests
+   must count skipped tests as not passed (or report the skip count), and tests of the status function should
+   assert structure (allowed values, agreement with files), not literal status text that changes as stages mature.
 5. **Resumable per-item batches.** For a stage that processes many items (classify N postings,
    screen N candidates), write partial output per item or per small batch (not all-or-nothing), so
    a stage interrupted partway can resume from what's already written rather than restarting.

@@ -69,7 +69,7 @@ Stop and ask before staging anything that contains: names or contact details of 
 Reproducibility is only shown by running the deposit somewhere clean. Scratch folder outside the project:
 
 1. Export the code from Git: `git clone` or `git archive` of the tagged commit (not the working folder; `git-for-research-projects`).
-2. Place the staged data where the code expects it (config path, not a hard-coded one).
+2. Place the staged data where the code expects it (config path, not a hard-coded one). Code that also reads gitignored caches, intermediate results, model files or prototype outputs shows what the deposit must bundle or regenerate beyond raw data: first list the files the project reads that are untracked (`git check-ignore`, a file registry) and diff that list against the clone, instead of re-rendering until each missing group surfaces. Compare skipped tests between project and clone too.
 3. Restore the environment from the lockfile: `renv::restore()`, or `uv sync --locked`.
 4. Run the single documented command (`targets::tar_make()`, `snakemake --cores 1`, `quarto render`). See `r-reproducible-pipeline` or `python-reproducible-pipeline`.
 5. Compare the headline numbers and tables with the paper (tolerance, not byte equality; plots and timestamps differ).

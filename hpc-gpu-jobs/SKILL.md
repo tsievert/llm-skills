@@ -51,7 +51,10 @@ Syntax varies per site. Common forms (confirm which your site expects):
 - Slurm sets `CUDA_VISIBLE_DEVICES` for the allocation. Do not override it unless the
   site says so; do log it.
 - Memory (`--mem`) is host RAM, not GPU memory. Check VRAM against partition
-  hardware (`sinfo -o "%N %G %m" -p <partition>` lists nodes and GRES).
+  hardware (`sinfo -o "%N %G %m" -p <partition>` lists nodes and GRES). VRAM can differ between partitions
+  (for example 40 GB vs 80 GB), so record partition and GPU model with every measured memory or capacity
+  ceiling; it does not transfer to another partition. Before giving an interactive test command, check the
+  site's partition table for a debug partition and prefer it over the production one.
 - Match CPUs to the data pipeline: `--cpus-per-task` should cover DataLoader workers
   (`num_workers` about equal to CPUs per GPU, then measure; in one published example
   GPU utilisation rose from 18% to 55% going from 1 to 8 workers). More workers also

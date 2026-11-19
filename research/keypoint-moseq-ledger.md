@@ -245,3 +245,8 @@ Local test 0.8.6 (2026-11-09, Windows, uv 0.12.5 venv Python 3.12.14, kpms 0.8.6
 - Not run: GPU, grid movies, calibration, `apply_model`, float64 mode, speed/memory claims. Closed: the earlier open item on float32 readers and 0.8.6 install on Windows (orjson).
 
 Check (2026-11-09): do `kpms_headless_fit.py` / `assets/kpms_fit.sbatch` need memory options after 0.8.6? Neither sets `parallel_message_passing`, `set_mixed_map_iters` or `set_mixed_map_gpus` (grep), so no code change needed; one GPU per task stays. Stable FAQ (webfetch): out-of-memory section no longer mentions `parallel_message_passing` or `set_mixed_map_iters`; `set_mixed_map_gpus(2)` still given for multi-GPU on Linux; NaN section lists `parallel_message_passing=True` ("by default only enabled on GPU") and says jitter affects only the serial sampler (CPU or `parallel_message_passing=False`). Docs in `hpc-and-troubleshooting.md` and the workflow reference reworded accordingly. Open: whether jitter being serial-sampler-only should be added to rule 10 (read, not tested).
+
+## 2026-11-19: 0.8.7 release notes
+
+- Source: https://github.com/dattalab/keypoint-moseq/releases (read). 0.8.7: code unchanged from 0.8.6; JAX compilation cache split into one folder per compression method (zstd/zlib) to stop cross-environment "Error reading persistent compilation cache entry" messages; no breaking or dependency changes; no later release listed.
+- Skill updated: version table row and "latest known" claim in hpc-and-troubleshooting.md. Not run locally. Triage entry 79 resolved.

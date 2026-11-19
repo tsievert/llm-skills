@@ -15,7 +15,7 @@
 
 Source: kpms stable docs (modeling tutorial for notebook version "0.8", FAQs, advanced topics, analysis) re-read 2026-10-29 against 0.8.3, plus runs on 0.6.6, 0.8.0 and (2026-10-29, scripts, CPU) 0.8.3. Re-check against the installed version. Since 0.8.0 the tutorial passes `metadata=metadata` to `init_model` and `**config()` (so `fps`) to `fit_model`, validates videos with `check_videos`, and starts with `kpms.check_installation(notebook_version="0.8")`. `scripts/kpms_headless_fit.py` passes `metadata=` and `fps=` (needs >= 0.8.0). Research record: `research/keypoint-moseq-ledger.md` in the llm-skills repo.
 
-## Version changes that matter (0.6.6 to 0.8.6)
+## Version changes that matter (0.6.6 to 0.8.7)
 
 0.8.5 and 0.8.6 rows come from the release notes (read 2026-11-09). Run locally on 0.8.6 (CPU, synthetic data): headless fit and resume, both result readers (float32/int32 output read fine), `compute_moseq_df`/`compute_stats_df`; the GPU, speed and memory claims are untested here. 0.8.4 rows come from the release notes (read 2026-10-30). Locally run on 0.8.4 (2026-10-30, Windows, uv venv Python 3.12, CPU, synthetic DLC csv, 6 recordings): headless fit and resume, `compute_stats_df` full recording x syllable grid (498 rows = 6 x 83 at `min_frequency=0`), circular heading columns present, `run_kruskal` warning for groups with fewer than 3 values, and a 3 vs 3 non-overlapping test giving an adjusted p of about 0.10 (not 0.0001). Not run: grid movies, `overlay_keypoints_on_video`, `update_hypparams`, `update_config`, `location_aware`.
 
@@ -44,6 +44,7 @@ Source: kpms stable docs (modeling tutorial for notebook version "0.8", FAQs, ad
 | Models fit in **float32 by default** (GPU and CPU); saved models/data in the other precision are converted on load with a message; same seed draws different random numbers than 0.8.5, so a 0.8.5 seed does not reproduce the fit; calibration widget shows different frames for the same seed; `results.h5`, `moseq_df` centroid/heading and `stats_df` heading statistics are float32, syllable labels int32 | 0.8.6 | Record the precision in provenance; refits are not bit-identical to older runs; the R and Python readers in this skill read float32/int32 output without changes (tested 2026-11-09) |
 | Needs jax-moseq >= 0.3.9; `orjson` is a new required dependency | 0.8.6 | Update the environment together; the 0.8.6 notes say fitting no longer stops on NaNs when a syllable's noise greatly exceeds keypoint noise (#272) |
 | Performance (release notes, kpms test data of 643,911 frames): whole fit 9.6 min instead of 29.4 on a V100, peak GPU memory 0.74 GiB instead of 10.5; GPU pose step runs 5 data segments at a time, with a memory check before fitting that lowers it if needed (a value set with `jax_moseq.utils.set_mixed_map_iters` is kept); persistent JAX compile cache (see the FAQ for its location); `outlier_removal` plots 10 random recordings by default (`plot_recordings`); faster calibration widget, grid movies, trajectory plots, `reindex_syllables_in_checkpoint` (in place), `save_results_as_csv` | 0.8.6 | Upstream numbers, not measured here. The FAQ no longer suggests single precision for out-of-memory errors; GPU memory is about 0.5 GB plus 0.05 MB per 100 frames per the FAQ |
+| 0.8.7: code unchanged from 0.8.6; the JAX compilation cache (added in 0.8.6) now has one folder per compression method (`zstd` or `zlib`), so environments that compress differently stop printing "Error reading persistent compilation cache entry" for each other's entries | 0.8.7 | No API change; old cache files left directly in the cache folder (`~/.cache/keypoint_moseq/jax` on Linux) are unused and can be deleted. Release notes read 2026-11-19, not run locally |
 | Recordings loaded from a directory are sorted | 0.6.13 | Noise calibration reproducible across machines |
 
 
@@ -148,6 +149,13 @@ Collected from upstream issues (#237, #186, #169, #188; not reproduced here, see
 ## Applying a fitted model to new recordings
 
 Load the checkpoint, load and outlier-filter new keypoints, `format_data`, then `kpms.apply_model(model, data, metadata, project_dir, model_name, **config())`. Use `overwrite=True` when re-applying to recordings from the original training set (docs recommend applying to both new and original data to control for assignment differences). Pass `num_iters` explicitly with `ar_only=True`; since 0.8.2 the default is one iteration. Refit instead of applying when the new data differ in setup (camera, body size, keypoint set). Syllables absent in some recordings are expected and give zero counts.
+
+## Migrating an existing script set
+
+1. Ask which entry point (orchestrator or sbatch chain) is the live one, and derive the file set from what it references; do not assume a module or personal clone on `PYTHONPATH` is current.
+2. Grep the scripts for argument and function names in the version-change table above (renamed arguments are silently ignored).
+3. List manual memory knobs that newer versions replace (for example automatic segmenting in 0.8.x).
+4. Hard-coded caps (file counts, frames) hide why they were chosen: ask the user for logs or JSON summaries of the last runs to recover the real ceiling, and record the GPU model with it.
 
 ## Advanced options (from the docs, none run here)
 
