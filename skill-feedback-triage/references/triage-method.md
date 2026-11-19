@@ -55,6 +55,8 @@ Research is recorded in the same turn it is done, not summarised afterwards.
 
 **First-hand observations.** When an entry reports a version-specific or cluster-only fact that cannot be reproduced locally, write the research row as "unverified, source: reporting session" plus the skill-text check; it can support an `add-note` in a `references/` file but not a SKILL.md change. When an entry's fix text contains backslash sequences (such as `\r`), apply it with the edit tool, not `sed`, and check with `grep -cU $'\r'`.
 
+**User memory outcome.** A one-user formatting preference, or environment guidance that recurs across sessions, is proposed for the user's memory file (`~/.posit/assistant/AGENTS.md`) instead of a skill edit; record the entry as `fix` once written there.
+
 ## Reproducing
 
 Use a small synthetic example in the scratch directory, with the package versions named in
