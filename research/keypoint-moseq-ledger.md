@@ -250,3 +250,11 @@ Check (2026-11-09): do `kpms_headless_fit.py` / `assets/kpms_fit.sbatch` need me
 
 - Source: https://github.com/dattalab/keypoint-moseq/releases (read). 0.8.7: code unchanged from 0.8.6; JAX compilation cache split into one folder per compression method (zstd/zlib) to stop cross-environment "Error reading persistent compilation cache entry" messages; no breaking or dependency changes; no later release listed.
 - Skill updated: version table row and "latest known" claim in hpc-and-troubleshooting.md. Not run locally. Triage entry 79 resolved.
+
+## 2026-11-20: docs alignment review
+
+- Sources read: FAQ (https://keypoint-moseq.readthedocs.io/en/stable/FAQs.html, no version shown), modeling tutorial (.../modeling.html), GitHub releases API (0.8.0 to 0.8.7; 0.8.7 dated 2026-11-09, nothing newer).
+- FAQ facts: jitter default 1e-3, suggested max 1e-2, acts only in the serial Kalman sampler (CPU or `parallel_message_passing=False`); `parallel_message_passing=True` default only on GPU; JAX preallocates 75% of GPU memory; memory about 0.5 GB + 0.05 MB per 100 frames (4 latent dims, 100 states); `set_mixed_map_gpus(2)` for multi-GPU; precision and `mixed_map_iters` not mentioned. Tutorial: 50 AR iters, +500 full, two kappas (full lower), checkpoint every 25, kappa read only at init. All consistent with the skill.
+- Verifies triage entry about jitter having no effect with the parallel GPU sampler (previously parked as unverified). Skill said "fix float precision" in rule 10: removed (not documented since 0.8.6).
+- Defects found: two reference files had newlines lost (heading and bullets joined in hpc-and-troubleshooting.md; items 6-9 joined in keypoint-moseq-workflow.md). Fixed.
+- Not checked: API signatures in the reference against `help()` of 0.8.7 (not installed this session); the all-parameter NaN report (open, one report). Suggested next check: install 0.8.7 on CPU and rerun the smoke test.
