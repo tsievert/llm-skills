@@ -27,6 +27,10 @@
   `--open-mode=append` is set.
 - Keep logs on a filesystem with enough quota; home directories are often small.
 
+## Silent loading phases
+
+- A job that reads many files or tens of millions of rows can print nothing for many minutes and look hung (a user cancelled such a job and lost the attempt). Log a progress line per batch of files, and tell the user the expected loading time and not to cancel while the log is quiet but the job is `RUNNING`.
+
 ## Silent failures
 
 - If the directory in `--output`/`--error` does not exist, Slurm cannot open the file
