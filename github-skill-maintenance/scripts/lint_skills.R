@@ -257,6 +257,11 @@ lint_one_skill <- function(dir) {
     ref <- readLines(file.path(dir, p), warn = FALSE, encoding = "UTF-8")
     if (length(ref) > 100 && !any(grepl("^#+\\s*(table of )?contents|^- \\[.*\\]\\(#", head(ref, 25), ignore.case = TRUE)))
       add("info", "reference-toc", sprintf("%s has %d lines and no table of contents near the top.", p, length(ref)))
+    # Lost newlines: a heading or numbered bold item glued onto the end of a prose line
+    fence <- cumsum(grepl("^\\s*```", ref)) %% 2 == 1
+    glued <- which(!fence & !grepl("^\\s*\\|", ref) & !grepl("`[^`]*(#{2,4} |\\d\\. )[^`]*`", ref) &
+                     grepl("[^|\\s].*\\s(#{2,4} [A-Z]|\\d\\. \\*\\*)", ref, perl = TRUE))
+    if (length(glued)) add("warn", "lost-newlines", sprintf("%s line(s) %s look like a heading or list item joined to the previous line.", p, paste(head(glued, 5), collapse = ", ")))
     nested <- regmatches(ref, regexpr("\\]\\((references/|\\./)[^)]+\\.md\\)", ref))
     if (length(nested)) add("info", "nesting", sprintf("%s links to other reference files; keep references one level deep from SKILL.md.", p))
   }

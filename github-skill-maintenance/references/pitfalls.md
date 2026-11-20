@@ -61,6 +61,7 @@ Contents: YAML description traps, CRLF line endings, links, hooks, naming, front
   and a check silently finds nothing (hit once in the shadowed-name check, 2026-10-30). Use
   `new.env(parent = emptyenv())` and `exists(..., inherits = FALSE)`.
 
+- **A fetched docs page is weak evidence of absence.** Pages carry no version number and can omit topics; record "not mentioned", not "removed", and use release notes as the version-bearing source.
 - **Backticked `references/` or `scripts/` paths resolve inside the same skill.** `lint_skills()` reports
   "Referenced path does not exist" when a SKILL.md cites another skill's file that way (reported once,
   2026-11-06). Cite the other skill by name and describe the file in words.
