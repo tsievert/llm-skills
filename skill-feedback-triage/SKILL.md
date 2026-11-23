@@ -55,7 +55,7 @@ read the lesson files first and use an export only to verify a claim; the parsin
    U <- read_usage(".posit/assistant/lessons-work/usage.tsv", since = W)
    D <- dispositions_read(".posit/assistant/lessons-work/dispositions.tsv")
    L <- lesson_status(L, D)   # adds `status`: new / parked / needs-info / closed
-   table(L$status)         # triage only "new"; parked and needs-info are context, closed is done
+   status_summary(L)       # triage "new (actionable)"; note-only: no-change; others are context
    lesson_problems(L)      # malformed entries, unknown skill folders (skips closed and built-in-skill entries)
    lesson_overview(L, U)   # per skill: loads, sessions, projects, entries by type
    lesson_dupes(L)         # candidate duplicates (heuristic, check by reading)

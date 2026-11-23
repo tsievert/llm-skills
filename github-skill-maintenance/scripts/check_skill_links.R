@@ -70,7 +70,7 @@ check_skill_links <- function(repo = find_repo_root(), scope = c("skill", "all")
   for (a in active) for (b in active) {
     if (a == b || !adj[b, a] || adj[a, b]) next
     if (any(dec$from == a & dec$to == b)) next
-    add(b, "info", "one-way", sprintf("%s mentions %s, but %s does not mention %s. Add a backlink in %s, or record a no-backlink decision.", a, b, b, a, b))
+    add(b, "info", "one-way", sprintf("%s mentions %s, but %s does not mention %s. Add a backlink in %s, or add this row to link-decisions.tsv (tab-separated): %s\tno-backlink\t<reason>\t<date>.", a, b, b, a, b, a, b))
   }
   for (a in active) {
     if (!any(adj[, a]) && !any(adj[a, ])) add(a, "info", "isolated", "No link to or from any other (non-hub) skill.")

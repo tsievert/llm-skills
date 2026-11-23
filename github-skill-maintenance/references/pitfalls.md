@@ -14,6 +14,7 @@ Contents: YAML description traps, CRLF line endings, links, hooks, naming, front
   - Any `edit` or `write` call can reintroduce CRLF, even on an LF file and mid-task. Check
     `git ls-files --eol <file>` before every edit of a file already touched this session, and run
     `git ls-files --eol -o -m --exclude-standard <skill>` before lint and commit.
+    Normalise as the last step before the first `lint_skills()` run, then re-check; lint after normalising, not before.
   - Untracked files: `git ls-files --eol` prints nothing, so use `file <path>`. Do not use `grep -c $'\r'`
     (grep's CRLF autodetection can report 0).
   - Fix with `sed -i 's/\r$//' <file>` in Git Bash. A plain append to a CRLF file may need an explicit `\r\n`.

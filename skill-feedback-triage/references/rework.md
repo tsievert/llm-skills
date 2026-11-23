@@ -51,3 +51,6 @@ Per the standing rule, do not call it ready while errors remain.
 
 At most one or two reworks per triage run; choose by churn and recurrence, and let the user decide. A rework
 is more research and more tokens than a patch, which is the point: it replaces several future patches.
+
+Net-size check for step 4: record `file.size("<skill>/SKILL.md")` before the first edit and compare after the last
+(an added pointer line is enough to break the rule).

@@ -13,3 +13,9 @@ Work through this checklist in order, in the real inbox (not the copy):
 - [ ] Copy the ledger back: `cp .posit/assistant/lessons-work/dispositions.tsv ~/.posit/lessons/dispositions.tsv`. The ledger is never committed or truncated.
 - [ ] Delete `.posit/assistant/lessons-work` in its own last command (a blocked `rm -rf` chained after `mv`/`cp` cancels them). Check dispositions with `dispositions_read()`, not `read.delim`.
 - [ ] Add a generic-wording Log entry to `HISTORY.md` (counts, outcomes, what was not verified). Commit skill edits, never lesson files; the `AGENTS.md` watermark line and the `HISTORY.md` entry go in the same commit (CRLF-to-LF warnings are harmless).
+
+## Partial close-out (a few entries, run not archived)
+
+When the user closes only some entries (for example parked ones) without archiving the run: record one disposition
+per closed entry with `dispositions_add()`, copy the ledger back (`cp ... ~/.posit/lessons/dispositions.tsv`, bash),
+and stop. No watermark, no `mv` to `processed/`, no keep list; leave the work folder for the next step and say so.

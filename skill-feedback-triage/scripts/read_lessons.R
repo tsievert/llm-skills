@@ -335,3 +335,11 @@ target_scan <- function(lessons, dispositions, repo = getwd(), days = 60, max_di
   out <- if (length(rows)) do.call(rbind, rows) else NULL
   if (!is.null(out)) out[order(-out$files_with_churn, -out$possible_repeats, -out$edits_window), ] else out
 }
+
+# New entries split into actionable and note-only (use-case, worked-well), plus the other statuses,
+# so the "new" count can be reconciled with what the user expects to be open.
+status_summary <- function(lessons) {
+  note <- lessons$type %in% c("use-case", "worked-well")
+  grp <- ifelse(lessons$status == "new", ifelse(note, "new (note-only)", "new (actionable)"), lessons$status)
+  table(grp)
+}
