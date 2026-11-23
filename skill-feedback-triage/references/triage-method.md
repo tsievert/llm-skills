@@ -1,7 +1,10 @@
 # Triage method
 
-Contents: evidence thresholds, research checklist, where a change goes (size and provenance gates), reproducing,
-upstream checks, classifying the cause, measuring whether the loop works, re-checking parked entries.
+## Contents
+
+Evidence thresholds, target scan, research checklist, where a change goes (size and provenance gates),
+reproducing, upstream checks, classifying the cause and the fix ladder, measuring whether the loop works,
+re-checking parked entries. Restructuring a section or file (`rework`): [rework.md](rework.md).
 
 ## Evidence thresholds (starting point, adjust with experience)
 
@@ -23,6 +26,22 @@ second reporter will never exist, a one-report gate alone would stall most guida
 weigh the cost and generality of the change (see the cheap-note row) instead of waiting
 for repetition.
 
+## Target scan (required before the table)
+
+Issues are grouped by cause, but fixes land in files, and a file that keeps getting small patches is the real
+problem. `target_scan(L, D)` lists per skill: edits in the last 60 days, the busiest file and its edit count,
+files with 3 or more edits, entries by status, and new entries that look like a repeat of an entry the ledger
+already closed. Then read each target file whole (not only the section named in the entry) and note how many
+patches from earlier runs it carries (`git log -p -- <file>`). Results go in the ledger and the table.
+
+- **Recurrence.** A new entry that repeats an issue closed earlier as `fix`, `add-note` or `already-present`
+  is evidence that the earlier fix failed, so it is not `already-present`. Find why it failed (text not seen,
+  wrong place, rule too weak, no enforcement) and move up the fix ladder. The title match is a screen: read
+  both entries. Record the outcome as `fix`.
+- **Rework trigger.** Propose `rework` when a target file has 3 or more edits in the window and at least 2 entries
+  point at it, when a recurrence exists, or when the same topic needs a third bullet. At most one or two reworks
+  per run, picked by churn; the user decides which.
+
 ## Research checklist (required per issue before the table)
 
 Every issue that could end as `fix` or `add-note` needs a research row in the ledger
@@ -35,6 +54,8 @@ records, each with a status (done, not applicable with a reason, not possible wi
 3. CRAN or Bioconductor: a package that removes the problem.
 4. OpenAlex, for a claim about a scientific method (user standing rule); read the source, not the title.
 5. The named skill's own text read (not only grepped), including references.
+6. The cause behind the symptom: why the skill or assistant allowed it, and what design would stop the whole
+   class (see the fix ladder), not only this instance.
 
 Split what the sources support from claims with no source; only the supported part can become a fix.
 Research is recorded in the same turn it is done, not summarised afterwards.
@@ -43,6 +64,8 @@ Research is recorded in the same turn it is done, not summarised afterwards.
 
 - **Replace or merge, never append.** Find the existing sentence or bullet on the topic and rewrite it. A new
   bullet is allowed only when nothing in the file covers the topic.
+- **These rules keep routine fixes small; they do not forbid a `rework`.** A rework may change more than one line
+  and may restructure, as long as net size does not grow and its own gate in [rework.md](rework.md) is met.
 - **One-project findings go to a `references/` file** (or are parked). SKILL.md gets a fix only when the issue
   was reproduced or seen in two or more projects, and then at most one line plus a pointer.
 - **No provenance in skill text.** Phrases such as "reported once", "two sessions", "one project", dates and
@@ -75,19 +98,30 @@ without asking. CRAN and Bioconductor installs are allowed.
   already verified.
 - OpenAlex only for literature questions (user standing rule).
 
-## Classifying the cause
+## Classifying the cause and the fix ladder
 
 | Cause | Typical fix |
 |---|---|
 | Skill claim wrong or outdated | correct the text, add "verified with <version>" |
-| Skill silent on a real case | add a short section or a reference file |
-| Skill right, assistant did not follow it | strengthen wording or move the rule earlier; check the description trigger |
+| Skill silent on a real case | short section or reference file; if the topic already has two bullets, restructure instead |
+| Skill right, assistant did not follow it | next rung up the ladder (below), not louder wording |
 | Package changed | version caveat, re-test snippets, update `check_versions()` claims |
 | Environment (Windows paths, permissions, cluster) | add an environment note, keep generic |
 | Data problem, not a skill problem | reject, tell the user why |
 
-Keep each fix minimal and in the right file: SKILL.md stays short, detail goes to
-`references/`. Do not add a lesson's story, only the rule it supports.
+**Fix ladder.** Pick the lowest rung that removes the cause, and say in the table why a higher rung was or was
+not chosen (an unreproduced one-project finding usually stays on rung 1 or 2).
+
+1. **Text:** a correct sentence in the right place.
+2. **Structure:** move the rule earlier, merge duplicates, turn prose into a checklist, decision table or
+   template, split a file by topic.
+3. **Enforcement:** a `lint_skills()` check, a script, a template, a hook, so the rule no longer depends on the
+   assistant remembering it. Preferred for anything reported again after a text fix.
+4. **Remove the cause:** delete the step, change the default, merge or retire the skill.
+
+Keep each fix in the right file: SKILL.md stays short, detail goes to `references/`. Do not add a lesson's
+story, only the rule it supports. For every table row also name one broader option (a higher rung or a
+`rework`) and why it was not proposed (cost, evidence, risk); if the honest answer is "no good reason", propose it.
 
 ## An entry with no matching load
 

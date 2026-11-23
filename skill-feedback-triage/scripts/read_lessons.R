@@ -209,7 +209,7 @@ lesson_problems <- function(lessons, builtin = builtin_skills) {
 #   dispositions_add(L[idx, ], "fix", ".posit/assistant/lessons-work/dispositions.tsv")
 
 dispositions_allowed <- c("fix", "add-note", "already-present", "reject", "no-change",
-                          "new-skill", "park", "needs-info")
+                          "new-skill", "park", "needs-info")  # a `rework` is recorded as `fix`
 
 lesson_key <- function(lessons) paste(lessons$file, lessons$skill, lessons$title, sep = "|")
 
@@ -279,4 +279,48 @@ parked_recheck <- function(lessons, repo = getwd(), min_chars = 6, all_skills = 
   out <- do.call(rbind, out)
   out$likely_stale <- out$share >= flag_share
   out[order(-out$share), ]
+}
+
+# Target scan (triage step 3): per skill named by `lessons` with status "new", how often its files
+# were edited recently (git), how many entries are new, parked or closed, and which new entries
+# repeat an issue the ledger already closed as fix, add-note or already-present (a repeat means
+# that earlier fix did not work: escalate it, do not close it again). Title similarity is a
+# screen; read both entries. `dispositions` is dispositions_read(); keys of entries archived in
+# earlier runs are compared by skill and title only.
+#   target_scan(L, D)    # L after lesson_status()
+target_scan <- function(lessons, dispositions, repo = getwd(), days = 60, max_dist = 0.45,
+                        churn_files = 3) {
+  skills <- unique(lessons$skill[lessons$status == "new" & !is.na(lessons$skill)])
+  norm <- function(x) tolower(gsub("[^a-z0-9 ]", "", tolower(x)))
+  closed <- dispositions[dispositions$disposition %in% c("fix", "add-note", "already-present"), ,
+                         drop = FALSE]
+  parts <- strsplit(closed$key, "|", fixed = TRUE)
+  closed$skill <- vapply(parts, function(p) if (length(p) >= 2) p[2] else NA_character_, "")
+  closed$title <- vapply(parts, function(p) if (length(p) >= 3) paste(p[-(1:2)], collapse = "|") else NA_character_, "")
+  rows <- lapply(skills, function(s) {
+    log <- suppressWarnings(system2("git", c("-C", shQuote(repo), "log", paste0("--since=", days, ".days"),
+                                              "--name-only", "--pretty=format:", "--", shQuote(s)),
+                                    stdout = TRUE, stderr = FALSE))
+    log <- log[nzchar(log)]
+    per_file <- sort(table(log), decreasing = TRUE)
+    mine <- lessons[lessons$skill == s, , drop = FALSE]
+    rep <- character()
+    nw <- mine[mine$status == "new", , drop = FALSE]
+    cl <- closed[closed$skill == s & !is.na(closed$title), , drop = FALSE]
+    if (nrow(nw) && nrow(cl)) {
+      dm <- utils::adist(norm(nw$title), norm(cl$title)) /
+        pmax(outer(nchar(norm(nw$title)), nchar(norm(cl$title)), pmax), 1)
+      hit <- which(dm <= max_dist, arr.ind = TRUE)
+      rep <- sprintf("%s ~ %s (%s)", nw$title[hit[, 1]], cl$title[hit[, 2]], cl$disposition[hit[, 2]])
+    }
+    data.frame(skill = s, edits_window = length(log), busiest_file = if (length(per_file)) names(per_file)[1] else NA,
+               busiest_edits = if (length(per_file)) as.integer(per_file[1]) else 0L,
+               files_with_churn = sum(per_file >= churn_files),
+               new = sum(mine$status == "new"), parked = sum(mine$status == "parked"),
+               closed = sum(mine$status == "closed"),
+               possible_repeats = length(rep), repeats = paste(rep, collapse = "; "),
+               stringsAsFactors = FALSE)
+  })
+  out <- if (length(rows)) do.call(rbind, rows) else NULL
+  if (!is.null(out)) out[order(-out$files_with_churn, -out$possible_repeats, -out$edits_window), ] else out
 }

@@ -35,10 +35,15 @@ read the lesson files first and use an export only to verify a claim; the parsin
 1. **Research row per issue.** Every issue that could end as `fix` or `add-note` has a recorded research row
    (reproduction, upstream, CRAN, OpenAlex for method claims, skill text read) in a ledger under `research/`,
    shown as a column in the table. No row: the outcome is `park` or `needs-info`, never `fix`.
-2. **Placement.** A fix replaces or merges with existing text, carries no provenance ("reported once",
-   dates), and a one-project finding goes to a `references/` file, not the SKILL.md body.
+2. **Placement.** A fix carries no provenance ("reported once", dates), a one-project finding goes to a
+   `references/` file, and a small fix replaces or merges with existing text. This keeps routine fixes small; it
+   does not limit a `rework` (gate 4).
 3. **Size.** Compare the target SKILL.md size before and after; above about 12 KB, move something out in the
    same change. Details: [references/triage-method.md](references/triage-method.md).
+4. **Cause, not symptom.** Before the table, run the target scan (step 3) and place each fix on the fix ladder
+   (text, structure, enforcement, remove the cause), stating why a higher rung was or was not chosen. A repeat
+   report of something already fixed is a failed fix, never `already-present`. A target with repeated patches
+   gets a `rework` proposal instead of another patch.
 
 ## Workflow
 
@@ -64,7 +69,10 @@ read the lesson files first and use an export only to verify a claim; the parsin
 2. **Group.** Merge duplicates into one issue and count independent projects and sessions
    per issue. Keep `generality: likely-user-specific` entries out of skill edits unless a
    second project shows the same thing.
-3. **Treat every entry as a hypothesis.** Run the research checklist in
+3. **Scan the targets, then treat every entry as a hypothesis.** For each target file run `target_scan(L, D)` (`read_lessons.R`) as in
+   [references/triage-method.md](references/triage-method.md) (recent edits, other entries naming it, recurring
+   closures) and read the whole file.
+   Then treat every entry as a hypothesis. Run the research checklist in
    [references/triage-method.md](references/triage-method.md) for each issue and record it in the ledger
    (see Gates; ledger skeleton: [assets/research-ledger-template.md](assets/research-ledger-template.md)). A `bug` entry naming a script is reproduced with a cheap test of that code path before it is
    parked or rejected. Grep the named skill and `HISTORY.md` for the entry's key terms before building the
@@ -81,10 +89,12 @@ read the lesson files first and use an export only to verify a claim; the parsin
    approves it in step 5 — `new-skill-suggestion` entries exist precisely so that decision
    is made here, deliberately, rather than on the spot in whatever session first noticed
    the need).
+   `rework` (restructure a section, file or mechanism in its own change: [references/rework.md](references/rework.md)).
    Evidence thresholds are in the reference.
 5. **Show the triage table and ask.** One row per issue, not per entry, listing its entry numbers
    (`L$n`) so the outcome column can be built from them. Columns: issue, entries, skills, reports
-   (projects), research (ledger row and checklist result), proposed outcome and change, target file and
+   (projects), research (ledger row and checklist result), proposed outcome and change, fix-ladder rung,
+   alternative considered (one broader option and why not), target file and
    size after the change. Wait for the user's choice
    (the `AskUser` tool suits batches) before editing any skill. If the run is postponed, save the proposed outcomes
    keyed by `L$key` (file, skill, title), not by entry number (numbers shift when files are added), and leave
@@ -97,18 +107,9 @@ read the lesson files first and use an export only to verify a claim; the parsin
    `check_skill_clashes()` and `check_skill_links()` for a new skill), run any changed
    script or snippet, and state what was and was not tested. Do not call anything ready
    while errors remain.
-7. **Archive.** Work through this checklist in order, in the real inbox (not the copy):
-   - [ ] The user has seen the triage table (no archiving or watermark before that).
-   - [ ] Build the keep list from the triage table: every file that contains a `park` row of this run **and** every file with a parked-status entry from earlier runs (`unique(L$file[L$status == "parked"])`). Do not build it from memory.
-   - [ ] Move all other processed files with bash `mv ... inbox/processed/` in one command (the R session cannot write to the home folder), naming files directly (strip CRLF with `tr -d '\r'`), before deleting the work folder. A file that mixes resolved and parked entries stays in the inbox whole until every entry in it has a disposition other than `park`.
-   - [ ] Key outcomes by entry number (`L$n`), never by row position of a re-filtered table, and build them on the same `L` that was printed. Build one outcome column on the entry table (one value per row) and check that every row got exactly one
-     value (`table(L$outcome, useNA = "ifany")`, and no entry number in two outcome lists) before calling `dispositions_add()`.
-   - [ ] Record a disposition for **every** entry of this run, including use-case entries and entries in files you archive, so mixed files stay quiet next time. One call per outcome: `dispositions_add(L[rows, ], "fix" | "reject" | ..., ".posit/assistant/lessons-work/dispositions.tsv")`. `park` and `needs-info` keep an entry open. Allowed values: `fix`, `add-note`, `already-present`, `reject`,
-     `no-change`, `new-skill`, `park`, `needs-info`; use-case entries get `no-change` (`use-case` is not a value and errors).
-   - [ ] Record the watermark with `triage_watermark_set(max(U$time))` before deleting the work folder (skip if `U` is empty; if the folder is gone, take the last timestamp from the real `usage.tsv`). Never truncate or edit `usage.tsv`.
-   - [ ] Copy the ledger back: `cp .posit/assistant/lessons-work/dispositions.tsv ~/.posit/lessons/dispositions.tsv`. The ledger is never committed or truncated.
-   - [ ] Delete `.posit/assistant/lessons-work` in its own last command (a blocked `rm -rf` chained after `mv`/`cp` cancels them). Check dispositions with `dispositions_read()`, not `read.delim`.
-   - [ ] Add a generic-wording Log entry to `HISTORY.md` (counts, outcomes, what was not verified). Commit skill edits, never lesson files; the `AGENTS.md` watermark line and the `HISTORY.md` entry go in the same commit (CRLF-to-LF warnings are harmless).
+7. **Archive.** Work through [references/archive-checklist.md](references/archive-checklist.md) in order (keep list,
+   `mv` to `processed/`, one disposition per entry, watermark, ledger copy-back, delete the work folder,
+   `HISTORY.md` entry). No archiving or watermark before the user has seen the table.
 
 ## Usage and maintenance review (no triage)
 
