@@ -256,7 +256,7 @@ lint_one_skill <- function(dir) {
   for (p in files[grepl("^references/.*\\.md$", files)]) {
     ref <- readLines(file.path(dir, p), warn = FALSE, encoding = "UTF-8")
     if (length(ref) > 100 && !any(grepl("^#+\\s*(table of )?contents|^- \\[.*\\]\\(#", head(ref, 25), ignore.case = TRUE)))
-      add("info", "reference-toc", sprintf("%s has %d lines and no table of contents near the top.", p, length(ref)))
+      add("info", "reference-toc", sprintf("%s has %d lines and no table of contents near the top (add a '## Contents' heading or a list of anchor links; a plain 'Contents:' sentence does not count).", p, length(ref)))
     # Lost newlines: a heading or numbered bold item glued onto the end of a prose line
     fence <- cumsum(grepl("^\\s*```", ref)) %% 2 == 1
     glued <- which(!fence & !grepl("^\\s*\\|", ref) & !grepl("`[^`]*(#{2,4} |\\d\\. )[^`]*`", ref) &

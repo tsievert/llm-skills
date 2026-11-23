@@ -38,6 +38,8 @@ patches from earlier runs it carries (`git log -p -- <file>`). Results go in the
   is evidence that the earlier fix failed, so it is not `already-present`. Find why it failed (text not seen,
   wrong place, rule too weak, no enforcement) and move up the fix ladder. The title match is a screen: read
   both entries. Record the outcome as `fix`.
+- **Same failure class on several sites** (several entries, different sites or inputs): propose a code-level
+  fix keyed by failure class (a ladder in the script) before any per-site documentation note.
 - **Rework trigger.** Propose `rework` when a target file has 3 or more edits in the window and at least 2 entries
   point at it, when a recurrence exists, or when the same topic needs a third bullet. At most one or two reworks
   per run, picked by churn; the user decides which.

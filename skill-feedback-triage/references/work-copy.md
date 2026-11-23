@@ -12,6 +12,8 @@ rm -rf .posit/assistant/lessons-work/inbox/processed
 ls -p ~/.posit/lessons/inbox | grep -v / | wc -l; ls .posit/assistant/lessons-work/inbox | wc -l   # counts must match (-p/grep -v excludes the processed folder)
 ```
 
+The R session cannot write to the system scratch directory either; any file R must read (for example an original copy for a before/after comparison) goes into the repo's git-ignored `tmp-examples/`, written by bash, and is deleted afterwards.
+
 Delete `.posit/assistant/lessons-work` once the run is archived. If the permission layer blocks the `rm -rf` (seen when the delete was not part of an approved plan), do not retry it: move the folder to the scratch directory (`mv`), which leaves the project clean. If it still blocks the `rm -rf`
 (for example after a postponed run), leave the folder and ask the user to approve the deletion; the first
 command above removes a leftover copy at the start of the next run.

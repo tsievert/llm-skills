@@ -287,10 +287,16 @@ parked_recheck <- function(lessons, repo = getwd(), min_chars = 6, all_skills = 
 # that earlier fix did not work: escalate it, do not close it again). Title similarity is a
 # screen; read both entries. `dispositions` is dispositions_read(); keys of entries archived in
 # earlier runs are compared by skill and title only.
-#   target_scan(L, D)    # L after lesson_status()
+#   target_scan(L, D)    # L after lesson_status(); all_skills = TRUE also ranks skills without new entries
+# `commits_since_entry` counts commits to the skill since the date of its oldest new entry: compare with
+# the entries before treating them as live pressure (the session may have fixed them already).
 target_scan <- function(lessons, dispositions, repo = getwd(), days = 60, max_dist = 0.45,
-                        churn_files = 3) {
+                        churn_files = 3, all_skills = FALSE) {
   skills <- unique(lessons$skill[lessons$status == "new" & !is.na(lessons$skill)])
+  if (all_skills) {
+    dirs <- basename(dirname(Sys.glob(file.path(repo, "*", "SKILL.md"))))
+    skills <- union(skills, dirs)
+  }
   norm <- function(x) tolower(gsub("[^a-z0-9 ]", "", tolower(x)))
   closed <- dispositions[dispositions$disposition %in% c("fix", "add-note", "already-present"), ,
                          drop = FALSE]
@@ -313,7 +319,12 @@ target_scan <- function(lessons, dispositions, repo = getwd(), days = 60, max_di
       hit <- which(dm <= max_dist, arr.ind = TRUE)
       rep <- sprintf("%s ~ %s (%s)", nw$title[hit[, 1]], cl$title[hit[, 2]], cl$disposition[hit[, 2]])
     }
-    data.frame(skill = s, edits_window = length(log), busiest_file = if (length(per_file)) names(per_file)[1] else NA,
+    # Commits to the skill since its oldest new entry: entries about problems already fixed show up here
+    since <- if (nrow(nw) && any(!is.na(nw$date))) as.character(min(as.Date(nw$date), na.rm = TRUE)) else NA_character_
+    after <- if (is.na(since)) NA_integer_ else length(suppressWarnings(system2(
+      "git", c("-C", shQuote(repo), "log", paste0("--since=", since), "--pretty=format:%h", "--", shQuote(s)),
+      stdout = TRUE, stderr = FALSE)))
+    data.frame(skill = s, edits_window = length(log), commits_since_entry = after, busiest_file = if (length(per_file)) names(per_file)[1] else NA,
                busiest_edits = if (length(per_file)) as.integer(per_file[1]) else 0L,
                files_with_churn = sum(per_file >= churn_files),
                new = sum(mine$status == "new"), parked = sum(mine$status == "parked"),

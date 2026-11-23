@@ -26,6 +26,10 @@
 *.bak
 *~
 
+# testthat failure leftovers
+_problems/
+testthat-problems.rds
+
 # Python caches (for skill scripts)
 __pycache__/
 *.pyc

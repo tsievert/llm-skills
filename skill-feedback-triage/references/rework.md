@@ -20,6 +20,12 @@ therefore makes the rule list and the rationale explicit before anything is dele
 2. **Rule inventory.** List every rule, caveat and example in the target as a numbered table: rule, why it
    exists (entry, ledger row or commit if known, else "unknown"), keep / merge / move / drop.
    "Unknown" rationale means keep or move to a reference, not drop, unless the rule is clearly wrong.
+   For a script, also list non-function top-level objects (regex vectors, column lists) and stateful
+   objects (environments, options) separately, since a split can break load order or duplicate state.
+   Count name references with lookarounds (`(?<![A-Za-z0-9_.])name(?![A-Za-z0-9_.])`, `perl = TRUE`), not
+   `\b`: a word boundary never matches before a dot, so dot-prefixed helpers look unused.
+   Save an original copy for before/after comparison with `bash` into the git-ignored `tmp-examples/`;
+   the R session cannot read or write the system scratch directory.
 3. **Name the underlying design problem** (one sentence) and the new shape (headings, decision table,
    checklist, script, lint check). Prefer the higher rungs of the fix ladder in `triage-method.md`.
 4. **Net size does not grow** for a SKILL.md; detail moves to `references/`, never into more SKILL.md lines.

@@ -48,13 +48,17 @@ Contents: YAML description traps, CRLF line endings, links, hooks, naming, front
   error: if a field needs several values, join them into one delimited string (the `file_signals`
   field uses `'|'`, matching the regex-alternation syntax it is used for) rather than a native
   YAML sequence.
-- **Long Markdown through a bash heredoc can be silently truncated.** A reference file written
-  with a `cat <<'EOF' > file` heredoc, combined in the same `bash` call with several `sed -i`
-  edits (and once, an `Rscript -e` script using regex backslashes), ended mid-sentence, and a
-  later file in the same command was never created, with no error surfaced (reported once,
-  2026-10-27). Write multi-line Markdown or R with the `write`/`edit` tools instead of a bash
-  heredoc; if a heredoc is unavoidable, keep it to one file per `bash` call and check `wc -l`
-  plus a `tail` of the result afterwards. Keep `sed` to single-line changes only.
+- **Writing files safely (decision table).** Scripted writes are the most common source of silent damage here.
+
+  | Method | Failure | Use instead |
+  |---|---|---|
+  | `bash` heredoc, `sed`, `Rscript -e` with text that contains a backslash (R regex, `\\(`, `\.`) | the bash tool call loses one level of backslash, even in a quoted heredoc; sourcing then fails with "unrecognized escape" | `write` or `edit` tool; check with `grep -c` for the exact string afterwards |
+  | `bash` heredoc with long Markdown plus several `sed -i` in one call | file ends mid-sentence, a later file is never created, no error | `write`/`edit`; if unavoidable one file per call, then `wc -l` and `tail` |
+  | R `writeLines()` / `file()` text mode on Windows | writes CRLF | `writeBin(charToRaw(paste0(x, collapse = "\n")), path)` or the `write` tool |
+  | R `sub()`/`gsub()` with `\\1` and replacement text containing a backslash | backslash silently dropped or a control byte inserted, no warning | `edit` tool, or `fixed = TRUE` with a literal anchor; then `file <path>` and compare `grep -c "^## "` |
+
+  Order matters for line endings: normalise with `sed -i 's/\r$//'` as the last step after the final `edit` or `write`, and confirm with `git ls-files --eol -m` before commit.
+- **A failing testthat run** can leave `_problems/` and `testthat-problems.rds` in the tests folder; they are git-ignored here, but delete them after a failure.
 
 - **Environment caches in skill scripts must not inherit.** `exists("x", envir = cache)` on a
   `new.env()` also searches the parent chain, so a global object with the same name gives a false hit

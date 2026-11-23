@@ -109,7 +109,7 @@ Full list in [references/pitfalls.md](references/pitfalls.md). The ones that bit
 
 - **CRLF in the working copy** makes multi-line `edit` calls fail with "string not found" and can come back after any `edit` or `write`. Check `git ls-files --eol <file>` (tracked) or `file <path>` (untracked) before each edit, normalise with `sed -i 's/\r$//' <file>`.
 - **Unquoted `#` or an apostrophe in a description** silently truncates or breaks the YAML; quote the value and re-run `lint_skills()` after every description edit.
-- **Long Markdown via a bash heredoc can be truncated silently**; use the `write`/`edit` tools.
+- **Text with backslashes, or long Markdown, through a bash heredoc is damaged silently**; use the `write`/`edit` tools (decision table in the pitfalls reference). R `writeLines()` on Windows writes CRLF.
 
 ## What the linter does not judge
 
