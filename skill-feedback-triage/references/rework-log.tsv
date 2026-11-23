@@ -1,0 +1,12 @@
+date	commit	target
+2026-11-23	d4c5bd3	deeplabcut-hpc/SKILL.md
+2026-11-23	d4c5bd3	deeplabcut-hpc/assets/
+2026-11-23	d4c5bd3	deeplabcut-hpc/references/docs-and-environment.md
+2026-11-23	8ab7a7b	deeplabcut-hpc/references/training-sweeps.md
+2026-11-23	8ab7a7b	deeplabcut-hpc/references/benchmark-interpretation.md
+2026-11-23	8ab7a7b	deeplabcut-hpc/references/ctd-topdown-preflight.md
+2026-11-23	d4c5bd3	hpc-job-scripts/SKILL.md
+2026-11-23	d4c5bd3	hpc-job-scripts/references/chaining-and-orchestrators.md
+2026-11-23	d4c5bd3	hpc-job-scripts/references/windows-line-endings.md
+2026-11-23	c61ea38	job-opportunity-watch/scripts/
+2026-11-23	d443d85	github-skill-maintenance/references/pitfalls.md

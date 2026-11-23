@@ -34,7 +34,13 @@ therefore makes the rule list and the rationale explicit before anything is dele
 6. **Write the new text** without provenance. Put the rule inventory and rationale in the ledger under
    `research/`, not in the skill.
 
+Cover the whole skill, not only the file that triggered it: run `usage_churn_files(skill)` (`scripts/churn.R`) and
+list every `candidate` file in the inventory as keep, rework now or defer with a reason.
+
 ## Verify
+
+Append one row per reworked file or folder to `rework-log.tsv` (date, commit, target) in the same commit, so the
+churn ranking stops listing the skill until it is edited again.
 
 `lint_skills()`, `uvx --from skills-ref agentskills validate <dir>`, `check_skill_links()` if related-skills
 sections changed, re-run any reproducible original failure and any changed script. Compare the new text

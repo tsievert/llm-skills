@@ -7,8 +7,10 @@ left dispositions, so take `table(lesson_status(L, D)$status)` as the source of 
 1. All-time loads: `read_usage(path)` with no `since`. `read_usage(since = watermark)` returns almost
    nothing right after a run, so `lesson_overview()` then shows zero loads for nearly every skill.
    `skill-lessons` loads are mostly hook-fired; treat them as weak evidence.
-2. Edit counts: `git log --format=%H -- <skill>/ | wc -l` per skill folder (since a chosen date).
-3. Size: `SKILL.md` bytes and the whole tree bytes/file count per skill.
+2. Edit counts and size: `source("skill-feedback-triage/scripts/churn.R"); usage_churn_table(usage = U_all)` (about 20 s) gives
+   commits (14 d, window), last rework from `rework-log.tsv`, commits since it, `uncovered` files no rework
+   touched, `SKILL.md` and tree size, loads. `usage_churn_files(skill)` lists the files.
+3. Treat a skill with recent rework and `uncovered = 0` as done; look at `uncovered` files before reworking it again.
 4. Description length: parse the YAML frontmatter (for example `yaml::yaml.front.matter()` or
    `rmarkdown::yaml_front_matter()`); a regex over the joined file text gives absurd values for
    folded or multi-line descriptions.

@@ -112,3 +112,21 @@ Gate status: step 1 (read whole target) and 2 (rule inventory) not done, only se
 | O6 | Extend `target_scan` to list all skills by churn, not only those with new entries | open |
 | O7 | Disposition the 11 new entries (job-watch five likely `already-present`/`fix`) in the next triage run | open |
 | O8 | User decision on the jobwatch.R pilot rework | needs user |
+
+## Round 2026-11-23 (later): churn helper, rework log, split question
+
+Requirement R2 (2026-11-23): triage must show churn across all skills, know when a skill was last reworked (otherwise
+the same skills keep appearing) and catch files inside a reworked skill that the rework overlooked; consider splitting
+triage into two skills.
+- Built `skill-feedback-triage/scripts/churn.R` (`usage_churn_table()`, `usage_churn_files()`, `rework_log_read()`) and
+  `references/rework-log.tsv` (date, commit, target; folder targets end in "/"). Ranking uses commits since the last
+  rework; `uncovered` counts large (>= 6 KB) or often-edited (>= 3) files no rework row covers. Tested on the real repo:
+  deeplabcut-hpc ranks low after today's rework but shows 1 uncovered file (`pytorch-config-tuning.md`); about 20 s runtime
+  (git calls per skill on Windows). Loads need a usage log passed in (home folder unreadable from R; use the work copy).
+- Step 3 of SKILL.md now names the helper; `rework.md` requires covering every `candidate` file and appending a log row.
+  SKILL.md 11.67 -> 11.90 KB.
+- Split question, source: https://agentskills.io/skill-creation/best-practices (read 2026-11-23): scope a skill as one
+  coherent unit; too narrow forces several skills to load, too broad hurts activation; SKILL.md under 500 lines / 5000 tokens.
+  Local fit: inbox triage and the usage/churn/rework review share only the rework step and different inputs (inbox versus git).
+  Candidate second skill would overlap `github-skill-maintenance` ("periodic health check"). Decision pending with the user;
+  recommendation: not yet, first see whether the rework-log and churn step stop repeat rankings.

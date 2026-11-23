@@ -71,7 +71,9 @@ read the lesson files first and use an export only to verify a claim; the parsin
    second project shows the same thing.
 3. **Scan the targets, then treat every entry as a hypothesis.** For each target file run `target_scan(L, D)` (`read_lessons.R`) as in
    [references/triage-method.md](references/triage-method.md) (recent edits, other entries naming it, recurring
-   closures) and read the whole file.
+   closures) and read the whole file. Every run also show the top five of `usage_churn_table()`
+   (`scripts/churn.R`, all skills, ranked by commits since the last rework in `references/rework-log.tsv`) and,
+   for a rework candidate, `usage_churn_files(skill)`.
    Then treat every entry as a hypothesis. Run the research checklist in
    [references/triage-method.md](references/triage-method.md) for each issue and record it in the ledger
    (see Gates; ledger skeleton: [assets/research-ledger-template.md](assets/research-ledger-template.md)). A `bug` entry naming a script is reproduced with a cheap test of that code path before it is
