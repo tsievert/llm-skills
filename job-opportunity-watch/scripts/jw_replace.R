@@ -13,6 +13,10 @@
   .clean(rawToChar(b))
 }
 
+# Model-free candidates for a dead or moved link: parent paths and the home page, vacancy-like URLs from the site's
+# sitemaps, and vacancy-like links on the home page. Scored by token overlap with the old URL; only candidates that
+# answer (HTTP below 400) are kept. Returns a data frame (url, via, score, http, final_url) of at most
+# `max_candidates` rows, empty if none. The assistant judges the candidates; nothing is written.
 jw_find_replacement <- function(url, max_candidates = 8, verbose = TRUE) {
   root <- sub("^(https?://[^/]+).*$", "\\1", url)
   old <- .tokens(url); cand <- list()

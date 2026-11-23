@@ -11,6 +11,8 @@
 
 .jw_tag_query_types <- c("hashtag", "text", "author+tag", "web_keywords")
 
+# Read state/social_tags.tsv as a data frame with the columns in .jw_tag_cols (empty frame if the file is missing;
+# older files get missing columns filled with NA).
 jw_tags_read <- function() {
   x <- .tsv_read(jw_state("social_tags.tsv"))
   if (is.null(x)) x <- as.data.frame(setNames(rep(list(character()), length(.jw_tag_cols)), .jw_tag_cols))

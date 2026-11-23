@@ -20,6 +20,9 @@
   "full professor|ordentliche[rn]? professor|teknisk|tekniker|laboratorio? tecnic|stagiaire|intern(ship)?\\b|",
   "master'?s? (student|thesis)|bachelor")
 
+# Screen title or anchor text (one row per text): role_hit, topic_hit and excluded flags. Excluded titles from the
+# profile (except those containing "unpaid") extend the built-in exclusion pattern. A heuristic that sets reading
+# order, not relevance.
 jw_classify_titles <- function(text, profile = NULL) {
   tl <- tolower(text)
   excl <- .excl_re
@@ -41,6 +44,9 @@ jw_classify_titles <- function(text, profile = NULL) {
 # jw_robots_allowed() is checked before every JSON call; a disallowed host is reported, not fetched.
 .robots_cache <- new.env()
 
+# robots.txt check for one URL: TRUE allowed, FALSE disallowed, NA when robots.txt cannot be fetched (a 4xx/5xx answer
+# means no rules, so TRUE). Rules naming this tool's user agent win over `*`; the longest matching pattern wins and
+# allow beats disallow on a tie. The file is cached per host in .robots_cache.
 jw_robots_allowed <- function(url, timeout = 15) {
   root <- sub("^(https?://[^/]+).*$", "\\1", url)
   path <- sub("^https?://[^/]+", "", url); if (!nzchar(path)) path <- "/"
@@ -78,6 +84,11 @@ jw_robots_allowed <- function(url, timeout = 15) {
   is.null(best) || best$allow
 }
 
+# Probe one link; returns a list with status (ok, ok_js_suspect, blocked, http_error, non_html, error), http, final_url,
+# bytes, text_chars, n_scripts, text_hash, note, route, elapsed and anchors (data frame). HTTP and parse failures are
+# reported in status and note, not thrown. `type` picks the reader: portal (default; sitemap XML and RSS/Atom bodies
+# are recognised too), sitemap, resolver (Google Sheet), json_eures, json_oracle. Fetching uses the web-fetching-r
+# ladder; thin or sparse pages get an optional render rung (references/portal-quirks.md).
 jw_probe_one <- function(url, timeout = 25, type = "portal") {
   t0 <- Sys.time()
   if (type == "resolver") return(.probe_gsheet(url, timeout, t0))

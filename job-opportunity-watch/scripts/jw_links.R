@@ -7,6 +7,7 @@
 # converted once with jw_convert_links_txt().
 jw_links_cols <- c("url", "section", "label", "enabled", "added", "added_by", "replaces", "note")
 
+# The links file in use: links.csv if it exists, else the legacy links.txt.
 jw_links_path <- function() {
   csv <- jw_path("links.csv"); if (file.exists(csv)) csv else jw_path("links.txt")
 }
@@ -73,6 +74,8 @@ jw_read_links <- function(path = jw_links_path()) {
   out
 }
 
+# Normalised key for URLs (vectorised): fragment and trailing slash dropped, scheme and host lower-cased; search-engine
+# URLs are keyed by query and time filter. Used to match links across the links file, state files and diffs.
 jw_key <- function(url) vapply(url, .jw_key1, "", USE.NAMES = FALSE)
 
 .jw_key1 <- function(url) {

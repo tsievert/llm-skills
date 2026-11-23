@@ -12,12 +12,16 @@ if (!exists("pf_fetch_html", mode = "function")) {
 
 jw_ua <- pf_user_agent("job-opportunity-watch", "personal research use; low rate")
 
+# Data folder for links, state and ledgers: option jobwatch.dir, else env var JOBWATCH_DIR, else ./job-watch.
 jw_dir <- function() getOption("jobwatch.dir", Sys.getenv("JOBWATCH_DIR", "job-watch"))
 
+# Path inside the data folder.
 jw_path <- function(...) file.path(jw_dir(), ...)
 
+# Path inside the data folder's state/ subfolder.
 jw_state <- function(...) file.path(jw_dir(), "state", ...)
 
+# Local time stamp in ISO 8601 form without a zone, as written to state files and ledgers.
 jw_now <- function() format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 
 # Drop invalid bytes that some pages produce when the declared charset is wrong
