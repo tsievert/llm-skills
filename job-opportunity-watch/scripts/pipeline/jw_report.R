@@ -10,6 +10,24 @@ jw_load <- function(dir = jw_script_dir()) {
   options(jobwatch.script_dir = normalizePath(dir)); invisible(TRUE)
 }
 
+# Layout guard for scripts/jw_*.R: every concern file is listed in the jobwatch.R loader, every listed file exists,
+# and no file is longer than `max_lines` (a new concern gets a new file instead of growing one). Returns messages.
+jw_check_script_layout <- function(scripts_dir, max_lines = 400L) {
+  loader <- file.path(scripts_dir, "jobwatch.R")
+  if (!file.exists(loader)) return(character())
+  txt <- paste(readLines(loader, warn = FALSE), collapse = "\n")
+  listed <- unique(regmatches(txt, gregexpr('"jw_[a-z_]+[.]R"', txt))[[1]]); listed <- gsub('"', "", listed)
+  have <- basename(list.files(scripts_dir, pattern = "^jw_[a-z_]+[.]R$"))
+  out <- character()
+  if (length(miss <- setdiff(have, listed))) out <- c(out, paste0("not loaded by jobwatch.R: ", paste(miss, collapse = ", ")))
+  if (length(gone <- setdiff(listed, have))) out <- c(out, paste0("listed in jobwatch.R but missing: ", paste(gone, collapse = ", ")))
+  for (f in have) {
+    n <- length(readLines(file.path(scripts_dir, f), warn = FALSE))
+    if (n > max_lines) out <- c(out, sprintf("%s has %d lines (limit %d): split it by concern", f, n, max_lines))
+  }
+  out
+}
+
 # ---- S0 preflight ---------------------------------------------------------------------------------
 # Cheap checks before anything touches the network. Returns the problems it recorded.
 jw_preflight <- function(week = jw_week_id(), root = jw_root(), run_tests = TRUE, tests_dir = NULL) {
@@ -49,6 +67,7 @@ jw_preflight <- function(week = jw_week_id(), root = jw_root(), run_tests = TRUE
   }
   if (!file.exists(file.path(root, "links.csv"))) prob("links_missing", paste0("links.csv not found in ", root, " (JW_ROOT must be the data folder; convert links.txt first)"))
 
+  if (!is.null(tests_dir)) for (m in jw_check_script_layout(dirname(dirname(tests_dir)))) prob("script_layout", m, "warn")
   if (run_tests && !is.null(tests_dir) && dir.exists(tests_dir) && requireNamespace("testthat", quietly = TRUE)) {
     Sys.setenv(JW_PREFLIGHT = "1"); on.exit(Sys.unsetenv("JW_PREFLIGHT"), add = TRUE)  # lets slow tests skip themselves
     res <- as.data.frame(testthat::test_dir(tests_dir, reporter = "silent", stop_on_failure = FALSE))

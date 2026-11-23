@@ -212,3 +212,18 @@ test_that("an s0 re-run drops earlier s0 problem rows and keeps other stages' ro
   p <- jw_problems_read(WK, r); expect_equal(p$stage, "s1")
   expect_equal(.problems_drop_stage("s0", WK, r), 0L)
 })
+
+test_that("script layout guard flags unloaded, missing and oversized concern files", {
+  d <- file.path(tempdir(), paste0("lay", sample.int(1e6, 1))); dir.create(d)
+  writeLines('for (f in c("jw_a.R", "jw_b.R")) NULL', file.path(d, "jobwatch.R"))
+  writeLines(rep("x <- 1", 3), file.path(d, "jw_a.R"))
+  writeLines(rep("x <- 1", 5), file.path(d, "jw_c.R"))
+  m <- jw_check_script_layout(d, max_lines = 4)
+  expect_true(any(grepl("not loaded by jobwatch.R: jw_c.R", m, fixed = TRUE)))
+  expect_true(any(grepl("missing: jw_b.R", m, fixed = TRUE)))
+  expect_true(any(grepl("jw_c.R has 5 lines", m, fixed = TRUE)))
+  expect_false(any(grepl("jw_a.R has", m, fixed = TRUE)))
+  writeLines('for (f in "jw_a.R") NULL', file.path(d, "jobwatch.R")); unlink(file.path(d, "jw_c.R"))
+  expect_length(jw_check_script_layout(d, max_lines = 4), 0)
+  expect_length(jw_check_script_layout(file.path(d, "nope")), 0)
+})

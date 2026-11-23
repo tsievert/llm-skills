@@ -25,7 +25,7 @@ still works; offer the one-time `jw_convert_links_txt(confirmed = TRUE)` (the `.
 ## Before the first run
 
 1. Load `web-fetching-r` and source its `scripts/polite_fetch.R` first (`jobwatch.R`
-   needs its `pf_*` helpers and stops with a clear message without them), then `jobwatch.R`, then
+   needs its `pf_*` helpers and stops with a clear message without them), then `jobwatch.R` (a loader for `scripts/jw_*.R`), then
    `jw_report.R` with `jw_load()`. The headless DAG does this itself.
 2. `jw_due(every_days = 7)` says whether a run is due; if not, say so and ask whether to run anyway.
 3. Read the profile and restate in three or four lines the hard requirements and exclusions (contract, FTE,

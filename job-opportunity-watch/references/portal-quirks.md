@@ -26,7 +26,7 @@ new links and 1 to 2 queue items. So the diff works; a few failures are transien
 
 - Role and topic words are English plus parts of German, Swedish, Danish, Norwegian, Finnish, Estonian,
   Dutch and French. Missing languages mean missed items; extend `.role_re` and `.topic_re` in
-  `scripts/jobwatch.R` when a language is under-represented in the portals.
+  `scripts/jw_probe.R` (`.role_re`, `.topic_re`) when a language is under-represented in the portals.
 - The deadline-cue list and month names in `jw_checks.R`'s `.jw_cue`/`.jw_mon` cover English, German,
   Finnish, Swedish, French and Dutch; a page in another language reads as `no_deadline_found` even
   with a visible deadline. Extend both when a new language's portals show up often as `no_deadline_found`.
@@ -115,7 +115,7 @@ job links resolve). EURES quirk: R's libcurl fails with "Failure when receiving 
 compression, so the call sets `accept_encoding = "identity"`. Not tested: more than one page of results, an
 Oracle site with a different language code, EURES filter codes beyond those in the saved search.
 
-Helpers for stubborn links (all in `jobwatch.R`, none edits `links.csv`):
+Helpers for stubborn links (in `scripts/jw_*.R`, loaded by `jobwatch.R`; none edits `links.csv`):
 
 - `jw_robots_allowed(url)`: `TRUE`, `FALSE`, or `NA` when `robots.txt` cannot be fetched (longest match wins,
   `*` and `$` supported, cached per host). Check it before using any endpoint found by hand.

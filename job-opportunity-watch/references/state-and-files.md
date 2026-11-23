@@ -7,7 +7,7 @@
 - [Profile](#profile)
 - [State columns](#state-columns)
 - [Privacy](#privacy)
-- [Functions (scripts/jobwatch.R)](#functions-scriptsjobwatchr)
+- [Functions (scripts/jw_*.R)](#functions-scriptsjw_r-loaded-by-jobwatchr)
 - [social_tags.tsv](#social_tagstsv)
 
 ## Layout
@@ -77,7 +77,22 @@ The links file and profile describe the user's job search (location, citizenship
 them out of any public repo, never paste them into lesson entries or issues, and do not copy them into
 skill files.
 
-## Functions (scripts/jobwatch.R)
+## Functions (scripts/jw_*.R, loaded by jobwatch.R)
+
+`jobwatch.R` is a loader; the code lives in one file per concern, and new functions go to the matching file:
+
+| File | Concern |
+|---|---|
+| `jw_core.R` | package guard, user agent, state paths, tsv helpers, `jw_tick` |
+| `jw_links.R` | links file: read, keys, search links, add/replace/enable/convert, confirmed write |
+| `jw_sources.R` | sitemap, feed, Google Sheet, JSON endpoint and JSON-LD extractors, endpoint discovery |
+| `jw_probe.R` | title classification, robots.txt, probe of one link and of all links, route suggestions |
+| `jw_state.R` | save run, audit, due, source health, opportunities ledger, headless run |
+| `jw_replace.R` | replacement finder for dead links |
+| `jw_social.R` | social-search tag ledger |
+
+The preflight warns (`script_layout`) when a `jw_*.R` file is not loaded by `jobwatch.R`, is missing, or exceeds
+400 lines. Load with `source()`; for `sys.source()` set `options(jobwatch.scripts = "<skill-dir>/scripts")` first.
 
 `jw_read_links`, `jw_probe`, `jw_save_run`, `jw_audit`, `jw_due`, `jw_source_health`, `jw_opp_upsert`,
 `jw_opp_expire`, `jw_add_link`, `jw_replace_link`, `jw_convert_links_txt`, `jw_find_replacement`,
@@ -88,7 +103,7 @@ If a long session already has an older copy of one of these functions loaded fro
 `source()`, re-loading the skill through its documented entry point does not refresh it — the stale
 definition keeps shadowing the current one until that specific file is `source()`d again. When a stage
 needs a helper that may have changed since it was last sourced in this session, re-source
-`scripts/jobwatch.R` (or the relevant pipeline script) explicitly rather than assuming an earlier load
+`scripts/jobwatch.R` (or the relevant concern file or pipeline script) explicitly rather than assuming an earlier load
 in the same session is still current. State-file readers like `jw_tags_read()` also tolerate a file
 written by an older schema (missing columns are filled with `NA` and reordered) rather than assuming
 the file matches the current column vector exactly.

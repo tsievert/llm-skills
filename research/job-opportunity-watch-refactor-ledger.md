@@ -411,3 +411,142 @@ Review result: before, `jw_probe_one` made one request with an identifying user 
 Findings that drove the design: (1) one research portal answered 403 to the identifying agent form and to `curl/8` but 200 to `Mozilla/5.0 (compatible; <tool>; ...)`, so a WAF rule on the agent token, not a bot challenge; (2) Cloudflare challenge pages carry `cf-mitigated: challenge` and also cover `robots.txt`: a stop; (3) several JS-built listings render fine in headless Chrome (chromote 0.5.1, Chrome found on this machine, CRAN, already installed) and the Fetch domain lets every page/XHR request be vetted against `robots.txt` (a university job API that disallows all agents was cancelled correctly); (4) `en.` language subdomains can be flaky while the neutral host works; (5) the static job-like count is fooled by words like "all vacancies" in the menu, so the render trigger is "thin, or fewer than 10 vacancy-like links".
 Packages: `chromote` used (optional); `robotstxt` not installed, the existing `jw_robots_allowed` kept (tested, handles longest match); no CRAN package for WAF-friendly agents.
 Live result: see HISTORY.md (5 of 17 now `ok`, 12 stay: 3 Cloudflare hosts, 1 moved link, 3 search-engine links, thin pages incl. one needing interaction). Open: render time (7 min for 114 links), `jobwatch.render_min_hits` default untuned, a Linux/macOS test, links.csv edits (uit.no `en.` host, the moved UiB vacancies URL) left to the user.
+
+## Rework pilot: `job-opportunity-watch/scripts/jobwatch.R` (2026-11-23)
+
+Status: inventory and split plan only, no file edited. Approved by the user as a pilot of the `rework` gate (`skill-feedback-triage/references/rework.md`).
+
+### Findings from reading the file and history
+
+- 71 KB, 1103 lines, 66 functions, 12 top-level constants, one top-level guard (needs `pf_fetch_html` from web-fetching-r) and one top-level object (`jw_ua`).
+- Section headings have drifted: the section named "JSON sources and endpoint discovery" now holds the main probe (`jw_probe_one`, `jw_probe`), the robots.txt check, route notes and `jw_tick`, while "2. probing" holds only sitemap, feed and sheet helpers; "6. headless run" is one function. The headings no longer say where code belongs, which is why each new lesson lands wherever the last one did.
+- 29 of 66 functions have no comment directly above them (11 of them public); rationale for those comes from the SKILL/reference text and git history, not the file.
+- Every function is referenced somewhere (another function, a script, a test or a reference doc): no dead code found. Dot-prefixed helpers are internal; public `jw_*` functions are named in `references/*.md` (notably `state-and-files.md` section Functions, and `portal-quirks.md` line 118).
+- Call graph between the proposed files (see below) has cycles (sources <-> probe, links -> probe, replace -> probe). R resolves names when called, so cycles are harmless for sourcing, but the split is by concern, not by layer.
+- Constants sit inside the line range of whichever function precedes them in the file; each must move with its user: `jw_links_cols`, `jw_noise_domains` (links); `.nav_re`, `.role_re`, `.topic_re`, `.excl_re` (classification, probe); `.sitemap_job_re` (sources); `.robots_cache` (a shared environment: must be created once, in the same file as `jw_robots_allowed`); `jw_opp_cols` (state); `.job_url_re` (replace); `.jw_tag_cols`, `.jw_tag_query_types` (social). Not yet verified which function reads each one.
+
+### Rule inventory (function level)
+
+Columns: lines = line count including leading comment (constants not separated); callers = number of other functions here that call it; ext = number of other files (R and md) that mention it; doc = whether a comment precedes it. Decision for every row: **keep** (moves unchanged to the target file). No function is proposed for dropping or merging in this pilot, because the aim is structure; merging duplicates would need reading bodies and is a separate step. Rationale per function is the leading comment where `doc = comment`; otherwise `unknown`, so keep.
+
+| function | lines | current section | target file | kind | callers | ext | doc |
+|---|---|---|---|---|---|---|---|
+| `jw_dir` | 1 | header | core | public | 3 | 0 | none |
+| `jw_path` | 1 | header | core | public | 3 | 0 | none |
+| `jw_state` | 1 | header | core | public | 8 | 0 | none |
+| `jw_now` | 2 | header | core | public | 3 | 0 | none |
+| `.clean` | 2 | header | core | private | 5 | 2 | comment |
+| `.cnt` | 1 | header | core | private | 1 | 0 | none |
+| `.na0` | 1 | header | core | private | 1 | 0 | none |
+| `.tsv_read` | 4 | header | core | private | 6 | 0 | none |
+| `.tsv_write` | 13 | header | core | private | 5 | 0 | none |
+| `jw_links_path` | 3 | 1. links file | links | public | 4 | 0 | none |
+| `.read_links_txt` | 17 | 1. links file | links | private | 1 | 0 | none |
+| `.read_links_table` | 10 | 1. links file | links | private | 5 | 0 | none |
+| `jw_read_links` | 33 | 1. links file | links | public | 2 | 3 | comment |
+| `jw_key` | 1 | 1. links file | links | public | 5 | 1 | none |
+| `.jw_key1` | 11 | 1. links file | links | private | 1 | 0 | none |
+| `jw_search_parts` | 18 | 1. links file | links | public | 2 | 1 | comment |
+| `jw_recency_label` | 8 | 1. links file | links | public | 1 | 1 | comment |
+| `jw_search_note` | 13 | 1. links file | links | public | 1 | 1 | comment |
+| `jw_search_refine` | 40 | 1. links file | links | public | 0 | 2 | comment |
+| `jw_classify_titles` | 14 | 2. probing | probe | public | 2 | 0 | none |
+| `.sitemap_text` | 9 | 2. probing | sources | private | 1 | 0 | comment |
+| `.slug_text` | 10 | 2. probing | sources | private | 1 | 1 | none |
+| `.sitemap_anchors` | 11 | 2. probing | sources | private | 1 | 1 | none |
+| `.feed_anchors` | 23 | 2. probing | sources | private | 1 | 0 | comment |
+| `jw_resolve_gsheet` | 37 | 2. probing | sources | public | 1 | 1 | comment |
+| `.gsheet_anchors` | 13 | 2. probing | sources | private | 1 | 0 | comment |
+| `.probe_gsheet` | 21 | 2. probing | sources | private | 1 | 0 | none |
+| `jw_robots_allowed` | 37 | JSON sources and endpoin | probe | public | 5 | 2 | none |
+| `.json_out` | 3 | JSON sources and endpoin | sources | private | 2 | 0 | none |
+| `.json_post` | 4 | JSON sources and endpoin | sources | private | 1 | 0 | comment |
+| `.q1` | 2 | JSON sources and endpoin | sources | private | 1 | 0 | none |
+| `.probe_eures` | 49 | JSON sources and endpoin | sources | private | 2 | 0 | comment |
+| `.probe_oracle` | 42 | JSON sources and endpoin | sources | private | 2 | 0 | comment |
+| `.jsonld_anchors` | 22 | JSON sources and endpoin | sources | private | 2 | 1 | comment |
+| `jw_discover_endpoints` | 56 | JSON sources and endpoin | sources | public | 1 | 2 | comment |
+| `jw_probe_one` | 82 | JSON sources and endpoin | probe | public | 3 | 3 | none |
+| `.jw_parse_page` | 17 | JSON sources and endpoin | probe | private | 1 | 0 | comment |
+| `.jw_route_note` | 9 | JSON sources and endpoin | probe | private | 1 | 0 | comment |
+| `.jw_failure_hint` | 8 | JSON sources and endpoin | probe | private | 1 | 0 | comment |
+| `.jw_n_jobhits` | 8 | JSON sources and endpoin | probe | private | 1 | 0 | comment |
+| `.jw_join_note` | 5 | JSON sources and endpoin | probe | private | 2 | 0 | none |
+| `jw_suggest_routes` | 13 | JSON sources and endpoin | probe | public | 1 | 1 | comment |
+| `jw_tick` | 9 | JSON sources and endpoin | core | public | 1 | 1 | comment |
+| `jw_probe` | 57 | JSON sources and endpoin | probe | public | 1 | 5 | comment |
+| `jw_save_run` | 47 | 3. state, diff, audit | state | public | 1 | 1 | comment |
+| `jw_audit` | 11 | 3. state, diff, audit | state | public | 1 | 1 | comment |
+| `jw_due` | 9 | 3. state, diff, audit | state | public | 0 | 3 | comment |
+| `jw_source_health` | 11 | 3. state, diff, audit | state | public | 1 | 3 | comment |
+| `jw_opp_upsert` | 17 | 4. opportunities ledger  | state | public | 0 | 2 | comment |
+| `jw_opp_expire` | 11 | 4. opportunities ledger  | state | public | 0 | 1 | comment |
+| `.jw_backup` | 4 | 5. editing the user's li | links | private | 5 | 0 | none |
+| `.write_links_csv` | 4 | 5. editing the user's li | links | private | 4 | 0 | none |
+| `jw_add_link` | 15 | 5. editing the user's li | links | public | 1 | 3 | comment |
+| `jw_replace_link` | 16 | 5. editing the user's li | links | public | 0 | 3 | comment |
+| `jw_set_link_enabled` | 16 | 5. editing the user's li | links | public | 0 | 2 | comment |
+| `jw_convert_links_txt` | 10 | 5. editing the user's li | links | public | 2 | 2 | comment |
+| `jw_write_confirmed` | 8 | 5. editing the user's li | links | public | 0 | 3 | comment |
+| `jw_headless` | 33 | 6. headless run (no mode | state | public | 0 | 2 | comment |
+| `.tokens` | 4 | 7. finding a replacement | replace | private | 1 | 0 | none |
+| `.get_text` | 7 | 7. finding a replacement | replace | private | 2 | 0 | none |
+| `.sitemap_locs` | 15 | 7. finding a replacement | sources | private | 3 | 0 | none |
+| `jw_find_replacement` | 52 | 7. finding a replacement | replace | public | 1 | 3 | none |
+| `jw_tags_read` | 11 | Social-search tag ledger | social | public | 3 | 2 | none |
+| `jw_tags_record` | 24 | Social-search tag ledger | social | public | 0 | 2 | comment |
+| `jw_tags_review` | 8 | Social-search tag ledger | social | public | 0 | 2 | comment |
+| `jw_tags_set_status` | 9 | Social-search tag ledger | social | public | 0 | 2 | comment |
+
+Lines per target: core 35, links 227, sources 317, probe 250, replace 63, social 52, state 139 (sums to 1083 of 1103; the rest is the header, section banners and blank lines).
+
+### Proposed split
+
+| New file | Contents | Approx. lines |
+|---|---|---|
+| `jw_core.R` | package loading, the web-fetching-r guard, `jw_ua`, paths (`jw_dir`, `jw_path`, `jw_state`, `jw_now`), `.clean`, `.cnt`, `.na0`, `.tsv_read`, `.tsv_write`, `jw_tick` | 60 |
+| `jw_links.R` | links file read/write: sections 1 and 5 (read, keys, search parts and refine, add, replace, enable, convert, confirmed write) | 230 |
+| `jw_sources.R` | source-type extractors: sitemap, feed, Google Sheet, JSON endpoints (EURES, Oracle), JSON-LD, `jw_discover_endpoints`, `.sitemap_locs` | 320 |
+| `jw_probe.R` | `jw_classify_titles`, robots check, `jw_probe_one`, `jw_probe`, page parsing, route notes, `jw_suggest_routes` | 250 |
+| `jw_state.R` | `jw_save_run`, audit, due, source health, opportunities ledger, `jw_headless` | 140 |
+| `jw_replace.R` | `jw_find_replacement` and its helpers | 65 |
+| `jw_social.R` | social-search tag ledger | 55 |
+| `jobwatch.R` (loader, about 30 lines) | sources the files above in this order: core, links, sources, probe, state, replace, social; keeps the header comment and the web-fetching-r guard | 30 |
+
+Largest file stays near 320 lines versus 1103 now; the 71 KB total is unchanged (a split reduces what a reader or an edit must load, not the total).
+
+### Risks and how to check
+
+1. **Locating siblings.** `source()` gives a script no reliable own directory. Options: (a) loader uses `sys.frame(1)$ofile` (works for `source()`, not for `sys.source` or `knitr`), with fallback to `getOption("jobwatch.scripts")` and a clear error; (b) keep one file and generate it from the parts with a build script, committing the generated file (all callers unchanged, but two sources of truth). Recommendation: (a), because the five known call sites all use `source()` (`run_probe.R`, `assets/pipeline/_targets.R`, `test_json.R`, `test_stages.R`, `jw_stage_fns.R` comment); tested in `test_stages.R` with a path relative to the loader.
+2. **Docs that name `jobwatch.R` as the home of functions:** `references/state-and-files.md` (Functions section), `portal-quirks.md` (lines 29 and 118), `stage-s1-probe.md`, `pipeline.md`; each needs the file names or a sentence that `jobwatch.R` loads them.
+3. **`.robots_cache`** must be created exactly once per session; if two files created it, state would be lost.
+4. **Tests:** offline tests (`test_json.R`, `test_stages.R`, `test_fetch_ladder.R`, `test_pipeline.R`) before and after, same pass count; a fixture-link probe without network is not available, so no live probe is planned. Not testable here: sourcing from a second machine, from `targets` workers.
+5. **Gate 4 of the rework file:** net SKILL.md size does not grow (this rework touches no SKILL.md except at most one pointer line).
+
+### Enforcement rung (optional, rung 3)
+
+A check in the skill's `scripts/pipeline/jw_checks.R` (or the existing preflight) that the loader lists every `scripts/jw_*.R` file and that no concern file exceeds a size limit (for example 400 lines), so the file cannot silently regrow into a monolith. This is the part that addresses regrowth, which the research found to be the usual outcome of a one-time rewrite.
+
+### Decisions needed from the user
+
+1. Approve the seven-file split (or merge `jw_social.R` and `jw_replace.R` into one `jw_extras.R` if fewer files are preferred).
+2. Loader option (a) or (b) above.
+3. Whether to include the size check (rung 3) in this change.
+4. Whether to also fix the stale/missing comments on the 11 undocumented public functions in the same change (not proposed by default).
+
+### Rework carried out (2026-11-23)
+
+User approved the seven-file split, loader option (a) and the size check. Result:
+
+| Item | Outcome |
+|---|---|
+| Split | `jobwatch.R` is a 31-line loader; code in `jw_core.R` (56 lines), `jw_links.R` (227), `jw_sources.R` (319), `jw_probe.R` (277), `jw_state.R` (133), `jw_replace.R` (56), `jw_social.R` (68). Mechanical: every top-level expression moved unchanged, in original order within a file; section banners dropped. Constants went with their users (`.job_url_re` to core because both state and replace use it; the four classification regexes with `jw_classify_titles` in probe; `.robots_cache` with `jw_robots_allowed`). |
+| Equivalence | Sourcing the old and new code into separate environments: 95 objects each, none missing or added, all 95 identical (`deparse` for functions, `all.equal` for constants). |
+| Loader | finds siblings through the `ofile` of any `source()` frame, then `options(jobwatch.scripts)`, else stops with a clear message (tested with `sys.source()` and no option). Cleans up its own variables. |
+| Size check | `jw_check_script_layout()` in `pipeline/jw_report.R`, run by the s0 preflight as warning `script_layout`: concern file not loaded, listed but missing, or over 400 lines. New offline test (6 expectations). |
+| Tests | offline suite before 43 tests / 216 expectations, after 44 / 222, 0 failures, 0 skipped. Not run: live probe, second machine, `targets` workers. |
+| Docs | `state-and-files.md` (file table, new anchor), `portal-quirks.md`, `pipeline.md`, `stage-s1-probe.md` pointers updated; SKILL.md unchanged (9.4 KB). |
+| Checks | `lint_skills()` clean for the skill, `skills-ref validate` valid, `check_skill_links()` clean. |
+
+Problems met: a bash heredoc collapsed double backslashes in R regex strings (same as an earlier lesson); fixed with `[.]` character classes through the edit tool. A first version of the size check skipped files not listed in the loader; the test caught it. `testthat` left `_problems/` and an `.rds` file in the tests folder after a failing run; deleted.
+Open: the 11 public functions without a leading comment (decision 4 not taken); `jw_sources.R` is 319 lines, so the 400 limit has room but a tighter limit (300) would flag it.

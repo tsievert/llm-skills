@@ -36,7 +36,7 @@ headless) and start from `jw_status()` plus a short summary, not from memory of 
 `<data>/runs/<YYYY-Www>/` holds `_stage.json` (status, hashes, counts, versions per stage), `.lock`, `inputs/`
 (frozen copies of the links and profile), the stage parquet files, `s4_parts/`, `problems.parquet`,
 `summary.md`, `report.html`. `<data>/opportunities.parquet` is the cross-week ledger. Nobody edits these by
-hand; change links and profile through the R functions in `jobwatch.R` (backup and confirmation).
+hand; change links and profile through the R functions in `jw_links.R` (loaded by `jobwatch.R`; backup and confirmation).
 
 ## Contracts, validation, gate (`jw_contracts.R`)
 
