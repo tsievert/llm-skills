@@ -5,6 +5,7 @@
 - Two failure modes and why `--dependency` alone does not catch them
 - Submission-loop template
 - Resuming from a specific step
+- Judging whether a script is still used
 - Evidence
 - Testing
 
@@ -134,6 +135,10 @@ orchestrator has no job ID to depend on for a stage it did not submit, so it sub
 resumed stage without a dependency. Do not assume the earlier stage's output is complete or
 valid just because the user wants to resume: have the resumed stage itself validate its own
 inputs on startup rather than trusting the choice of start index.
+
+## Judging whether a script is still used
+
+A reference grep (for example for `PY_SCRIPT=` defaults) misses scripts launched through computed paths and cannot judge an optional branch. Combine it with a functional comparison against the step that supersedes the file, and state the grep limits.
 
 ## Evidence
 

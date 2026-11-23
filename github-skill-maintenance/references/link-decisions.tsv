@@ -43,3 +43,4 @@ manuscript-writing-coach	deeplabcut-hpc	no-backlink	HPC and training skill; manu
 manuscript-writing-coach	keypoint-moseq	no-backlink	Only a pointer for reporting questions on syllable studies; kpms users do not need manuscript coaching from within the fitting workflow	2026-11-10
 manuscript-writing-coach	openalex	no-backlink	Generic literature skill must not collect a pointer to every domain skill that uses it	2026-11-10
 application-style-coach	openalex	no-backlink	Only a hand-off sentence for find-a-study requests; openalex is generic and should not collect pointers from domain skills.	2026-11-17
+python-reproducible-pipeline	deeplabcut-hpc	no-backlink	deeplabcut-hpc no longer mentions the pipeline skills in SKILL.md (only a uv/PATH pointer in a reference); a DLC cluster job is not a pipeline next step	2026-11-23

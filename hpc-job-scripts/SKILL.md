@@ -59,13 +59,9 @@ guess or proceed on assumptions.
   overhead), and some sites cap or discourage arrays: check the profile.
 - Chain stages with `sbatch --parsable` + `--dependency=afterok:<id>`; use
   `--kill-on-invalid-dep=yes` so failed upstream jobs do not leave pending jobs forever.
-  For a short-lived, login-node orchestrator that submits a whole chain in one go and
-  exits (not a daemon that monitors the run): check that each `sbatch` call itself
-  succeeded before trusting the job ID it printed, and make sure every stage script
-  exits non-zero on failure — `afterok` only reflects the job's exit code, so a caught
-  exception or swallowed subprocess error that still exits 0 makes the chain proceed on
-  a false premise. Details, a tested submission-loop template, and a resume-from-step
-  pattern: [references/chaining-and-orchestrators.md](references/chaining-and-orchestrators.md)
+  In a login-node orchestrator, check that each `sbatch` call succeeded before using its
+  job ID, and make every stage exit non-zero on failure (`afterok` only sees the exit code).
+  Template and resume pattern: [references/chaining-and-orchestrators.md](references/chaining-and-orchestrators.md)
 - Record provenance at start: job ID, host, date, `module list`, Python version,
   git commit, and the exact command/config.
 
@@ -112,8 +108,7 @@ guess or proceed on assumptions.
 
 | Symptom | Likely cause |
 |---|---|
-| `sbatch: Batch script contains DOS line breaks`, `bad interpreter: /bin/bash^M` or odd syntax errors | CRLF line endings from Windows (often in several file types at once: shell, Python, yaml, json); find them with `grep -rlIU $'\r' --include='*.sh' --include='*.py' --include='*.yaml' --include='*.json' .`, fix with `sed -i 's/\r$//' <files>` and restore the executable bit (`chmod +x`); on Windows Git Bash plain `grep -c $'\r'` and `cat -A` can report zero carriage returns on CRLF files (reproduced: `grep -U` counts them, and so does `file`), so use `grep -U` or `file` there, and in any script or test that detects CRLF (reported once); to stop it recurring set `*.sh text eol=lf` (and the other script types) in `.gitattributes` so the working copy is LF (reported once); if an editing tool's multi-line replace reports "string not found" on a Windows-origin script, suspect CRLF, and after tool edits run `file` to catch mixed endings (reported once) | Files made by the write tool on Windows are CRLF too (check with `file`; fix with `sed -i 's/[[:cntrl:]]$//'`), and a large bash heredoc can silently truncate a script (the only sign may be a shell warning "here-document delimited by end-of-file"), so check the last lines. Quoting `$'\r'` or backslash sequences through `sed`/`awk` fails silently: change such lines with the edit tool and recheck with `grep -U`.
-| Script "did not work" under a `.slurm` or other extension | Slurm reads `#SBATCH` lines from the content, so the extension should not matter (reported once, cause not established); name batch scripts `.sh` and run `file script.sh` to rule out CRLF |
+| `sbatch: Batch script contains DOS line breaks`, `bad interpreter: /bin/bash^M`, odd syntax errors, or a `.slurm`-extension script that "did not work" | CRLF line endings from Windows (several file types at once). Check with `file` or `grep -U`, fix with `sed -i 's/\r$//' <files>`; `check_sbatch.sh` flags it. Detection pitfalls, prevention and a heredoc truncation trap: [references/windows-line-endings.md](references/windows-line-endings.md) |
 | Job fails instantly, no log | Output directory missing; check `scontrol show job <id>` (`StdOut=`) |
 | Job pending forever | Request exceeds partition limit, or wrong account/partition |
 | Python output only appears at the end | Buffered stdout; see `hpc-python-code` |
