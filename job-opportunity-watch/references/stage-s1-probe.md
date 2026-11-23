@@ -42,7 +42,12 @@ links are excluded), not that the vacancies are relevant. A full run of about 10
 
 ## What the script cannot read
 
-Record every attempt, continue, never stop the run for one link:
+Record every attempt, continue, never stop the run for one link. The probe already runs a generic recovery ladder by
+failure class (compatible user agent on 403, language-neutral or `www`/https URL variants, headless-Chrome render for
+thin pages, a stop on bot challenges) and writes the route taken and any `try: ...` candidates into the `note`
+column; read the table in [portal-quirks.md](portal-quirks.md#unreadable-sources-the-fetch-ladder-generic-by-failure-class)
+before trying anything by hand, and add a new route to the ladder (by class), not a note about one site. The
+bullets below are for what remains after the ladder:
 
 - **`ok_js_suspect`, `blocked`, `nav_only`:** try the `webfetch` tool once. If still empty, list the source as
   "needs manual check" and do not claim it was checked. Sources that stay in this state for several weeks are

@@ -56,6 +56,20 @@ extracting the pattern that was actually there. Revisit if a future skill needs 
   itself, so callers with a different notion of "anchor" (e.g. a non-job-listing page) pass their
   own counts.
 - `pf_tables(doc)` -> `list` of data frames (possibly empty). Thin wrapper, no retry or state.
+- `pf_failure_class(resp = NULL, err = NULL)` -> one of `ok`, `challenge`, `forbidden`, `not_found`, `transient`,
+  `client_error`, `network`. A challenge (header `cf-mitigated: challenge`, or a body naming a bot wall) wins over a plain 403.
+- `pf_ua_compat(ua)` -> the same identity as `ua` in the `Mozilla/5.0 (compatible; <tool>/<ver>; <purpose>)` form some WAF rules
+  require (checked 2026-11-23: a research portal answered 403 to the plain form and 200 to this one). It names the tool; it does not
+  imitate a browser.
+- `pf_url_variants(url, max_n = 3)` -> data frame `label`, `url`: language subdomain or path segment dropped, `www` toggled, http upgraded,
+  trailing slash toggled; queries untouched.
+- `pf_fetch_ladder(url, ua, timeout = 25, retry_on, min_interval = 1.5, max_variants = 3, state, learned)` -> `list(response, error,
+  url_used, route, failure_class, attempts, ok)`. At most 1 + 1 + `max_variants` requests, each rate-limited. A challenge stops it; a 404
+  tries only the language-neutral variants. `learned` remembers per host that the compatible user agent works. Callers keep their own
+  status mapping (job-opportunity-watch maps `challenge`/`forbidden` to `blocked`).
+- `pf_render_html(url, ua, wait_max = 10, settle = 2, allow = NULL)` -> `list(ok, html, note, blocked)`. Needs `chromote` and a Chrome
+  install, otherwise `ok = FALSE` with the reason. Images, fonts and media are never loaded; `allow(url)` is called for every page, XHR
+  and fetch request and a `FALSE` cancels it. A rendered bot wall is reported, not bypassed. Not for logins or pages needing a click.
 
 ## Heuristic thresholds and where they came from
 

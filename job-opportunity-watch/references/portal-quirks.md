@@ -5,7 +5,7 @@
 - [Test on a real list](#test-on-a-real-list)
 - [Limits of the title filter](#limits-of-the-title-filter)
 - [Links that redirect to a changing Google Sheet](#links-that-redirect-to-a-changing-google-sheet)
-- [Sources that failed in one weekly run (checked 2026-11-03)](#sources-that-failed-in-one-weekly-run-checked-2026-11-03)
+- [Unreadable sources: the fetch ladder (generic, by failure class)](#unreadable-sources-the-fetch-ladder-generic-by-failure-class)
 - [JSON sources and endpoint discovery (checked 2026-11-03, one machine, one time)](#json-sources-and-endpoint-discovery-checked-2026-11-03-one-machine-one-time)
 - [Reading hints for pages the script cannot parse](#reading-hints-for-pages-the-script-cannot-parse)
 - [If the probe stops working](#if-the-probe-stops-working)
@@ -64,17 +64,36 @@ board: 594 rows, 593 with a link, identical result by flag and by redirect; a no
 `resolver` gives `status = error` with a clear note. Not tested: a sheet that stops being public mid-run,
 tab names that match no pattern (returns zero anchors), `jw_probe()` end to end over a whole links file.
 
-## Sources that failed in one weekly run (checked 2026-11-03)
+## Unreadable sources: the fetch ladder (generic, by failure class)
 
-- RSS feed read as "unparseable html": fixed, see `stage-s1-probe.md` (XML bodies are no longer sent to the HTML parser).
-- A Cloudflare "Just a moment" challenge (HTTP 403, also on `sitemap.xml` and `/rss`): the site's
-  `robots.txt` allows crawling and lists sitemaps, but the challenge blocks scripted requests. Do not
-  bypass; mark it `manual-check` and use a mirror or aggregator that is probeable.
-- Connection timeouts to one host that resolves, while other hosts of the same institution work: this can be
-  the local network or a firewall rule rather than the site, and no script change fixes it. Test from
-  another network (the user's browser, a phone hotspot) before retiring the link.
-- "Could not resolve hostname" on the local resolver (`SERVFAIL`) with no second resolver reachable: ask the
-  user to open the page in a browser; if it loads there, the problem is the machine's DNS.
+`jw_probe_one()` no longer treats a failure as final. It classifies the first response once and the class picks the
+next routes; no route names a site, so a new problem link needs no new code. The routes are in `pf_fetch_ladder()`,
+`pf_render_html()` (web-fetching-r) and `jw_suggest_routes()`; the evidence is in
+`research/job-opportunity-watch-refactor-ledger.md` (2026-11-23).
+
+| Class (how it is detected) | Routes tried, in order | Ends as |
+|---|---|---|
+| `challenge`: `cf-mitigated: challenge` header, or a body such as "Just a moment" / CAPTCHA / WAF page | none: stop at once | `blocked`, note "bot challenge (not bypassed)". Use a mirror or aggregator already in the list, or the browser. `robots.txt` on such a host is usually challenged too |
+| `forbidden`: 401/403 without a challenge | a Googlebot-style `Mozilla/5.0 (compatible; <tool>/<version>; <purpose>)` user agent (still names the tool), then the URL variants | `ok` with note `route: ua_compat ...`, else `blocked`. The host remembers a working route for the session. Some WAF rules reject any user agent without the `Mozilla/5.0 (compatible; ...)` token (seen on a European research portal) |
+| `not_found` (404/410) | language-neutral variants only (a wrong path will not be fixed by `www` or https) | `http_error`, note "link moved, try `jw_find_replacement()`" |
+| `transient` (429/5xx) or `network` | one retry with backoff, then variants: drop the language subdomain (`en.host` to `host`) or path segment (`/en/`), toggle `www`, upgrade to https, toggle the trailing slash (at most 3) | `ok` with the route in the note, else `http_error`/`error`. A language subdomain that fails while the neutral host works was seen once |
+| Read but thin, or fewer than 10 vacancy-like links (`jobwatch.render_min_hits`) | **render**: headless Chrome through `chromote` (optional; skipped with a note when missing). It loads the page as a user would, never loads images or fonts, and sends every page, XHR and fetch request through the `robots.txt` check, so a cancelled request is counted in the note | rendered anchors replace the static ones only if they hold more vacancy-like links. Slow: about 5 s per page, a 100-link list took about 7 minutes instead of 2. Opt out with `options(jobwatch.render = FALSE)` |
+| Still thin after rendering | `jw_suggest_routes()`: feeds and sitemaps announced by the page or `robots.txt`, JSON-LD, API URLs in the page's scripts (with the `robots.txt` verdict), known portal platforms with their `json:` opt-in word | note `try: ...` for the assistant and user to follow; nothing is switched on automatically |
+
+What stays a decision for the user: the `json:eures` / `json:oracle` opt-in (terms, below), replacing a dead link, and
+any source that is a deliberate block. A page whose rendering needs a host that `robots.txt` disallows is read only
+as far as the allowed requests give (a university portal whose job API disallows all agents rendered 11 links
+instead of a listing). Not covered: pages that need a click or scroll before the list appears, and login walls.
+
+Other failure causes the ladder cannot fix:
+
+- Connection timeouts to one host that resolves, while other hosts of the same institution work: possibly the local
+  network or a firewall rule. Test from another network (browser, phone hotspot) before retiring the link.
+- "Could not resolve hostname" on the local resolver with no second resolver reachable: ask the user to open the
+  page in a browser; if it loads there, the problem is the machine's DNS.
+- An RSS body sent to the HTML parser ("unparseable html") is fixed: XML bodies go to the feed reader.
+
+Tested 2026-11-23 on one machine: of 17 sources that were not `ok` in a weekly run, 5 became `ok` (one by the compatible user agent, three by rendering, one when a transient 503 cleared) and 12 stayed (challenge pages, a moved link, three search-engine links, thin pages); the 97 sources that were already `ok` kept their status.
 
 ## JSON sources and endpoint discovery (checked 2026-11-03, one machine, one time)
 

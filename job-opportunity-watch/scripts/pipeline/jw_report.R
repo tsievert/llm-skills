@@ -52,7 +52,9 @@ jw_preflight <- function(week = jw_week_id(), root = jw_root(), run_tests = TRUE
   if (run_tests && !is.null(tests_dir) && dir.exists(tests_dir) && requireNamespace("testthat", quietly = TRUE)) {
     Sys.setenv(JW_PREFLIGHT = "1"); on.exit(Sys.unsetenv("JW_PREFLIGHT"), add = TRUE)  # lets slow tests skip themselves
     res <- as.data.frame(testthat::test_dir(tests_dir, reporter = "silent", stop_on_failure = FALSE))
-    if (any(res$failed > 0 | res$error)) prob("unit_tests_failed", sprintf("%d unit test(s) failed", sum(res$failed > 0 | res$error)))
+    bad_t <- res[res$failed > 0 | res$error, ]
+    if (nrow(bad_t)) prob("unit_tests_failed", sprintf("%d unit test(s) failed: %s", nrow(bad_t),
+                          substr(paste0(bad_t$file, " / ", bad_t$test, collapse = "; "), 1, 300)))
   }
   jw_freeze_inputs(week, root)
   p <- jw_problems_read(week, root); p <- p[p$stage == stage, ]

@@ -71,6 +71,10 @@ whether the skill is ever used.
   forward slashes.
 - Shell scripts: LF endings (`.gitattributes` enforces LF in the index, but a working
   copy written on Windows can still be CRLF), a shebang, `bash -n`.
+- Tests of a new lint check: create the scratch folder fresh each run (copying a skill into an existing folder nests the copy and the check
+  then runs on stale files) and include one known-bad case to prove the check can fire. `lint_skills()` takes `repo` and `skills`
+  (no `root`), so a synthetic repo is passed as `lint_skills(repo = tmp)`. After editing with the edit tool a CRLF-to-LF git warning is
+  expected; normalise again only if a further multi-line edit follows.
 
 - Package-manager tests (renv, uv, conda) go into disposable copies of source files only. Never copy, move, sync or delete
   recursively over folders that link into a shared cache (`renv/library`, `.venv`, junctions): a write through the link damages the

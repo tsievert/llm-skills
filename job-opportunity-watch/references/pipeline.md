@@ -74,7 +74,12 @@ synced folder (Syncthing, OneDrive): never run stages on two machines at once (n
 - Headless: `targets::tar_make(script = "<skill>/assets/pipeline/_targets.R", store = "<data>/runs/<week>/_targets")`
   with `JW_ROOT`, `JW_SKILL` (and optionally `JW_WEEK`) set. It stops with `STAGE_PENDING` at the assistant
   stage; after the conversation closes s4 run it again and only `report` rebuilds. Tested with fixture stage
-  functions; the real s1-s3 functions are in "The mechanical stages".
+  functions; the real s1-s3 functions are in "The mechanical stages". Run it in a fresh background R process (the
+  `callr` default), not with `callr_function = NULL` in a busy console: session objects named like targets (`s1`,
+  `s3`, `s4`) collide with them, and the per-source probe progress floods the console. If the target store is
+  stale, `tar_make()` re-probes every link and the queue can grow after s4 closed, which breaks the s4 coverage
+  gate. Once s4 is closed, render the report with `jw_render_report()` instead and use `tar_make()` only for a new
+  week.
 - Report: `jw_render_report()` writes `summary.md` first (small; later conversations read this, not the HTML)
   and then renders `assets/pipeline/report.qmd` into the run folder. It needs `options(jobwatch.script_dir)`,
   which `jw_load()` sets; it stops if that folder is wrong, and it warns (and records `report_render_failed`)
@@ -108,7 +113,8 @@ mid-week change is flagged; the first ledger week is labelled a baseline.
   (no separate seen-file to go stale; a rerun gives the same queue; the first week is a baseline and says so).
   The prefilter takes its word lists from `job_profile.yml`: a profile key becomes a regex through the optional
   `search_synonyms` block (key to regex, any language), otherwise its own words. Tier 1 = topic word, tier 2 =
-  role or vacancy-like title only; each row carries the `reason`, and dropped links are counted by reason in
+  role or vacancy-like title only (a queue with no tier 1 means no new title contained a topic word: read the tier
+  counts, they are not an error); each row carries the `reason`, and dropped links are counted by reason in
   `problems.parquet` (severity info). Excluded titles, full professor (only if the profile excludes it) and
   excluded systems or topics are dropped; an excluded system is kept when a strong topic word is also present.
 - **s3** `jw_s3_deadlines(week)` first reads the link text (an expired date next to a deadline cue settles the

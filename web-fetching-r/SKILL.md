@@ -1,7 +1,7 @@
 ---
 name: web-fetching-r
 description: 'Provides polite, rate-limited web fetching in R (httr2/rvest/xml2): a shared helper for a consistent user agent, per-host throttling, retry/timeout handling, and bot-wall/JavaScript-rendering detection, plus a workflow for pulling a table or list of records from a given page into a data frame for a one-off task. Also the shared fetch mechanics that job-opportunity-watch, recipe-notes-formatter and social-research-search source instead of each re-implementing their own copy. Use when the user wants to scrape, pull, or extract a table or list from a specific webpage for one-off use, or mentions rvest/httr2 web scraping. Not for a recurring watch list of job portals (use job-opportunity-watch), recipe pages (use recipe-notes-formatter), academic literature (use openalex), or Bluesky/Mastodon (use social-research-search).'
-compatibility: Requires R with httr2, rvest and xml2, and internet access. Read-only and polite -- per-host rate limiting, an identifying user agent, no logins, no bot-wall or CAPTCHA bypass. scripts/polite_fetch.R has no skill-specific logic; other skills source it for the fetch mechanics and keep their own parsing and state.
+compatibility: Requires R with httr2, rvest and xml2 (chromote plus a Chrome install optional, for JavaScript pages), and internet access. Read-only and polite -- per-host rate limiting, an identifying user agent, no logins, no bot-wall or CAPTCHA bypass. scripts/polite_fetch.R has no skill-specific logic; other skills source it for the fetch mechanics and keep their own parsing and state.
 ---
 
 # Web fetching (R)
@@ -30,6 +30,10 @@ source("<skill-dir>/scripts/polite_fetch.R")   # <skill-dir> = folder shown when
 | `pf_fetch_html(url, ua, min_interval, timeout, max_tries, retry_on, state)` | `pf_wait()` + `pf_perform()` + light HTML parsing; returns `list(url, status, http, content_type, html, doc, problem)` |
 | `pf_blocked_text(text)` | Heuristic: does the start of the visible text look like a CAPTCHA/bot-wall/"enable JavaScript" page? |
 | `pf_js_suspect(text_chars, n_scripts, n_anchors)` | Heuristic: does the page look like it needs JS rendering (thin text/links, many `<script>` tags)? |
+| `pf_failure_class(resp, err)` | Classifies one response: `ok`, `challenge` (bot wall: stop), `forbidden`, `not_found`, `transient`, `client_error`, `network` |
+| `pf_fetch_ladder(url, ua, ...)` | Fetch with generic recovery chosen by failure class: compatible user agent on 403, language-neutral/`www`/https URL variants, a stop on a challenge; returns the route taken and an attempts table. Use instead of `pf_perform()` when a failed page matters |
+| `pf_url_variants(url)`, `pf_ua_compat(ua)` | The URL variants and the `Mozilla/5.0 (compatible; <tool>; ...)` user agent the ladder uses |
+| `pf_render_html(url, ua, allow)` | Optional: render a JavaScript page in headless Chrome (`chromote`), with an `allow(url)` hook (for example a `robots.txt` check) applied to every page and XHR request |
 | `pf_tables(doc)` | All HTML tables on a parsed page as a list of data frames (thin wrapper over `rvest::html_table()`) |
 
 Full contracts, defaults and the reasoning behind each heuristic:

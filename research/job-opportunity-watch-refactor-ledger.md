@@ -377,3 +377,37 @@ Test: `uvx --python 3.12 --from ddgs python t.py` (ddgs 9.16.1, Python 3.12 via 
 Not done: Brave API comparison (no `BRAVE_API_KEY`/`BRAVE_SEARCH_API_KEY` set; none created). Whether `timelimit="m"` actually filtered by date was not checked (no dates returned by the text backend). Single run from one IP; reliability over a week unknown.
 
 httr2 ecosystem (CRAN_package_db, 2026-11-16): httr2 1.3.0 (2026-07-13) has built-in `req_throttle`, `req_retry`, `req_cache`, `req_perform_parallel`, so no extension is needed for polite fetching. Reverse dependencies: 604 packages, almost all single-API clients. Related tools: `robotstxt` 0.7.15 (2024-08, robots.txt checks), `ratelimitr` 0.4.2, `chromote` 0.5.1 / `selenider` 0.4.1 (JS rendering), `curl` 8.1.0, `httptest2` 1.2.2 / `vcr` 2.1.0 / `webmockr` 2.2.0 / `webfakes` 1.5.0 (tests), `reqres` 1.2.0 (request/response classes for servers), `mirai` / `nanonext` (async). No CRAN package found that adds browser-like TLS fingerprinting to httr2 (checked by title/description scan only).
+
+## 2026-11-23: alternative routes for sources unreadable in the W48 probe (triage of lessons 116, 130, 132)
+
+Request: find fetch routes for the 17 s1 sources that were not `ok` (list from `s1_sources.parquet` of the W48 run). Method: curl with a plain
+descriptive UA, one request per URL, one machine, one time. Nothing bypassed: Cloudflare challenges were left alone (rule in `portal-quirks.md`).
+
+| Source (s1 status) | Result 2026-11-23 | Route / verdict |
+|---|---|---|
+| en.uit.no/ledigestillinger (http_error 503) | `en.` host 503/502; `https://uit.no/ledigestillinger` 200, 74 KB | **Fixed by URL**: drop the `en.` subdomain (also found by the 403-on-/en/ lesson: try the language-neutral host first). Page links to `uit.no/tavla/stillinger` |
+| uib.no .../84777/vacant-positions-uib (404) | old path 404; `https://www.uib.no/en/about-uib/career-at-uib/vacancies` 200, links to a Jobbnorge employer page | **Fixed by URL** (replace the dead path); listing itself is on Jobbnorge |
+| jobbnorge.no search (ok_js_suspect) | `/rss` redirects to an HTML shell (no feed); `/search?...` is a JS shell, no job anchors in HTML; `api.jobbnorge.no` 401 (earlier note) | **No route found**; Norwegian posts also reachable via EURES (`json:eures`) or EURAXESS; manual check |
+| euraxess.ec.europa.eu search (blocked 403) | curl with the exact 908-character URL: 200, 221 KB, job links `/jobs/<id>` present; also with UA `curl/8` | **Probe-side**: httr2's request was blocked, curl was not. Check UA/headers or rate (not tested which); retry the probe before treating as blocked |
+| ut.ee, emu.ee, academicpositions.com (blocked 403) | every path, including `robots.txt`, returns the Cloudflare "Just a moment" challenge | **Do not bypass**. Use mirrors already in the list: EURAXESS (searchable by university name, 200), `universitypositions.eu/rss/jobs` (200, 1 MB RSS) |
+| Oracle HCM, `fa-eosd-saasfaprod1...` (ok_js_suspect) | REST `recruitingCEJobRequisitions` `findReqs;siteNumber=CX_1001` answers 200 JSON without login; no `robots.txt` (404) | **Route exists**: `json:oracle` opt-in in the link `note`; needs the user's per-portal acceptance of the terms (table in `portal-quirks.md`) |
+| europa.eu EURES search (ok_js_suspect) | `POST /eures/api/jv-searchengine/public/jv-search/search` answers 200 | **Route exists**: `json:eures` opt-in (user acceptance) |
+| valtiolle.fi (ok_js_suspect, nav_only) | server HTML already contains `/en/jobs/<slug>-<id>/` links; `robots.txt` allows all | **Probe-side**: anchors exist, so `nav_only` is likely a filter/threshold false negative; filters are in the URL, so verify the filtered list on a real run. Not tested end to end |
+| jobs.uni-graz.at (ok_js_suspect) | page 200 (7.8 KB shell); API host is `Disallow: /` (earlier note) | Not fetched; browser only |
+| kuleuven.be jobsite (ok_js_suspect, flag fine) | 200, 24 KB; `.rss` 404 | Already readable (`fine`); `ok_js_suspect` is a status warning only |
+| careers.un.org (nav_only) | page 200 (120 KB, JS app) | not investigated further |
+| universitypositions.eu jobs (weak) | the RSS link in the list (200, 1 MB) covers it; filter locally | use the RSS row |
+| 3 Google search URLs (search_engine) | cannot be replayed | use `web_search`/ddgs route (earlier test), not a link |
+
+Facts for the skill: (1) on a 403/404/503 try the language-neutral or local-language host/path before search (uit.no confirmed, W48 French URL lesson);
+(2) Cloudflare "Just a moment" on a whole host (even `robots.txt`) is a stop, mirror it; (3) `json:oracle` and `json:eures` are the only JSON routes that
+worked; both need user opt-in; (4) a plain-`curl` 200 where httr2 got 403 suggests a probe-side cause, which is worth a retry before a source is called blocked.
+Not done: any link edit (needs user confirmation per the project AGENTS.md), httr2 header comparison, JS-rendering (chromote) tests.
+
+### Build and test of the generic fetch ladder (2026-11-23, same day)
+
+Request (user): make link fetching generic by link type/failure class, not per site; review the whole logic; add packages if needed.
+Review result: before, `jw_probe_one` made one request with an identifying user agent and mapped the status code to `blocked`/`http_error`; recovery was a per-site note.
+Findings that drove the design: (1) one research portal answered 403 to the identifying agent form and to `curl/8` but 200 to `Mozilla/5.0 (compatible; <tool>; ...)`, so a WAF rule on the agent token, not a bot challenge; (2) Cloudflare challenge pages carry `cf-mitigated: challenge` and also cover `robots.txt`: a stop; (3) several JS-built listings render fine in headless Chrome (chromote 0.5.1, Chrome found on this machine, CRAN, already installed) and the Fetch domain lets every page/XHR request be vetted against `robots.txt` (a university job API that disallows all agents was cancelled correctly); (4) `en.` language subdomains can be flaky while the neutral host works; (5) the static job-like count is fooled by words like "all vacancies" in the menu, so the render trigger is "thin, or fewer than 10 vacancy-like links".
+Packages: `chromote` used (optional); `robotstxt` not installed, the existing `jw_robots_allowed` kept (tested, handles longest match); no CRAN package for WAF-friendly agents.
+Live result: see HISTORY.md (5 of 17 now `ok`, 12 stay: 3 Cloudflare hosts, 1 moved link, 3 search-engine links, thin pages incl. one needing interaction). Open: render time (7 min for 114 links), `jobwatch.render_min_hits` default untuned, a Linux/macOS test, links.csv edits (uit.no `en.` host, the moved UiB vacancies URL) left to the user.

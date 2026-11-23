@@ -6,6 +6,8 @@ if (!file.exists(file.path(here, "jw_contracts.R"))) here <- normalizePath(file.
 for (f in c("jw_contracts.R", "jw_pipeline.R", "jw_checks.R", "jw_stage_fns.R")) source(file.path(here, f))
 
 TODAY <- as.Date("2026-10-27")
+# Fixture deadline relative to the real date (ISO format is locale independent), so the test does not rot
+FUT <- format(Sys.Date() + 400)
 dl <- function(txt) jw_deadline_from_text(txt, TODAY)
 
 PROFILE <- list(career_search_profile = list(
@@ -149,7 +151,7 @@ test_that("s3: text pre-check, page fetch for tier 1 only, chunked resume, gate 
   jw_write_stage(s2, "s2", wk, r); jw_manifest_update(jw_run_dir(wk, r), "s2", status = "done")
   calls <- character()
   fetch <- function(u) { calls <<- c(calls, u)
-    switch(basename(u), `2` = "Deadline: 20 November 2026", `3` = "Deadline 1 June 2026", `4` = NULL, `6` = "no date here", "x") }
+    switch(basename(u), `2` = paste("Deadline:", FUT), `3` = "Deadline 1 June 2026", `4` = NULL, `6` = "no date here", "x") }
   jw_stage_run("s3", function() jw_s3_deadlines(wk, r, TODAY, chunk = 2, fetch_fn = fetch), wk, r)
   s3 <- jw_read_stage("s3", wk, r)
   expect_equal(s3$verdict, c("expired", "open", "expired", "unreadable", "not_checked", "no_deadline_found"))
@@ -157,7 +159,7 @@ test_that("s3: text pre-check, page fetch for tier 1 only, chunked resume, gate 
   expect_equal(jw_manifest_read(jw_run_dir(wk, r))$stages$s3$status, "done")
   expect_false(file.exists(file.path(jw_run_dir(wk, r), "s3_partial.parquet")))
   # resume: a partial file for ids 2 and 3 means only 4 and 6 are fetched
-  jw_write_parquet(data.frame(item_id = c("i2", "i3"), deadline = as.Date(c("2026-11-20", "2026-06-01")),
+  jw_write_parquet(data.frame(item_id = c("i2", "i3"), deadline = as.Date(c(FUT, "2026-06-01")),
                               verdict = c("open", "expired"), flag = NA, dates = NA), file.path(jw_run_dir(wk, r), "s3_partial.parquet"), jw_contracts()$s3$schema)
   calls <- character(); again <- jw_s3_deadlines(wk, r, TODAY, chunk = 2, fetch_fn = fetch)
   expect_equal(sort(basename(calls)), c("4", "6")); expect_equal(again$item_id, s2$item_id)

@@ -36,7 +36,10 @@ read-only; link posts, do not profile individuals).
    posts_per_month = <rough estimate from this run>)`. Count honestly; zero is valid. `posts_per_month` is
    overwritten each run, not accumulated: a niche field tag can look structurally low-volume (a few posts over
    several months) rather than merely unlucky this week, which is the point of recording it.
-4. `jw_tags_review()` suggests status changes (keep after a useful hit; retire after several runs with none).
+4. `jw_tags_review()` suggests status changes (keep after a useful hit; retire after several runs with none). It
+   counts hits, not their share in the region, so a broad bot tag with many hits and none useful can be flagged:
+   decide by yield and region, not by the count alone. When two mirrors of a bot post give different dates, check
+   whether they belong to different posts at the same employer before trusting either.
    Propose them; apply only with `jw_tags_set_status(..., confirmed = TRUE)`. Never delete rows.
 5. Report ledger changes in one line in the summary. Counts are small: a rough guide, not a ranking.
 
