@@ -51,7 +51,7 @@ Rows marked (detail) have more in [references/pitfall-details.md](references/pit
 
 Optimizer, scheduler, augmentation keys with documented defaults, and what DLC does not expose are in [references/pytorch-config-tuning.md](references/pytorch-config-tuning.md). Re-verify against the docs for the installed version; keys drift. Training-script overrides go through `train_network(...)` arguments or `pytorch_cfg_updates`.
 
-For a multi-candidate sweep, exhaust the `net_type` axis before secondary knobs. The architecture list (print it with `available_models()`), benchmark interpretation and orchestrator checks are in [references/training-sweeps.md](references/training-sweeps.md).
+For a multi-candidate sweep, exhaust the `net_type` axis before secondary knobs. Architectures (`available_models()`) and orchestrator checks: [training-sweeps.md](references/training-sweeps.md). Benchmark exports, defaults, walltime: [benchmark-interpretation.md](references/benchmark-interpretation.md). CTD, top-down, dry runs: [ctd-topdown-preflight.md](references/ctd-topdown-preflight.md).
 
 ## Job script skeleton (training, one GPU)
 

@@ -87,3 +87,44 @@ Outcomes: trigger wording broadened, defaults section and uv note added to refer
 Moved out of `SKILL.md` (no content dropped): pitfalls 4, 5, 7, 8, 11a detail to `references/pitfall-details.md`; the upstream-search procedure to `references/upstream-search.md`. Real-use evidence moved here from the former "Not verified" section:
 
 - 2026-10-24, two independent sessions on a user project: diagnosing a multi-animal-to-single-animal project split that gave fewer annotated frames than expected (Slurm console log, JSON manifest/validation report, checksum manifest), and building a small orchestrator to submit several training jobs with varying hyperparameters, reviewed against HPC and DLC practice (headless plotting backend, dataloader-worker sizing, a shared-resource race in one script). All fixed and checked locally with `bash -n`, the bundled sbatch linter and dry runs. Still never run on a real cluster.
+
+## 2026-11-23 (later): rework proposal for references/training-sweeps.md
+
+Trigger: `deeplabcut-hpc` SKILL.md was already reworked today (commit d4c5bd3, 109 -> smaller, 8.8 KB), so the churn
+(28 SKILL.md edits, 31 commits in 60 d) is mostly history. The live pressure is on `references/training-sweeps.md`:
+14.1 KB, 12 edits in 60 d, grew by 3 lines in today's rework, full of provenance ("reported once", dates) and mixes
+four topics. Problem in one sentence: one file holds net_type choice, benchmark reading, orchestrator hygiene and
+CTD/top-down pre-flight, so every new report is appended as another bullet.
+
+Proposed shape (net size not larger, SKILL.md untouched except pointers):
+- `training-sweeps.md` (~5 KB): axis order, net_type table, orchestrator checks, fair-comparison guide.
+- `benchmark-interpretation.md` (new): reading an export, what "default" means, walltime feasibility, batch-size sizing, ranking caveat.
+- `ctd-topdown-preflight.md` (new): CTD conditions, pre-flight list, rtmpose_x crop/input_size, same-build evaluation, DLCRNet, unique bodyparts.
+Status: inventory shown to user, awaiting approval; no edits made.
+
+### Parked-entry greps vs training-sweeps.md (2026-11-23)
+- 98 (older exports lack split/config hash): already-present, line "Exports from older iterations may lack the split hash...".
+- 103 (PoseConfig.build noisy): already-present, "Local dry runs" bullet (redirect stdout or tail).
+- 110 (dry-run needs sibling submit script stub): already-present, same bullet.
+- 104 (R session cannot read the scratch dir): NOT present (grep for read tool/blocked/JSON found nothing). Proposed one line in the local-defaults recipe.
+
+### Rule inventory, training-sweeps.md (28 rules; target ~5 KB + 2 new references)
+A=training-sweeps.md, B=benchmark-interpretation.md (new), C=ctd-topdown-preflight.md (new).
+1 net_type axis before secondary knobs: keep A. 2 check benchmark + architectures page, architecture first: merge with 1, A.
+3 net_type table: keep A. 4 candidate must match single/multi-animal: keep A. 5 DLCRNet PAF error on single-animal: move C.
+6 CPU-install 3.0.2 model names (top_down prefix): merge into table notes, A. 7 export tabulation before ranking: move B.
+8 missing shuffles -> compare iteration, config not copied: move B. 9 older export NULL-safe: move B (parked 98 absorbed).
+10 default = DLC-generated default, hist_eq off, PoseConfig.build recipe: move B. 11 driver settings differing from default listed; dataloader uniform: move B.
+12 bare-baseline feature switches stated: move B. 13 rtmpose_x crop 256 vs 384 (#3592): move C. 14 test-split optimism: move B.
+15 one shuffle per candidate, numbering from 1: keep A. 16 evaluate_network call and Shuffles alias: keep A. 17 own output path/config per task: keep A (pointer).
+18 uniquebodyparts -> bottom-up only: move C. 19 compare traceback line numbers vs local script; failed shuffles register in metadata.yaml: keep A.
+20 orchestrator holds next submission only; refuse-reuse list: keep A. 21 local dry runs stub + noisy output: move C (parked 103, 110 absorbed).
+22 same metric same split, key_metric test.mAP: keep A. 23 walltime feasibility: move B. 24 evaluate in the same DLC build (extra_forbidden): move C.
+25 CTD conditions from prediction file, CTD_CONDITIONS: move C. 26 CTD/top-down pre-flight incl. crop/input_size by head type: move C, condense.
+27 diff tuned vs default; replicates only if seed differs: move B. 28 batch size from measured GPU memory: move B.
+29 shell ${VAR:-x} vs ${VAR-x}: keep A. 30 fair comparison via create_training_dataset_from_existing_split: keep A.
+New: 104 line (print results in the Python step or read with the read tool, not from the R session): add C or B.
+Drop: none; all provenance ("reported once", dates) removed from text and kept here.
+
+### Rework applied 2026-11-23 (uncommitted)
+training-sweeps.md 14.1 -> 4.8 KB; new benchmark-interpretation.md (5.1 KB) and ctd-topdown-preflight.md (3.1 KB); SKILL.md pointer line only (9019 -> ~9230 B, +~0.2 KB for two extra pointers). Provenance removed from text. Parked 98/103/110 covered (already-present), 104 added to benchmark-interpretation.md. lint clean apart from description-length info; skills-ref validate passed; 17 distinctive terms from the inventory each found in the new files. Not tested: no DLC code run; dispositions/watermark untouched (triage not archived).
