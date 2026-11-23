@@ -96,6 +96,13 @@ lint_one_skill <- function(dir) {
   add <- function(level, check, msg) {
     f[nrow(f) + 1, ] <<- list(skill, level, check, msg)
   }
+  # Tracked files stored as LF but CRLF or mixed in the working copy (breaks multi-line edits)
+  eol <- suppressWarnings(tryCatch(system2("git", c("-C", shQuote(dir), "ls-files", "--eol", "."),
+                                           stdout = TRUE, stderr = FALSE), error = function(e) character()))
+  bad <- sub("^.*\\t", "", eol[grepl("^i/lf\\s+w/(crlf|mixed)\\s", eol)])
+  if (length(bad))
+    add("warn", "eol", sprintf("Working copy has CRLF or mixed line endings (index is LF): %s. Fix with sed -i 's/\\r$//' <file> as the last step before commit.",
+                               paste(head(bad, 5), collapse = ", ")))
   raw <- readLines(file.path(dir, "SKILL.md"), warn = FALSE, encoding = "UTF-8")
   fm <- split_frontmatter(raw)
   if (is.null(fm)) {
