@@ -37,7 +37,8 @@ patches from earlier runs it carries (`git log -p -- <file>`). Results go in the
 - **Recurrence.** A new entry that repeats an issue closed earlier as `fix`, `add-note` or `already-present`
   is evidence that the earlier fix failed, so it is not `already-present`. Find why it failed (text not seen,
   wrong place, rule too weak, no enforcement) and move up the fix ladder. The title match is a screen: read
-  both entries. Record the outcome as `fix`.
+  both entries. Record the outcome as `fix`. An entry filed on the day of the fix is a failed fix only if its
+  session started after the fix commit (`git log -S"<phrase>"` gives the time); otherwise the session saw the old text.
 - **Same failure class on several sites** (several entries, different sites or inputs): propose a code-level
   fix keyed by failure class (a ladder in the script) before any per-site documentation note.
 - **Rework trigger.** Propose `rework` when a target file has 3 or more edits in the window and at least 2 entries
@@ -49,7 +50,7 @@ patches from earlier runs it carries (`git log -p -- <file>`). Results go in the
 The target scan shows pressure; the patch gate forces a decision. After outcomes are chosen, list one path per
 proposed edit and run `patch_gate()` (`scripts/churn.R`). A row is `rework-or-defer` when the file has 3 or more
 edits since its last rework (or in the window if never reworked), when this run edits it twice, or when this run
-edits 3 or more places in the same skill. Thresholds count all commits, not only triage ones: read them as a
+edits 4 or more files in the same skill. Thresholds count all commits, not only triage ones: read them as a
 prompt to look, then judge.
 
 - For each such row choose: propose a `rework` (scope it with `usage_churn_files(skill)`), or defer with a

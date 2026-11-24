@@ -106,7 +106,8 @@ patch_gate <- function(targets, repo = getwd(), days = 60, log = rework_log_read
   skills <- vapply(strsplit(files, "/", fixed = TRUE), `[`, "", 1)
   info <- do.call(rbind, lapply(unique(skills), usage_churn_files, repo = repo, days = days, log = log))
   out <- data.frame(file = files, skill = skills, proposed = as.integer(tab), stringsAsFactors = FALSE)
-  out$skill_proposed <- ave(out$proposed, out$skill, FUN = sum)
+  # Distinct files per skill: several notes in one file are caught by `proposed`, a spread over many files here
+  out$skill_files <- ave(out$proposed, out$skill, FUN = length)
   m <- match(out$file, info$file)
   out$kb <- info$kb[m]
   # Edits since the last rework covering the file, or in the window when it was never reworked
@@ -116,7 +117,7 @@ patch_gate <- function(targets, repo = getwd(), days = 60, log = rework_log_read
                   (endsWith(deferred$target, "/") & startsWith(f, deferred$target)), , drop = FALSE])
   out$deferred_n <- vapply(hit, nrow, 1L)
   out$last_deferral <- vapply(hit, function(h) if (nrow(h)) h$reason[which.max(as.Date(h$date))] else "", "")
-  out$verdict <- ifelse(out$file_edits >= churn_edits | out$proposed >= 2 | out$skill_proposed >= 3,
+  out$verdict <- ifelse(out$file_edits >= churn_edits | out$proposed >= 2 | out$skill_files >= 4,
                         "rework-or-defer", "patch")
   out[order(out$verdict, -out$file_edits), ]
 }

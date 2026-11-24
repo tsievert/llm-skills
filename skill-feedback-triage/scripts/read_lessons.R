@@ -156,7 +156,11 @@ lesson_dupes <- function(lessons, max_dist = 0.35) {
     t <- tolower(gsub("[^a-z0-9 ]", "", tolower(d$title)))
     dm <- utils::adist(t) / pmax(outer(nchar(t), nchar(t), pmax), 1)
     idx <- which(upper.tri(dm) & dm <= max_dist, arr.ind = TRUE)
-    if (nrow(idx)) out[[s]] <- data.frame(skill = s, a = d$file[idx[, 1]], title_a = d$title[idx[, 1]],
+    # `n` (the numbered key L$n) is shown when present so outcomes are never typed from a listing index
+    if (nrow(idx)) out[[s]] <- data.frame(skill = s,
+                                          n_a = if ("n" %in% names(d)) d$n[idx[, 1]] else NA_integer_,
+                                          n_b = if ("n" %in% names(d)) d$n[idx[, 2]] else NA_integer_,
+                                          a = d$file[idx[, 1]], title_a = d$title[idx[, 1]],
                                           b = d$file[idx[, 2]], title_b = d$title[idx[, 2]],
                                           dist = round(dm[idx], 2), stringsAsFactors = FALSE)
   }
