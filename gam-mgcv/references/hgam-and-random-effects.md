@@ -57,8 +57,8 @@ The `by = of` smooths are differences from the reference smooth. For all pairwis
 | Standard GAM with random effects, REML | `mgcv::gam()` / `bam()` |
 | Correlated random slopes, lme4-style formulas | `gamm4::gamm4()` |
 | AR(1) or other `nlme` correlation, heteroscedasticity | `mgcv::gamm()` or `bam(rho = )` |
-| Zero inflation, many families, TMB speed, smooths in a mixed model | `glmmTMB` with `s()` (gratia has `draw()`/`smooth_estimates()` methods) |
-| Spatial models using SPDE | `sdmTMB` (gratia has methods) |
+| Zero inflation, many families, TMB speed, smooths in a mixed model | `glmmTMB` with `s()` (gratia has `draw()`, `assemble()`, `smooth_estimates()` and `appraise()` methods; needs glmmTMB >= 1.1.15.2) |
+| Spatial models using SPDE | `sdmTMB` (gratia has methods; needs sdmTMB >= 1.2.0 fitted with the RTMB backend) |
 | Full Bayesian inference, priors | `brms` with `s()` / `t2()` |
 
 `gamm()` and `gamm4()` return a list with `$gam` and `$mer`/`$lme`; check and plot `$gam`, and inspect the mixed-model component separately.
@@ -71,4 +71,5 @@ The `by = of` smooths are differences from the reference smooth. For all pairwis
 - Start simple (model G or GS), add complexity only when diagnostics or the question call for it.
 - Few levels per group (< 5) or few observations per group: random effects and factor smooths are poorly estimated; treat the group as fixed.
 - Report between-group variability using `gratia::variance_comp()`.
-- For prediction at a new level of the grouping factor, simulate group-level effects with `gratia::random_effect_samples()` rather than setting the effect to zero if you want population-level uncertainty.
+- For prediction at a new level of the grouping factor, simulate group-level effects with `gratia::random_effect_samples()` rather than setting the effect to zero if you want population-level uncertainty. gratia 0.12 also offers `marginalise = TRUE` in `fitted_values()`/`fitted_samples()` to integrate over the fitted random-effect distribution (both ran on a `bs = "re"` model in 0.12.1; numbers not checked against a manual integral; smoothing parameters and dispersion stay fixed, and fits with `min.sp` are rejected). The integral uses the estimated variance, which is poorly determined with few groups.
+- `gratia::variance_comp(type = "terms")` (0.12.1) returns each term's variance share with intervals; the changelog extends it to `gam()`, `bam()`, `gamm()` and `gamm4()` fits (only a simulated Gaussian `gam()` was checked here).

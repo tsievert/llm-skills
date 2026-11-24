@@ -4,7 +4,7 @@ description: Visualizes and cautiously interprets fitted generalized additive mo
 license: CC-BY-4.0
 metadata:
   author: tsievert
-  version: "1.0"
+  version: "1.1"
 ---
 
 # Visualizing and interpreting GAMs
@@ -15,13 +15,14 @@ Companion to `gam-mgcv` (fitting and checking). Use this skill once a model exis
 
 ## Step 0: currency check (do this first)
 
-gratia changes quickly; code from memory is often outdated. Before writing code:
+gratia changes quickly; code from memory is often outdated (0.12 changed plot defaults, sampling argument names, `fitted_samples()` output and removed `fixef()`). Before writing code:
 
 1. `packageVersion("gratia"); packageVersion("mgcv")`.
 2. Test which functions exist, rather than assuming:
-   `sapply(c("conditional_differences", "conditional_values", "response_derivatives", "ale", "gratia_theme_set"), \(f) f %in% getNamespaceExports("gratia"))`
-3. If a function is missing or an argument errors, read the gratia changelog and reference index (https://gavinsimpson.github.io/gratia/news/index.html, https://gavinsimpson.github.io/gratia/reference/index.html) and, if relevant, Gavin Simpson's blog (https://fromthebottomoftheheap.net/). Do not guess argument names.
-4. Consult [references/recent-developments.md](references/recent-developments.md) for what was new when this skill was written and how to re-check.
+   `sapply(c("conditional_differences", "conditional_values", "response_derivatives", "ale", "compare_smooths", "random_effect_samples", "fixed_effects", "gratia_theme_set"), \(f) f %in% getNamespaceExports("gratia"))`
+3. If a function is missing or an argument errors, read the gratia changelog (`utils::news(package = "gratia")` offline, or https://gavinsimpson.github.io/gratia/news/index.html) and the reference index (https://gavinsimpson.github.io/gratia/reference/index.html) and, if relevant, Gavin Simpson's blog (https://fromthebottomoftheheap.net/). Do not guess argument names.
+4. A call that runs is not proof that an argument worked: in 0.12.1 some renamed arguments are silently ignored (for example `n_draws` in `fitted_values(interval = "simultaneous")`, which uses `n_sim`). Check the effect on the output, or `?fn`.
+5. Consult [references/recent-developments.md](references/recent-developments.md) for the 0.12.1 changelog summary, the tested status table and how to re-check. An older installed gratia may need the older-version-safe patterns there.
 
 ## Workflow
 
@@ -32,10 +33,12 @@ gratia changes quickly; code from memory is often outdated. Before writing code:
 |---|---|---|
 | What does one term contribute? | `draw(m)`, `smooth_estimates()` + `add_confint()` | Centred partial effect on the link scale; not the expected response |
 | What does the model predict for specific covariate values? | `fitted_values()`, `conditional_values()`, `data_slice()`, or `predict(se.fit = TRUE)` | Combines all terms; state what is held fixed and which random effects are excluded |
-| Do groups differ? | `conditional_differences()` where available, or a linear-combination contrast; `difference_smooths()` for centred smooth shapes | Never judge by overlap of two bands |
+| Do groups differ? | `conditional_differences()` where available, or a linear-combination contrast; `difference_smooths()` for centred smooth shapes (factor-by, not `sz`) | Never judge by overlap of two bands |
+| Does one smooth differ between two fitted models? | `compare_smooths()` | Compares fits, not groups; not a test |
+| What would a new, unobserved group look like? | `random_effect_samples()`, `marginalise = TRUE` | Integrates over the fitted random-effect variance; typical-group curves answer a different question |
 | Where is the rate of change non-zero? | `derivatives()`, `response_derivatives()`, `derivative_samples()` | Pointwise unless stated; heuristic finite differences |
 | How uncertain is a derived quantity (peak location, area, threshold)? | posterior simulation: `smooth_samples()`, `fitted_samples()`, `posterior_samples()` | Conditional on smoothing parameters unless `unconditional = TRUE` |
-| How much variation does each term carry? | `variance_comp()` | Proportions can exceed 1 or be negative |
+| How much variation does each term carry? | `variance_comp(type = "terms")` | Proportions can exceed 1 or be negative; check the output has `.proportion` columns |
 
 3. **Check support.** Show data (rug, partial residuals, or points). Mask or flag regions with little data (`too_far()`, `data_slice(.by = )`, `dist =`). Do not interpret wiggles, plateaus or edge behaviour where there is little or no data.
 4. **Choose the interval type** (pointwise, simultaneous, across-the-function; link vs response scale) and label it on the figure or in the caption.
@@ -44,11 +47,12 @@ gratia changes quickly; code from memory is often outdated. Before writing code:
 ## Visualization rules
 
 - Plot against the original covariate scale with `back_transform = TRUE` where covariates are transformed; the vertical axis stays on the link scale.
+- Since gratia 0.12 `draw()` adds parametric-term panels and gives them intercept-inclusive intervals by default; count the panels and say what the parametric panels show, or set `parametric = FALSE` and `overall_uncertainty = FALSE` deliberately.
 - State the scale on the y-axis label: "partial effect on log odds", "centred contribution to log expected count", "expected count (response scale)".
 - Always show the rug or partial residuals so readers see where data exist.
 - Label intervals (95% Bayesian credible/confidence, pointwise or simultaneous) in the caption.
 - Use a common y-range across panels only when comparing effect sizes; otherwise note differing scales.
-- Plotting recipes, theming (new theme-based API in recent gratia), surfaces, group comparisons and common pitfalls: [references/visualisation.md](references/visualisation.md).
+- Plotting recipes, theming (theme-based API; colour arguments deprecated in 0.12), surfaces, group comparisons and common pitfalls: [references/visualisation.md](references/visualisation.md).
 
 ## Interpretation rules (short form)
 

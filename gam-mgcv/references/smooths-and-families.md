@@ -57,7 +57,7 @@ Tested 2026-11-04 on mgcv 1.9-5 with simulated data (`gamSim(2)`, n = 400); help
 | Unordered categories | `multinom(K = k - 1)` (list of formulae) |
 | Location-scale | `gaulss()`, `gammals()`, `gumbls()`, `gevlss()`, `shash()`, ... (list of formulae) |
 
-Always follow with a family-appropriate residual check; `gam.check()` for non-Gaussian families uses deviance residuals, which can look odd. Prefer quantile residuals, `gratia::appraise()`, `gratia::rootogram()` or `DHARMa`.
+Always follow with a family-appropriate residual check; `gam.check()` for non-Gaussian families uses deviance residuals, which can look odd. Prefer quantile residuals, `gratia::appraise()` (0.12 selects simulated reference bands for `tw()`/`Tweedie()` itself), `gratia::rootogram()`, `gratia::dharma_residuals()` or `DHARMa`.
 
 ## Common mistakes
 

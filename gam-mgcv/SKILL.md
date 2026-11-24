@@ -14,7 +14,7 @@ Workflow and rules for additive models in R. Details live in `references/`; load
 
 ## First steps
 
-1. Check versions: `packageVersion("mgcv")`, `packageVersion("gratia")`. gratia's API changes between releases (0.11.x renamed sampling arguments, deprecated `evaluate_smooth()`, colour arguments in `draw()`, `grouped_by`). If code from memory errors, read the current docs or NEWS (see Resources) instead of guessing.
+1. Check versions: `packageVersion("mgcv")`, `packageVersion("gratia")`. gratia's API changes between releases (0.11.x renamed sampling arguments and deprecated `evaluate_smooth()`; 0.12 deprecated the colour arguments of `draw()` and `grouped_by`, removed `fixef()` in favour of `fixed_effects()`, and requires R >= 4.4.0, mgcv >= 1.9-4, ggplot2 >= 4.0.3). If code from memory errors, read the current docs or NEWS (see Resources) instead of guessing.
 2. Look at the data: response type, grouping structure, repeated measures, spatial or temporal ordering, sample size. These determine family, random effects and correlation handling.
 3. Check Gavin Simpson's work (see Resources) when a question concerns gratia, plotting, posterior simulation, difference smooths, derivatives, or a modelling pattern you are unsure about. He is the author of gratia and publishes tutorials, course materials and related packages.
 
@@ -66,7 +66,7 @@ Details, families and pitfalls: [references/smooths-and-families.md](references/
 - Default is one smoothing parameter per level; `id = 1` shares one across levels.
 - `k.check()` returns no k-index for the term, so do not claim `k` was verified from it.
 - The plotted term is a deviation from the main smooth, not the level's curve. Build level curves and level contrasts from whole-model predictions.
-- `gratia::difference_smooths()` errors on `sz` terms (verified in 0.11.2.10, 0.11.2-64 and 0.11.2.73). `gratia::conditional_differences()` works on `sz` models where installed (verified in 0.11.2-64 and 0.11.2.73; give both `by` and `condition`); the reference file also has a linear-combination helper for older versions. Check the installed gratia version and issues at https://github.com/gavinsimpson/gratia/issues?q=sz before asserting a limitation.
+- `gratia::difference_smooths()` errors on `sz` terms (verified in 0.11.2.10, 0.11.2-64, 0.11.2.73 and the CRAN 0.12.1). `gratia::conditional_differences()` works on `sz` models where installed (verified in 0.11.2-64, 0.11.2.73 and 0.12.1; give both `by` and `condition`); the reference file also has a linear-combination helper for older versions. Check the installed gratia version and issues at https://github.com/gavinsimpson/gratia/issues?q=sz before asserting a limitation.
 
 ## Beyond mgcv families: gamlss2 and inlaws
 
@@ -82,8 +82,8 @@ Plain `gam()` assumes independent residuals. With time series, spatial or repeat
 
 ## Diagnostics
 
-- `gam.check(m)` / `gratia::appraise(m)`: QQ, residuals vs linear predictor, histogram, observed vs fitted.
-- Quantile residuals for discrete families: `gratia::quantile_residuals()`, `gratia::rootogram()` for counts, `DHARMa` as an alternative.
+- `gam.check(m)` / `gratia::appraise(m)`: QQ, residuals vs linear predictor, histogram, observed vs fitted. In gratia 0.12 `appraise()` uses scalable plots from 10,000 observations, simulation reference bands for `tw()`/`Tweedie()` models, and can show a posterior predictive check (`ppcheck = TRUE`); it also covers glmmTMB, lme4 and `gamm4` fits.
+- Quantile residuals for discrete families: `gratia::quantile_residuals()`, `gratia::rootogram()` for counts, `gratia::dharma_residuals()` (simulation-based, no DHARMa needed in 0.12; returns a numeric vector) or `DHARMa`. Surrogate residuals exist for `ocat()` and `multinom()` fits (changelog). Passing residual checks does not validate the interpretation.
 - Concurvity: `mgcv::concurvity(m, full = FALSE)` or `gratia::model_concurvity()`. High concurvity makes individual smooths unreliable, so say so when interpreting.
 - Compare models with `AIC()` and `anova(m1, m2, test = "F")` as approximate tools. REML scores are not comparable across models with different fixed terms; refit with `method = "ML"` or compare predictive performance.
 - With dependent data (repeated animals), in-sample AIC can favour a term that does not help predict new units; use leave-whole-groups-out CV. After an mgcv or gratia upgrade, re-run a saved anchor script and record `packageVersion()`. Both: [references/model-comparison.md](references/model-comparison.md).

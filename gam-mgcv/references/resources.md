@@ -12,8 +12,8 @@
 Gavin L. Simpson (Aarhus University) is the author of gratia and publishes tutorials, course materials and related packages. When a task involves gratia, plotting GAMs, posterior simulation, difference smooths, derivatives, or an unusual smooth, look here before relying on memory.
 
 - gratia site, reference index, articles, changelog: https://gavinsimpson.github.io/gratia/
-  - Articles worth reading: model checking (distributions, uncertainty, dependence), prediction comparisons and rates of change, smooth effects/interactions/surfaces, variance components, data slices, posterior simulation and the sampling migration guide, spatial smooths, shape-constrained models, glmmTMB and sdmTMB support.
-  - Changelog: https://gavinsimpson.github.io/gratia/news/index.html (read before using older code; sampling arguments, `draw()` colour arguments and parametric-term defaults have changed).
+  - Articles worth reading: model checking (distributions, uncertainty, dependence), prediction comparisons and rates of change, smooth effects/interactions/surfaces, variance components, data slices, posterior simulation and the sampling migration guide, customising gratia plots (theme migration), transformed covariates, spatial smooths, shape-constrained models, SCAM, glmmTMB and sdmTMB support.
+  - Changelog: https://gavinsimpson.github.io/gratia/news/index.html (read before using older code; sampling arguments, `draw()` colour arguments, parametric-term defaults and `fixef()` have changed; `utils::news(package = "gratia")` shows the installed version's changelog offline).
 - gratia repo and issues: https://github.com/gavinsimpson/gratia
 - Blog (From the bottom of the heap): https://fromthebottomoftheheap.net/ . Posts include random effects in GAMs with mgcv, extrapolating with B splines, gratia release notes, and a 2026 post on GAMs in livestock animal science.
 - GitHub profile: https://github.com/gavinsimpson . Relevant repos seen in October 2026: `gratia`, `physalia-gam-course` (course materials), `au-viborg-gam-course`, `naboer` (neighbourhoods for mgcv's neighbourhood cross-validation, NCV), `palaeopen-sofia-2026` (training materials), `gams-in-animal-science-manuscript`. Re-list the profile for newer repositories.
@@ -38,7 +38,7 @@ Gavin L. Simpson (Aarhus University) is the author of gratia and publishes tutor
 
 | Package | Use |
 |---|---|
-| gratia | ggplot2 plots, diagnostics, smooth estimates, differences, derivatives, posterior simulation |
+| gratia | ggplot2 plots, diagnostics (also for glmmTMB, lme4, gamm4, sdmTMB fits), smooth estimates, differences, derivatives, posterior simulation; CRAN 0.12.1 tested 2026-11-24 |
 | gamm4 | GAMMs with lme4 (random slopes, correlated effects) |
 | glmmTMB | smooths via `s()`, many families, zero inflation |
 | brms | fully Bayesian GAMs with `s()`, `t2()` |

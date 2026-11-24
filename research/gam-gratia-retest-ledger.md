@@ -73,3 +73,63 @@ Requirement 2 (2026-11-09, user): the triage fix for the "k audit when `k.check(
 Facts: the k-doubling refit in the skill is documented behaviour, not an invention of the reporting project. Added to the skill: the fREML-score change, the 5,000-row subsample and p-value variability. The bootstrap-SD scale for contrasts stays labelled as one project's addition. Local re-check (mgcv 1.9-5, synthetic bam, `select = TRUE`): NA for the `sz` row; global-smooth edf 6.7 of k' 7 rose to 9.9 at k = 16.
 
 Open: whether the differencing k-index could be computed by hand for `sz` terms (residuals ordered by the numeric covariate within level); not tried.
+
+## 2026-11-24: gratia 0.12.1 (CRAN) changelog read and retest
+
+Requirement 3 (2026-11-24, user): gratia was updated from CRAN; read the changelog and update all skills relying on it holistically, not by one-line fixes.
+
+| Source | Status | Finding |
+|---|---|---|
+| `utils::news(package = "gratia")` for the installed 0.12.1 (top section read in full, about 1,100 lines; 0.11.x sections not re-read) | read | Large release: 0.12.0 never released, folded into 0.12.1. Breaking: `fixef()` re-export removed, sampling argument rework (`n_draws`, `n_grid`), `fitted_samples()` returns all parameters by default, parametric panels and intercept-inclusive intervals in `draw()`, `back_transform`, `grouped`/`show_ci`, theme API, dependencies (R >= 4.4.0, mgcv >= 1.9-4, ggplot2 >= 4.0.3, patchwork >= 1.3.2). New: simultaneous bands (single smooths, tube), `compare_smooths()`, `random_effect_samples()`, `marginalise`, moments, ALE, residual toolkit, glmmTMB/sdmTMB/gamm4/GJRM/SCAM support, 3D/tile/polar plots. |
+| https://gavinsimpson.github.io/gratia/articles/sampling-migration.html | read (via fetch summary) | General old-to-new table only; does not give per-function names for `fitted_values()`, `confint()`, `difference_smooths()`, `derivatives()`, `draw()`, `smooth_estimates()`; says `response_derivatives()` and `conditional_differences()` keep their own arguments. |
+
+Local tests (fresh `callr::rscript` process, gratia 0.12.1, mgcv 1.9.5, R 4.6.0, synthetic `data_sim("eg1")` and `CO2`; scripts were in the scratch directory and are not kept):
+
+| Item | Result |
+|---|---|
+| Exports | `fixef` and `simultaneous_bands` not exported; `fixed_effects`, `compare_smooths`, `random_effect_samples`, `fitted_moments`, `conditional_moments`, `shape_intervals`, `residuals_covariate_plot`, `draw_label_control`, `family_parameters`, `dharma_residuals`, `add_sizer`, `evaluate_smooth` (defunct) exported; `marginalise` is an argument, not a function |
+| `draw()` panel count | 5 default vs 3 with `parametric = FALSE` on `Type + Treatment` + 2 smooths |
+| `fitted_values(interval = "simultaneous")` | `n_sim` changes band width (2.64 at 50, 2.71 at 5,000 draws); `n_draws` silently ignored (identical to no setting) |
+| `response_derivatives()`, `conditional_differences(uncertainty = "simulation")` | `n_sim` works; `n_draws` errors ("matched by multiple actual arguments") |
+| `confint(type = "simultaneous")` | `nsim` works; `n_draws` also returned a result (effect not checked) |
+| `smooth_samples(n =)` | migration error; `n_draws` works |
+| `fitted_samples()` | `.parameter` column present; `quantity = "expectation"` accepted, identical for Gaussian identity-link |
+| `variance_comp(type = "terms")` | `.proportion*` columns plus `total`; proportions sum to 1 on one Gaussian GAM |
+| `difference_smooths()` factor-by on `CO2` (unequal grids) | now runs (was an open item); simultaneous and `order = 1` run |
+| `difference_smooths()` on `sz` | still errors |
+| `conditional_differences()`, `derivatives()`, `draw()`, `smooth_samples()` on `sz` | run (one Cholesky-fallback warning for `smooth_samples`) |
+| `simultaneous_method = "tube"` | runs for `tp` and `cr`; crit 3.10 / 3.09 (changelog restricts to supported cubic splines; `tp` support not verified) |
+| `conditional_values()` with two numeric covariates | 2,500-row grid |
+| `marginalise = TRUE`, `random_effect_samples()` | run; numbers not validated against manual integral |
+| `compare_smooths()` | runs; `draw(show = "difference")` not run |
+| Theme API, `smooth_col` and `grouped_by` deprecations, `parametric_effects(transform =)` deprecation | warnings as documented |
+| `back_transform = TRUE` | adds `.gratia_raw_<x>` column for `s(log(x))` |
+
+Not run: polar, 3D and tile plots, moments, shape intervals, surrogate residuals, multi-chain MH, glmmTMB/sdmTMB/gamm4/GJRM/SCAM support, mirai workers, `variance_comp` for `gamm`/`gamm4`.
+
+Skills updated: `gam-interpretation` (SKILL.md v1.1, `recent-developments.md` rewritten around 0.12.1, `visualisation.md`, `uncertainty-and-inference.md`), `gam-mgcv` (SKILL.md, `sz-smooths.md`, `hgam-and-random-effects.md`, `smooths-and-families.md`, `gamlss-and-extra-families.md`, `resources.md`). Not touched: `social-research-search`, `skill-lessons`, `github-skill-maintenance` (gratia appears only as an example or a package name list).
+
+### 2026-11-24 (second round): the features left untested above
+
+Requirement 4 (2026-11-24, user): test polar and 3D plots, `fitted_moments()`, `shape_intervals()`, glmmTMB `draw()` and record the results. Same setup (fresh `callr::rscript`, gratia 0.12.1, mgcv 1.9.5, glmmTMB 1.1.15.2, synthetic data). Installed from CRAN with the project's standing permission: `ggcube` 0.3.0 and `sf` 1.1-3 (and sf's dependencies); `scam`, `sdmTMB`, `loo`, `bayesplot` were not installed, so those methods stay untested. Plots were saved as small PNGs; two (polar, glmmTMB) were looked at, the rest were only checked to be written without error.
+
+| Item | Status | Result |
+|---|---|---|
+| `draw(cyclic = "polar")`, cyclic `cc` smooth | run, image viewed | Draws: circular axis with 0 at top, radial partial effect, rug outside the ring, ribbon visible. Also ran on a factor-by cyclic smooth (image not viewed). Non-cyclic call on the same smooth ran too |
+| `draw(surface = "tile")` | run | PNG written (image not viewed) |
+| `draw(surface = "3d")`, `ci_3d = TRUE`, and on a `conditional_values()` surface | run after installing ggcube **and sf** | Without ggcube: error naming ggcube. With ggcube only: error "3D surface support and domain checks requires the optional package 'sf'". Both needed. Images not viewed, so appearance (occlusion, interval surfaces) unchecked |
+| `draw(conditional_values(m, condition = list(c("th","x1"))))` | run | Surface plot written |
+| `draw_label_control()` | run | `draw(m, label_control = draw_label_control())` ran; effect on labels not inspected |
+| `fitted_moments()` | run, values checked | Poisson: mean = variance (2.74), cv = 1/sqrt(mean) ok. Gamma log link: mean equals `predict(type = "response")` (0.807, 1.353) and variance/mean^2 = cv^2 (0.39). `gaulss()`: variance equals (1/tau)^2 from `predict` (0.449 vs 0.670^2; 2.21 vs 1.487^2). `nuisance = "fixed"` runs. Output is long: `.row`, `.parameter` (mean, variance, cv), `.fitted`, `.se`, CI, `.status` |
+| `conditional_moments()`, `family_parameters()` | run | Return the same long layout; `family_parameters()` lists parameter, link, predictor index, global vs predictor |
+| `fitted_samples()` default vs `quantity = "expectation"` | run on `gaulss()` | Default returns `mean` and `sd` parameters (5 draws each); expectation returns one `expectation` series. Earlier Gaussian note (identical output) holds only for single-parameter models |
+| `shape_intervals()` | run on hand-made bands | Signature is `(estimate, lower, upper, data, constraints, interval, level)`: `data` (complete Cartesian grid) and a named `constraints` list (`"m+"`, `"m-"`, `"c+"`, `"c-"`, `"+"`) are required, so calling it on a `smooth_estimates()` tibble alone errors ("argument data is missing"). Monotone: output estimate nondecreasing, band width not larger, a monotone target inside the input band stayed inside. Convex: output second differences >= 0. `lower > upper` errors. Help text: operators preserve whole-grid containment, give no pointwise coverage guarantee, and do not fix bias or a bad initial band |
+| `scasm()` + `draw(interval_method = "shape")`, `smooth_estimates(interval_method = "shape")`, `confint(interval_method = "shape")` | run | Each emits the warning that shape enforcement preserves whole-grid containment and gives no guaranteed pointwise calibration; `.crit` column returned. `scasm()` fit with `xt = "m+"` returned class `gam glm lm` |
+| `shape_confidence_set()` | formals only | Arguments `X, lower, upper, Ain, bin, C, d, level, interpretation, band_type`; not run |
+| glmmTMB: `draw()`, `assemble()`, `smooth_estimates()`, `appraise()` | run, `draw()` image viewed | Gaussian `s(x1) + g + (1 | id)`: 3 panels (smooth with band, random-intercept QQ, factor `g` pointrange). `assemble()` names `s(x1)`, `(1 | id)`, `g`. `smooth_estimates()` 100 rows. `appraise()` plot written. Poisson with a cyclic smooth and a zero-inflation smooth fit also drew. `ranef_lines = TRUE` ran on `(1 + x1 | id)` (image not viewed) |
+| glmmTMB `fixed_effects()` | run | Errors "No fixed-effects method for this object": use `glmmTMB::fixef()` for glmmTMB fits |
+| Not testable here | not run | sdmTMB, SCAM (`scam` not installed), `loo`/`bayesplot` methods, GJRM, mirai workers, multi-chain MH |
+
+Skill files updated from this round: `gam-interpretation/references/recent-developments.md` (status table), `visualisation.md` (polar, 3D, moments, glmmTMB), `uncertainty-and-inference.md` (moments, `shape_intervals()`).
+
+Open: per-function argument names for the sampling rework (only five functions tested); whether `n_draws` in `confint()` takes effect; `tube` on non-cubic smooths; the 0.11.x changelog sections were not re-read.
