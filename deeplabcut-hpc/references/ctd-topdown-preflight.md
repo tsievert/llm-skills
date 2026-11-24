@@ -19,7 +19,7 @@ CTD shuffles take their conditions from the prediction file written when the bot
 
 ## Pre-flight list before submitting a CTD or top-down sweep
 
-- The CTD reference shuffle equals the bottom-up condition shuffle.
+- The CTD reference shuffle equals the bottom-up condition shuffle, and that shuffle's task is bottom-up: training does not check this, but evaluation fails ("Conditions can only be loaded from shuffles for bottom-up models") if the conditioner is top-down.
 - That shuffle's evaluation-results folder (with the prediction file) is in any node-local staged copy.
 - The train/test split file exists in the staged copy.
 - Top-down models have crop or head `input_size` set explicitly (see above).
