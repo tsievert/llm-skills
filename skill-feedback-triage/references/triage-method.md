@@ -44,6 +44,29 @@ patches from earlier runs it carries (`git log -p -- <file>`). Results go in the
   point at it, when a recurrence exists, or when the same topic needs a third bullet. At most one or two reworks
   per run, picked by churn; the user decides which.
 
+## Patch gate (required before the table)
+
+The target scan shows pressure; the patch gate forces a decision. After outcomes are chosen, list one path per
+proposed edit and run `patch_gate()` (`scripts/churn.R`). A row is `rework-or-defer` when the file has 3 or more
+edits since its last rework (or in the window if never reworked), when this run edits it twice, or when this run
+edits 3 or more places in the same skill. Thresholds count all commits, not only triage ones: read them as a
+prompt to look, then judge.
+
+- For each such row choose: propose a `rework` (scope it with `usage_churn_files(skill)`), or defer with a
+  one-sentence reason shown in the table. "Cheap note, one report" is a reason only if the file is not also
+  contradictory or overlapping; read the file to say so.
+- A deferral is recorded with `rework_defer(target, reason)` at archive time. A target with an earlier deferral
+  shows `deferred_n` above 0: propose the rework first; deferring again is the user's explicit choice.
+- `patch` rows (low churn, single change) go ahead as small fixes. A one-line fix is the right answer when the
+  target is healthy; the gate only prevents it from being the default regardless of the target's state.
+- Several `add-note` outcomes on one skill in one run are one topic: ask whether a restructure of that reference
+  would absorb them.
+
+## New-skill suggestions
+
+Nothing to reproduce. Check overlap with existing territory (`github-skill-maintenance/references/skill-boundaries.md`),
+whether a second independent report backs it, and whether the scope fits one skill `description`.
+
 ## Research checklist (required per issue before the table)
 
 Every issue that could end as `fix` or `add-note` needs a research row in the ledger

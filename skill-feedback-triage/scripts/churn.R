@@ -79,3 +79,44 @@ usage_churn_files <- function(skill, repo = getwd(), days = 60, log = rework_log
   out <- do.call(rbind, rows)
   out[order(-out$candidate, -out$edits_window, -out$kb), ]
 }
+
+# Patch gate: run before the triage table on the files the proposed outcomes would edit (one element per
+# proposed change, so a file named twice counts twice). Rows marked "rework-or-defer" need a `rework`
+# proposal in the table or a recorded deferral; a target already deferred once should not be deferred
+# silently again. Deferrals live in references/rework-deferred.tsv (date, target, reason).
+rework_deferred_read <- function(repo = getwd(),
+                                 path = file.path(repo, "skill-feedback-triage", "references", "rework-deferred.tsv")) {
+  if (!file.exists(path)) return(data.frame(date = character(), target = character(), reason = character()))
+  utils::read.delim(path, colClasses = "character", comment.char = "#")
+}
+
+rework_defer <- function(target, reason, repo = getwd(), date = format(Sys.Date()),
+                         path = file.path(repo, "skill-feedback-triage", "references", "rework-deferred.tsv")) {
+  stopifnot(nzchar(reason), !grepl("[\t\n]", reason))
+  if (!file.exists(path)) writeLines("date\ttarget\treason", path)
+  cat(paste(date, target, reason, sep = "\t"), "\n", sep = "", file = path, append = TRUE)
+  invisible(rework_deferred_read(repo, path))
+}
+
+patch_gate <- function(targets, repo = getwd(), days = 60, log = rework_log_read(repo),
+                       deferred = rework_deferred_read(repo), churn_edits = 3) {
+  targets <- gsub("\\\\", "/", targets)
+  tab <- table(targets)
+  files <- names(tab)
+  skills <- vapply(strsplit(files, "/", fixed = TRUE), `[`, "", 1)
+  info <- do.call(rbind, lapply(unique(skills), usage_churn_files, repo = repo, days = days, log = log))
+  out <- data.frame(file = files, skill = skills, proposed = as.integer(tab), stringsAsFactors = FALSE)
+  out$skill_proposed <- ave(out$proposed, out$skill, FUN = sum)
+  m <- match(out$file, info$file)
+  out$kb <- info$kb[m]
+  # Edits since the last rework covering the file, or in the window when it was never reworked
+  out$file_edits <- ifelse(is.na(info$reworked[m]), info$edits_window[m], info$edits_since_rework[m])
+  out$file_edits[is.na(out$file_edits)] <- 0L
+  hit <- lapply(out$file, function(f) deferred[f == deferred$target |
+                  (endsWith(deferred$target, "/") & startsWith(f, deferred$target)), , drop = FALSE])
+  out$deferred_n <- vapply(hit, nrow, 1L)
+  out$last_deferral <- vapply(hit, function(h) if (nrow(h)) h$reason[which.max(as.Date(h$date))] else "", "")
+  out$verdict <- ifelse(out$file_edits >= churn_edits | out$proposed >= 2 | out$skill_proposed >= 3,
+                        "rework-or-defer", "patch")
+  out[order(out$verdict, -out$file_edits), ]
+}

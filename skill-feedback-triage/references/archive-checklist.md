@@ -12,6 +12,7 @@ Work through this checklist in order, in the real inbox (not the copy):
 - [ ] Record the watermark with `triage_watermark_set(max(U$time))` before deleting the work folder (skip if `U` is empty; if the folder is gone, take the last timestamp from the real `usage.tsv`). Never truncate or edit `usage.tsv`.
 - [ ] Copy the ledger back: `cp .posit/assistant/lessons-work/dispositions.tsv ~/.posit/lessons/dispositions.tsv`. The ledger is never committed or truncated.
 - [ ] Delete `.posit/assistant/lessons-work` in its own last command (a blocked `rm -rf` chained after `mv`/`cp` cancels them). Check dispositions with `dispositions_read()`, not `read.delim`.
+- [ ] Record each deferred rework from the patch gate with `rework_defer(target, reason)` (`scripts/churn.R`); an approved rework gets its `rework-log.tsv` row in its own commit instead.
 - [ ] Add a generic-wording Log entry to `HISTORY.md` (counts, outcomes, what was not verified). Commit skill edits, never lesson files; the `AGENTS.md` watermark line and the `HISTORY.md` entry go in the same commit (CRLF-to-LF warnings are harmless).
 
 ## Partial close-out (a few entries, run not archived)

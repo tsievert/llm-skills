@@ -42,8 +42,9 @@ read the lesson files first and use an export only to verify a claim; the parsin
    same change. Details: [references/triage-method.md](references/triage-method.md).
 4. **Cause, not symptom.** Before the table, run the target scan (step 3) and place each fix on the fix ladder
    (text, structure, enforcement, remove the cause), stating why a higher rung was or was not chosen. A repeat
-   report of something already fixed is a failed fix, never `already-present`. A target with repeated patches
-   gets a `rework` proposal instead of another patch.
+   report of something already fixed is a failed fix, never `already-present`. The patch gate (step 4) decides
+   whether a target gets another patch or a `rework`; the aim is to fix causes, with one-line patches only
+   where that is all a target needs.
 
 ## Workflow
 
@@ -72,31 +73,28 @@ read the lesson files first and use an export only to verify a claim; the parsin
 3. **Scan the targets, then treat every entry as a hypothesis.** For each target file run `target_scan(L, D)` (`read_lessons.R`) as in
    [references/triage-method.md](references/triage-method.md) (recent edits, other entries naming it, recurring
    closures) and read the whole file. Every run also show the top five of `usage_churn_table()`
-   (`scripts/churn.R`, all skills, ranked by commits since the last rework in `references/rework-log.tsv`) and,
-   for a rework candidate, `usage_churn_files(skill)`.
-   Then treat every entry as a hypothesis. Run the research checklist in
-   [references/triage-method.md](references/triage-method.md) for each issue and record it in the ledger
-   (see Gates; ledger skeleton: [assets/research-ledger-template.md](assets/research-ledger-template.md)). A `bug` entry naming a script is reproduced with a cheap test of that code path before it is
-   parked or rejected. Grep the named skill and `HISTORY.md` for the entry's key terms before building the
-   table, then read the target section: a `suggested-change` already applied is `already-present`; an entry
+   (`scripts/churn.R`, ranked by commits since the last rework in `references/rework-log.tsv`).
+   Treat every entry as a hypothesis: run the research checklist (same reference) per issue and record it in the
+   ledger ([assets/research-ledger-template.md](assets/research-ledger-template.md)). Reproduce a `bug` entry naming a
+   script with a cheap test before parking or rejecting it. Grep the named skill and `HISTORY.md` for the entry's
+   key terms, then read the target section: an already-applied `suggested-change` is `already-present`; an entry
    about a built-in skill with no folder here (for example `quarto-authoring`) is `reject`.
-   `type: new-skill-suggestion` entries (slot `new-skill`) have nothing to reproduce: check overlap with
-   existing territory (`github-skill-maintenance/references/skill-boundaries.md`), whether a second
-   independent report backs it, and whether the scope fits one skill `description`.
+   `new-skill-suggestion` entries have nothing to reproduce: check overlap and scope (`triage-method.md`).
 4. **Decide per issue.** Outcomes: `fix` (skill text, script or reference changes),
    `add-note` (caveat or "verified on" line), `needs-info` (ask the user to rerun a
    command and paste the output), `reject` (user-specific, or the skill was right), `park`
-   (one low-confidence report; leave it in the inbox so evidence can accumulate), or
-   `new-skill` (build it with `create-skill`, in this triage session, only after the user
-   approves it in step 5 — `new-skill-suggestion` entries exist precisely so that decision
-   is made here, deliberately, rather than on the spot in whatever session first noticed
-   the need).
+   (one low-confidence report; leave it in the inbox so evidence can accumulate),
+   `new-skill` (`create-skill`, after the user approves in step 5), or
    `rework` (restructure a section, file or mechanism in its own change: [references/rework.md](references/rework.md)).
    Evidence thresholds are in the reference.
+   **Patch gate (before the table, required).** Run `patch_gate(<one path per proposed edit>)`
+   (`scripts/churn.R`). Each `rework-or-defer` row needs a `rework` proposal in the table (use
+   `usage_churn_files(skill)` to scope it) or a stated reason to defer (`rework_defer()` at archive time). A
+   target deferred before gets the `rework` first; deferring again is the user's explicit choice (`triage-method.md`).
 5. **Show the triage table and ask.** One row per issue, not per entry, listing its entry numbers
    (`L$n`) so the outcome column can be built from them. Columns: issue, entries, skills, reports
    (projects), research (ledger row and checklist result), proposed outcome and change, fix-ladder rung,
-   alternative considered (one broader option and why not), target file and
+   alternative considered (one broader option and why not), patch-gate verdict, target file and
    size after the change. Wait for the user's choice
    (the `AskUser` tool suits batches) before editing any skill. If the run is postponed, save the proposed outcomes
    keyed by `L$key` (file, skill, title), not by entry number (numbers shift when files are added), and leave

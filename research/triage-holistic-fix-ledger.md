@@ -130,3 +130,24 @@ triage into two skills.
   Local fit: inbox triage and the usage/churn/rework review share only the rework step and different inputs (inbox versus git).
   Candidate second skill would overlap `github-skill-maintenance` ("periodic health check"). Decision pending with the user;
   recommendation: not yet, first see whether the rework-log and churn step stop repeat rankings.
+
+## Round 2026-11-24: churn was shown, not decided (patch gate)
+
+Requirement R3 (2026-11-24): review the triage skill so it does not only accumulate one-line fixes; check how churn
+detection is reviewed in a standard run; the aim is holistic review, small patches only where that is all a target needs.
+
+| # | Finding | Evidence |
+|---|---|---|
+| F1 | Step 3 only said to "show" the top five of `usage_churn_table()`; no step turned churn into a decision, the table had no churn column, and gate 4's "repeated patches" had no threshold. | SKILL.md steps 3-5 before this change |
+| F2 | The run of 2026-11-24 (15th) showed the churn table, then patched 4 files with 5 notes. Retrospective `patch_gate()` on those paths flags all four (file edits 1 to 13 since rework or in window; two notes on one file; four notes in one skill). The skill's own SKILL.md topped the churn table and was not discussed. | run ledger 2026-11-24, churn output |
+| F3 | Proposals 6 (field-notes batching), 7 (standing pattern log) of section 4 remain unimplemented; the patch gate partly covers 6 ("several add-notes in one skill are one topic"). | section 4 |
+| F4 | No record of deferred reworks, so a candidate can be deferred every run indefinitely. | rework-log.tsv has only completed reworks |
+
+Change: `patch_gate()`, `rework_defer()`, `rework_deferred_read()` in `scripts/churn.R` (rung 3, enforcement);
+`references/rework-deferred.tsv` (date, target, reason); SKILL.md step 4 "Patch gate" and a table column;
+`triage-method.md` "Patch gate" section; archive checklist line. SKILL.md 11.90 -> 11.82 KB (new-skill paragraph moved to
+`triage-method.md`). Alternative considered: a hard gate that blocks add-notes on any churned file; not chosen, because
+churn counts all commits (including rework and new content), so it would over-block healthy targets. Thresholds
+(3 edits, 2 per file, 3 per skill) are untuned; expect noise at first (all four files were flagged in the retrospective test).
+Research: git churn only (own repo); no CRAN package fits; Agent Skills spec not re-read (no frontmatter change).
+Tested: function run on the real repo and a deferral round trip on a temp file. Not tested: a full triage run with the gate.
