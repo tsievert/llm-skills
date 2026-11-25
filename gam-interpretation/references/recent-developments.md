@@ -48,7 +48,7 @@ Diagnostics
 - `log_lik()`, `loo::loo()`, `loo::waic()` and `bayesplot::pp_check()` methods for independent GAM/BAM fits; multi-chain Metropolis-Hastings sampling with `sampling_diagnostics()`.
 
 Housekeeping
-- `fixef()` re-export removed: use `gratia::fixed_effects()` (or `nlme::fixef()` / `lme4::fixef()` for fits from those packages).
+- `fixef()` re-export removed: use `gratia::fixed_effects()` (or `nlme::fixef()` / `lme4::fixef()` / `glmmTMB::fixef()` for fits from those packages; `fixed_effects()` errors on glmmTMB fits).
 - mgcv B-spline tensor products (`bs = "bt"`, mgcv >= 1.9-5) are supported; `mirai::daemons()` workers speed up derivatives, smooth sampling and ALE.
 - glmmTMB support needs the released glmmTMB 1.1.15.2 or later.
 

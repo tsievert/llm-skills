@@ -14,7 +14,9 @@ filesystems. Anything two tasks touch together is a potential race.
 **Rules**
 
 1. **One writer per path.** Give every task its own output paths, keyed by
-   `$SLURM_ARRAY_TASK_ID` (results, logs, temp files, checkpoints, caches). Merge
+   `$SLURM_ARRAY_TASK_ID` (results, logs, temp files, checkpoints, caches); when tasks
+   are variants (same setting, different seed), put every varying parameter in the
+   names or use one directory per task. Merge
    afterwards in a dependent job:
    `sbatch --dependency=afterok:<array_jobid> merge.sh` (waits for all tasks).
 2. **Never append to one shared file** (CSV, log, JSONL) from many tasks. Interleaved
@@ -103,7 +105,9 @@ Three layers, strongest first. Use at least the first two for long jobs.
    normally includes cancellation and timeout. The window after the time limit is
    short (SIGTERM, then SIGKILL after `KillWait`; check
    `scontrol show config | grep KillWait`), so keep the final sync small by syncing
-   periodically, and test the trap (`scancel <jobid>` on a short job) on your cluster.
+   periodically, and test the trap (`scancel <jobid>` on a short job) on your cluster. Take ids for `scancel`/`sacct`
+   from `squeue`: the id in a task's log header is the task's own job id, while the array is
+   cancelled as `<arrayid>` or `<arrayid>_<task>`.
 
 Template: [assets/python-scratch-job.sh](../assets/python-scratch-job.sh)
 

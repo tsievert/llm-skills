@@ -20,6 +20,8 @@ python -c "import jax, keypoint_moseq as k; print(k.__version__, jax.__version__
 
 On a GPU-less login node the same import can print a long jax CUDA plugin error (`cuInit`, error 303) and then still work and report CPU. It is not an environment fault; set `JAX_PLATFORMS=cpu` there to silence it. A CPU-only step can also start with a `SystemError` traceback from `cuda_device_count` in plugin discovery even with `JAX_PLATFORMS=cpu`; it is harmless when the step's status is ok.
 
+A driver that spawns one GPU child process per candidate must keep itself off the GPU: merely importing `keypoint_moseq` or jax (also in a version-logging helper) makes the parent reserve about 75% of the card, and the child then fails at `init_model` with an allocator warning that the initial shared region is smaller than configured. Set `JAX_PLATFORMS=cpu` in the parent (save the original environment for the children) and diagnose with per-process `nvidia-smi` via `srun --overlap`.
+
 If a local `uv`/`python` install is invisible to the assistant's `bash` calls even though a
 separate terminal sees it, this is usually a stale-PATH issue, not a missing install — see
 "uv/Python not found by the assistant's shell" in `python-reproducible-pipeline`

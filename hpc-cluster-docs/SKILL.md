@@ -23,7 +23,8 @@ documentation (web fetch) can be read directly.
 
 **Requirement:** whenever information is needed that only the cluster can provide,
 stop and ask the user to run the specific shell command(s), given in a code block, and
-paste back the output. Do not guess or proceed on assumptions.
+paste back the output. Do not guess or proceed on assumptions. For size breakdowns use
+`du -h --max-depth=1 <dir>` alone: `du -sh parent parent/child` prints only the parent.
 
 ## Workflow
 

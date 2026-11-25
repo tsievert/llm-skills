@@ -1,3 +1,8 @@
 date	target	reason
 2026-11-24	skill-feedback-triage/scripts/read_lessons.R	20 KB, 21+ functions, 12 edits; today's change is one added column, rework needs a function-level inventory; schedule own change
 2026-11-24	skill-feedback-triage/references/triage-method.md	11 edits, 12.6 KB; extended earlier today with the patch gate; rework after the gate has been used for a few runs
+2026-11-25	keypoint-moseq/references/hpc-and-troubleshooting.md	one small addition to a healthy file; no contradiction or overlap found when read
+2026-11-25	keypoint-moseq/references/keypoint-moseq-workflow.md	one small addition to a healthy file; no contradiction or overlap found when read
+2026-11-25	hpc-resource-allocation/references/capacity-benchmark.md	one small addition to a healthy file; no contradiction or overlap found when read
+2026-11-25	hpc-cluster-docs/SKILL.md	one small addition to a healthy file; no contradiction or overlap found when read
+2026-11-25	gam-interpretation/references/recent-developments.md	one small addition to a healthy file; no contradiction or overlap found when read

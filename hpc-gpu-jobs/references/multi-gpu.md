@@ -67,6 +67,7 @@ The program reads `RANK`, `LOCAL_RANK`, `WORLD_SIZE`, `MASTER_ADDR`, `MASTER_POR
 | Hang at init | Wrong `MASTER_ADDR`/port, firewall, wrong NCCL interface; set `NCCL_DEBUG=WARN` |
 | `Address already in use` | Port collision with another job; derive port from job ID |
 | One rank dies, others hang | Missing `--kill-on-bad-exit=1` |
+| One device hits allocator OOM in a single-process multi-GPU job (for example JAX), then logs a rendezvous/clique wait and never exits | No rank exits, so `--kill-on-bad-exit` cannot help: add a log-stall watchdog (kill on the OOM string plus no new log lines, write a status file) and a short `--time` for capacity probes |
 | Each worker sees one GPU under torchrun | `--gpus-per-task=1` used with torchrun |
 | Ranks all use GPU 0 | Tasks see all GPUs and no per-rank device selection |
 | Slow scaling beyond one node | Network/interconnect or data pipeline bound; run a scaling test |
