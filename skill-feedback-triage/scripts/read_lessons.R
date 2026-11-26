@@ -273,12 +273,13 @@ parked_recheck <- function(lessons, repo = getwd(), min_chars = 6, all_skills = 
     txt <- vapply(f, function(x) tolower(paste(readLines(x, warn = FALSE), collapse = " ")), "")
     hits <- vapply(txt, function(t) sum(vapply(w, grepl, TRUE, x = t, fixed = TRUE)), 0)
     best <- if (length(hits)) which.max(hits) else NA_integer_
+    matched <- if (is.na(best)) "" else paste(utils::head(w[vapply(w, grepl, TRUE, x = txt[[best]], fixed = TRUE)], 8), collapse = " ")
     data.frame(n = if ("n" %in% names(p)) p$n[i] else NA_integer_,
                skill = p$skill[i], title = substr(p$title[i], 1, 60), terms = length(w),
                best_hits = if (is.na(best)) 0 else hits[[best]],
                share = if (length(w) && !is.na(best)) round(hits[[best]] / length(w), 2) else 0,
                best_file = if (is.na(best)) NA else sub(paste0("^", normalizePath(repo, "/"), "/?"), "", f[best]),
-               stringsAsFactors = FALSE)
+               matched = matched, stringsAsFactors = FALSE)
   })
   out <- do.call(rbind, out)
   out$likely_stale <- out$share >= flag_share
@@ -342,6 +343,43 @@ target_scan <- function(lessons, dispositions, repo = getwd(), days = 60, max_di
 
 # New entries split into actionable and note-only (use-case, worked-well), plus the other statuses,
 # so the "new" count can be reconciled with what the user expects to be open.
+# Entries that need a decision: status new or needs-info, excluding note-only types. Matches the
+# "new (actionable)" count of status_summary() (plus needs-info).
+actionable <- function(lessons) {
+  lessons[lessons$status %in% c("new", "needs-info") & !lessons$type %in% c("use-case", "worked-well"), , drop = FALSE]
+}
+
+# Print entries in batches so one call stays under the tool output limit (about 17 KB):
+#   lesson_print(actionable(L), from = 1)   then   from = 13, ...
+lesson_print <- function(lessons, from = 1, n = 12, chars = 300) {
+  rows <- seq_len(nrow(lessons))
+  rows <- rows[rows >= from][seq_len(min(n, sum(rows >= from)))]
+  cut <- function(x) substr(gsub("\\s+", " ", as.character(x)), 1, chars)
+  for (i in rows) {
+    e <- lessons[i, ]
+    cat(if ("n" %in% names(e)) e$n else i, e$skill, e$type, "| conf", e$confidence, "| gen", e$generality,
+        "\n T:", cut(e$title), "\n S:", cut(e$symptom), "\n R:", cut(e$resolution),
+        "\n C:", cut(e[["suggested_change"]]), "\n\n")
+  }
+  cat("batch", from, "to", max(rows), "of", nrow(lessons), "\n")
+  invisible(rows)
+}
+
+# Record one outcome per entry and verify every key landed in the ledger.
+# `outcome` is a character vector, one value per row of `lessons` (build it on the same L that was printed).
+# Stops before writing if any value is missing or not allowed; stops after writing if a key is absent.
+dispositions_record <- function(lessons, outcome, file, date = format(Sys.Date())) {
+  stopifnot(length(outcome) == nrow(lessons))
+  bad <- is.na(outcome) | !outcome %in% dispositions_allowed
+  if (any(bad)) stop("missing or disallowed outcome for rows: ", paste(which(bad), collapse = ", "))
+  for (o in unique(outcome)) dispositions_add(lessons[outcome == o, , drop = FALSE], o, file, date)
+  have <- dispositions_read(file)$key
+  miss <- setdiff(lesson_key(lessons), have)
+  if (length(miss)) stop(length(miss), " entries missing from the ledger after writing")
+  message("recorded ", nrow(lessons), " entries: ", paste(names(table(outcome)), table(outcome), collapse = ", "))
+  invisible(TRUE)
+}
+
 status_summary <- function(lessons) {
   note <- lessons$type %in% c("use-case", "worked-well")
   grp <- ifelse(lessons$status == "new", ifelse(note, "new (note-only)", "new (actionable)"), lessons$status)

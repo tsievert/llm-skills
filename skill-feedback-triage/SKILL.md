@@ -23,12 +23,11 @@ Copy the inbox, usage log and dispositions into the git-ignored `.posit/assistan
 (the R session cannot read the home folder), check the file counts match, and delete the copy once the run is
 archived: [references/work-copy.md](references/work-copy.md). A leftover copy re-triages archived files.
 
-If the user collected files from other machines or projects, they go into the same
-`inbox` copy; names do not collide by design.
+Files from other machines go into the same `inbox` copy (names do not collide).
 
-**Dropped-off conversation exports.** If the user also provides conversation-export JSON files,
-read the lesson files first and use an export only to verify a claim; the parsing recipe is in
-[references/conversation-exports.md](references/conversation-exports.md).
+**Conversation exports.** Read the lesson files first; use an export only to verify a claim
+(recipe:
+[references/conversation-exports.md](references/conversation-exports.md)).
 
 ## Gates (the table is not shown without these)
 
@@ -57,19 +56,22 @@ read the lesson files first and use an export only to verify a claim; the parsin
    D <- dispositions_read(".posit/assistant/lessons-work/dispositions.tsv")
    L <- lesson_status(L, D)   # adds `status`: new / parked / needs-info / closed
    status_summary(L)       # triage "new (actionable)"; note-only: no-change; others are context
+   A <- actionable(L)      # the entries to decide (new or needs-info, no use-case/worked-well)
+   lesson_print(A, from = 1)  # 12 entries per call; repeat with from = 13, 25, ...
    lesson_problems(L)      # malformed entries, unknown skill folders (skips closed and built-in-skill entries)
    lesson_overview(L, U)   # per skill: loads, sessions, projects, entries by type
    lesson_dupes(L)         # candidate duplicates (heuristic, check by reading)
    ```
-   Set `options(width = 200)` first. Give `L` a numbered key (`L$n <- seq_len(nrow(L))`) once and print every
-   listing from that object, in batches (about 17 KB overflows the code tool's output). Report coverage first
+   Set `options(width = 200)` first. Give `L` a numbered key (`L$n <- seq_len(nrow(L))`) once, before `actionable()`,
+   and print every listing in batches (about 17 KB overflows the code tool's output). Report coverage first
    (skills never loaded; skills loaded often with no entries: fine, or the reminder fails, unknown). Fix or
    report malformed entries rather than dropping them; `closed` entries stay out of the table. Every run, run
    `parked_recheck(L)` before the table (`likely_stale` flag: [references/triage-method.md](references/triage-method.md));
    survivors stay parked until a new report of the same thing.
 2. **Group.** Merge duplicates into one issue and count independent projects and sessions
    per issue. Keep `generality: likely-user-specific` entries out of skill edits unless a
-   second project shows the same thing.
+   second project shows the same thing. Read later entries of the same session for a resolution that
+   supersedes an earlier unresolved one (outcome `reject`, reason superseded).
 3. **Scan the targets, then treat every entry as a hypothesis.** For each target file run `target_scan(L, D)` (`read_lessons.R`) as in
    [references/triage-method.md](references/triage-method.md) (recent edits, other entries naming it, recurring
    closures) and read the whole file. Every run also show the top five of `usage_churn_table()`

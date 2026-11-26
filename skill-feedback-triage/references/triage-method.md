@@ -104,7 +104,7 @@ Research is recorded in the same turn it is done, not summarised afterwards.
 
 **First-hand observations.** When an entry reports a version-specific or cluster-only fact that cannot be reproduced locally, write the research row as "unverified, source: reporting session" plus the skill-text check; it can support an `add-note` in a `references/` file but not a SKILL.md change. When an entry's fix text contains backslash sequences (such as `\r`), apply it with the edit tool, not `sed`, and check with `grep -cU $'\r'`.
 
-**User memory outcome.** A one-user formatting preference, or environment guidance that recurs across sessions, is proposed for the user's memory file (`~/.posit/assistant/AGENTS.md`) instead of a skill edit; record the entry as `fix` once written there.
+**User memory outcome.** A one-user formatting preference, or environment guidance that recurs across sessions, is proposed for the user's memory file (`~/.posit/assistant/AGENTS.md`) instead of a skill edit; record the entry as `fix` once written there. Read the current memory text first: if later entries show an existing rule failing, propose replacing it, not adding a second one.
 
 ## Reproducing
 
@@ -174,7 +174,7 @@ persistent gap means the turn limit or wording needs changing (see
 Parked entries go stale: later edits often cover them (one run: about a third of 20 were already
 present). `parked_recheck(L)` scores each entry's distinctive words against the named skill's files;
 add `all_skills = TRUE, flag_share = 0.6` to also search neighbouring skills. It is a screen, not a
-verdict. `likely_stale` over-fires right after a review that wrote new reference text, and is often a false positive for broad topics (one run: 6 of 7 flagged, guidance
+verdict; the `matched` column lists the terms found in the best file, so read it before grepping. `likely_stale` over-fires right after a review that wrote new reference text, and is often a false positive for broad topics (one run: 6 of 7 flagged, guidance
 absent for most), so grep two or three distinctive terms first, then read the target section. Give a
 confirmed one `already-present` (or `add-note`/`fix` under the thresholds above) or keep it parked.
 Grep misses paraphrased guidance, so read the section for every proposed fix.
