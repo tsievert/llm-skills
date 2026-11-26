@@ -65,3 +65,12 @@ for key, video in zip(keys, videos):
 5. Delete `error_annotations.csv` after changing the data or its frame rate, and restart the kernel when plots look wrong.
 
 Not checked: whether 0.8.3 changed the calibration widget, and whether #153 still occurs on 0.8.3. Ask the user for their kpms, jax-moseq, JupyterLab, panel and bokeh versions before diagnosing widget problems.
+
+## Jitter and NaNs
+
+**Jitter is a last resort, not a free fix for NaNs.** Check the data first (still periods, animal entering or leaving the frame, objects pulling keypoints off the animal); jitter can hide NaNs without fixing the cause. The FAQ (read 2026-11-20) allows raising it from 1e-3 to at most 1e-2, and says it acts only in the serial Kalman sampler (CPU, or `parallel_message_passing=False`), so it does nothing in the GPU default. Raise it one step at a time and look at trajectory plots (upstream #153: 1e-1 gave odd coordinates). Float32 is the 0.8.6 default and not a documented NaN cause.
+
+## Bodypart order and recording names
+
+**Check bodypart order across files before pooling.** `load_keypoints` takes the bodyparts from the first file and assigns the others by position, silently mislabelling a file with a different column order (tested on 0.8.3). `scripts/kpms_headless_fit.py` compares the csv/h5 headers first and exits listing the differing files (`--skip-header-check` to override); if you load files another way, check the headers yourself.
+**Recording names come from file names.** DLC names usually include a long `DLC_...` network suffix and multi-animal files become `<file>_<individual>`. Strip and map names to a metadata table explicitly and check for unmatched or duplicated keys. Results are keyed by recording name, so `apply_model` on new data with a name that already exists overwrites that recording's results (upstream #218): check `coordinates.keys()` of old and new data differ.

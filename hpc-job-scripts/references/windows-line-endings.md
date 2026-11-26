@@ -26,6 +26,10 @@ Files made by the editor's write tool on Windows are CRLF too (check with `file`
 
 Plain `grep -c $'\r'` and `cat -A` can report zero carriage returns on CRLF files there. `grep -U` counts them, and so does `file`; use one of those in any script or test that detects CRLF.
 
+## Editing CRLF files with sed from Git Bash
+
+`sed -i` patterns containing `\r` do not match CRLF files, and an unquoted backslash path (for example `$PA_SCRATCH_DIR` on Windows) makes copies and edits silently do nothing. Recipe: quote every path and use forward slashes; `tr -d '\r' < f > "$tmp/f.lf"`; edit the LF copy; convert back with `sed 's/$/\r/'`; then `diff` against the backup and run `file` on the result. Always diff after a scripted edit. In an editing tool, anchor a match on a single line: a multi-line `old_string` can fail on CRLF.
+
 ## Preventing it
 
 Set `*.sh text eol=lf` (and the other script types) in `.gitattributes` so the working copy is LF.

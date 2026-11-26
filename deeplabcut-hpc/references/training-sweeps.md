@@ -31,6 +31,8 @@ A CPU install of 3.0.2 returned 34 model names and 3 detectors; still print `ava
 - Give every task its own output path and config copy (pitfalls 1 and 8 in `SKILL.md`).
 - Before resubmitting after a failure, compare the traceback's line numbers with the local script: a local patch may never have been copied to the cluster. Failed jobs also register their shuffle in `metadata.yaml`, so use new numbers.
 - Keep the orchestrator to the next planned submission only: no per-round variables or round history. Move finished and failed shuffle numbers to the refuse-reuse list, never reuse a failed number, and archive old versions outside the script.
+- Before planning epoch or schedule ablations, check that the driver exposes scheduler milestones and learning rate, not only epochs and batch size (see `pytorch-config-tuning.md`).
+- Rank CTD conditioner candidates among bottom-up shuffles only; a CTD evaluation failure after normal training points to a top-down conditioner.
 - Compare candidates by the same metric on the same split; the default `runner.key_metric` is `test.mAP`.
 - Shell defaults: `${VAR:-x}` replaces an empty value too, so a script documented as "empty means DLC default" still applies `x`. Use `${VAR-x}` (default only when unset), or pass an explicit sentinel such as `default` for every variable in a baseline run and map it to None in Python.
 

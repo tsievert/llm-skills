@@ -62,6 +62,8 @@ guess or proceed on assumptions.
   In a login-node orchestrator, check that each `sbatch` call succeeded before using its
   job ID, and make every stage exit non-zero on failure (`afterok` only sees the exit code).
   Template and resume pattern: [references/chaining-and-orchestrators.md](references/chaining-and-orchestrators.md)
+- When reusing directives from another job script, check the partition's QOS minimums first (`sacctmgr -P show qos format=Name,MaxTRESPerJob,MinTRES`): a small job on a large-memory partition fails with `QOSMinMemory`. Always run `sbatch --test-only` before submitting.
+- When asking the user for log output, give a `grep` for the program's result markers, not `tail`: the site's end-of-job accounting footer can fill the last lines.
 - Record provenance at start: job ID, host, date, `module list`, Python version,
   git commit, and the exact command/config.
 
@@ -108,7 +110,7 @@ guess or proceed on assumptions.
 
 | Symptom | Likely cause |
 |---|---|
-| `sbatch: Batch script contains DOS line breaks`, `bad interpreter: /bin/bash^M`, odd syntax errors, or a `.slurm`-extension script that "did not work" | CRLF line endings from Windows (several file types at once). Check with `file` or `grep -U`, fix with `sed -i 's/\r$//' <files>`; `check_sbatch.sh` flags it. Detection pitfalls, prevention and a heredoc truncation trap: [references/windows-line-endings.md](references/windows-line-endings.md) |
+| `sbatch: Batch script contains DOS line breaks`, `bad interpreter: /bin/bash^M`, odd syntax errors, or a `.slurm`-extension script that "did not work" | CRLF line endings from Windows (several file types at once). Check with `file` or `grep -U`, fix with `sed -i 's/\r$//' <files>`; `check_sbatch.sh` flags it. Detection pitfalls, editing CRLF files with sed from Git Bash, prevention and a heredoc truncation trap: [references/windows-line-endings.md](references/windows-line-endings.md) |
 | Job fails instantly, no log | Output directory missing; check `scontrol show job <id>` (`StdOut=`) |
 | Job pending forever | Request exceeds partition limit, or wrong account/partition |
 | Python output only appears at the end | Buffered stdout; see `hpc-python-code` |

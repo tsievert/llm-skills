@@ -97,3 +97,18 @@ g  <- graph_from_data_frame(tm[tm$n >= 10, c("from", "to", "p")])
 ## 6. kpms built-in analysis (Python)
 
 Signatures checked on 0.8.0 and again on 0.8.3 (run on synthetic data; they changed from 0.7.x, so check `help()` on older installs): `compute_moseq_df(project_dir, model_name, results_dict=None, *, fps=None, smooth_heading=True)` (columns name, centroid_x/y, heading, angular_velocity, velocity_px_s, syllable, frame_index, group, fps, onset; `fps` comes from the config if not given; angular velocity no longer spikes at +-pi since 0.8.2) and `compute_stats_df(moseq_df, min_frequency=0.005, groupby=["group","name"])` (adds frequency and duration per syllable and recording; without `index.csv` every recording is in group `default`). The old call `compute_stats_df(project_dir, model_name, moseq_df, ..., fps=30)` raises `TypeError` on 0.8.x. Per the 0.8.0 notes, other renames (grid movies: `pre`/`post`/`min_duration`/`filter_size` became `before_onset_sec`/`after_onset_sec`/`min_instance_duration_sec`/`smoothing_filter_frames`) are silently ignored when the old names are passed; not run. Other functions:  `plot_syll_stats_with_sem(...)` for group tests, `generate_transition_matrices`, `visualize_transition_bigram`, `plot_transition_graph_group`, `label_syllables` (writes `syll_info.csv`). Use these for quick looks; for mixed-model inference export the tables and analyse in R or statsmodels, because the built-in group tests treat each recording as independent and offer no covariates or interactions (verified in the 0.6.6 source, with `run_kruskal`'s signature unchanged in 0.8.3 and its syllable-label reporting fixed in 0.8.2: permutation Kruskal-Wallis with BH correction plus Dunn post hoc, one `group` column; details in [syllable-statistics.md](syllable-statistics.md)).
+
+## Helper packages (checked on CRAN 2026-10-23)
+
+| Need | Package | Status in this skill |
+|---|---|---|
+| Read results.h5 in R | `hdf5r` (CRAN) | Tested: dimension order, nested groups, values equal to kpms CSV |
+| Mixed models, GAMs for syllable data | `glmmTMB`, `lme4`/`lmerTest`, `emmeans`, `DHARMa`, `mgcv` (general workflow in `mixed-models-glmm`) | Tested on simulated data in `stats_demo.R` of `animal-behaviour-tracking-analysis` |
+| Compositional usage | `DirichletReg`, `compositions` | Not tested |
+| Multivariate usage tests | `vegan` + `permute` (PERMANOVA, whole-animal permutations) | Tested on simulated data in `stats_demo.R` |
+| Transition graphs | `igraph`, `tidygraph`, `ggraph` | Not tested here |
+| Call Python from R/Quarto | `reticulate` | Mentioned only, not used (fitting belongs on the cluster) |
+| Explicit HMMs on movement data | `momentuHMM`, `hmmTMB`, `moveHMM` | Different approach (parametric states on speed/turning), not a kpms substitute |
+| Alternative R reader | `rhdf5` (Bioconductor) | Not used |
+
+There is no CRAN package for keypoint-MoSeq itself; the fitting side is Python only.

@@ -23,7 +23,7 @@ documentation (web fetch) can be read directly.
 
 **Requirement:** whenever information is needed that only the cluster can provide,
 stop and ask the user to run the specific shell command(s), given in a code block, and
-paste back the output. Do not guess or proceed on assumptions. For size breakdowns use
+paste back the output. Do not guess or proceed on assumptions. If a "pasted output" contains only the commands, say so in the first sentence, do not infer state, and carry on with work that does not depend on it. For quota checks give fallbacks (`quota -s`, `mmlsquota`, `df -h .`); empty output or "No quota enabled" means no per-user quota, not a failure. For size breakdowns use
 `du -h --max-depth=1 <dir>` alone: `du -sh parent parent/child` prints only the parent.
 
 ## Workflow
@@ -99,7 +99,6 @@ paste back the output. Do not guess or proceed on assumptions. For size breakdow
 - Choosing or diagnosing CPU/memory/GPU/time requests: `hpc-resource-allocation`
 - GPU / deep-learning jobs: `hpc-gpu-jobs`
 - R scripts and R pipelines on the cluster: `hpc-r-code`
-- DeepLabCut training and video analysis: `deeplabcut-hpc`
 - DeepLabCut training and video analysis: `deeplabcut-hpc`
 
 ## Explain the reasoning (teaching rule)

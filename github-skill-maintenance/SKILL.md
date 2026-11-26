@@ -78,7 +78,9 @@ and say what it would change.
    packages that are not installed are skipped on purpose, and `deeplabcut` is only found
    when written as `deeplabcut <version>`. Treat it as a candidate list. It returns a data frame
    with a `file` column covering the whole repo (hundreds of rows): assign it and filter to the
-   changed skill's files instead of printing it all.
+   changed skill's files instead of printing it all. Filter on the `package` and `file` columns
+   (`cv <- check_versions(); cv[cv$package == "mgcv" & startsWith(cv$file, "gam-mgcv/"), ]`), not on a
+   pasted-string condition, which returns NA rows.
 4. **Sync and hook setup.** Read-only audit of settings, the sync hook, the lessons hooks
    (PostToolUse `skill` and Stop), the skill-trigger hook (UserPromptSubmit, PostToolUse
    `skill`, Stop) and the file-signal hook (PostToolUse `skill` and `read|grep|bash`; both are described in
