@@ -65,9 +65,13 @@ Compare `nbinom2` with and without `ziformula`. Then say which quantity you repo
 - Issues reported in the ecology/behaviour literature and glmmTMB tracker (BLUP misuse, data-driven family selection, spatial autocorrelation, rank deficiency, `simulate()` conditioning): see [references/pitfalls-and-reporting.md](references/pitfalls-and-reporting.md), section "Issues reported for ecological and behavioural data".
 - Not tested: real data, crossed random effects with many levels, spatial/temporal autocorrelation (`ar1()`, `exp()` covariance structures in glmmTMB), ordinal models, brms/Bayesian alternatives.
 
+## Watch for bug candidates
+
+Keep an eye out for behaviour that deviates from the documentation of glmmTMB, lme4, DHARMa, performance or emmeans: a documented argument silently ignored, a diagnostic that errors on a supported model, output that contradicts the help page, or a result that differs between packages for the same simple model. Rule out the usual causes first (singular fit, separation, misspecified family, version differences; check the installed version's help and NEWS, and the "Known issues" above). If it still looks like a bug, say so, search the package's issue tracker, and offer to draft a report with versions and a minimal reproduction (built-in or simulated data with a seed); do not file it yourself. Procedure: `upstream-bug-report`.
+
 ## Related skills
 
-`gam-mgcv` and `gam-interpretation` for non-linear time courses; `animal-behaviour-tracking-analysis` for DLC metrics and the matching statistics examples; `manuscript-figures-ggplot` for journal-ready figures of model results; `hpc-r-code` for glmmTMB or lme4 fits that run on a cluster; `openalex` for literature on methods; `stats-reporting-and-review` for standardized effect sizes/CIs, power analysis, and multiplicity correction once a model is fit.; `tidy-data-wrangling` for getting repeated-measures data into long, clean form before fitting.
+`upstream-bug-report` for checking a suspected package bug against upstream issues and drafting a redacted report; `gam-mgcv` and `gam-interpretation` for non-linear time courses; `animal-behaviour-tracking-analysis` for DLC metrics and the matching statistics examples; `manuscript-figures-ggplot` for journal-ready figures of model results; `hpc-r-code` for glmmTMB or lme4 fits that run on a cluster; `openalex` for literature on methods; `stats-reporting-and-review` for standardized effect sizes/CIs, power analysis, and multiplicity correction once a model is fit.; `tidy-data-wrangling` for getting repeated-measures data into long, clean form before fitting.
 
 ## Explain the reasoning (teaching rule)
 

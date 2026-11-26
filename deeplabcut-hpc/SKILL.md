@@ -1,6 +1,6 @@
 ---
 name: deeplabcut-hpc
-description: Sets up and runs DeepLabCut (DLC) pose estimation on HPC clusters and headless GPU machines - environment install, training and video-analysis batch scripts, pytorch_config.yaml settings, DLC failure modes and failed training logs. Use when the user mentions DeepLabCut, DLC, train_network, analyze_videos, pose_cfg.yaml, pytorch_config.yaml, or markerless pose estimation, esp. with Slurm or GPUs. Also use to retrain, resubmit, or build an orchestrator/sweep, benchmark suite or sbatch loop over DLC training or video-analysis scripts (shuffles, model variants), even if the request does not say "DeepLabCut" or "Slurm", to review or rank a benchmark JSON/export (even analysis-only), compare shuffles or net_type results, decide whether a model needs more epochs, or reproduce a DLC bug locally and draft an upstream issue. Combine with hpc-* skills. For metrics or statistics on the tracked output use animal-behaviour-tracking-analysis; for behavioural syllables use keypoint-moseq.
+description: Sets up and runs DeepLabCut (DLC) pose estimation on HPC clusters and headless GPU machines - environment install, training and video-analysis batch scripts, pytorch_config.yaml settings, DLC failure modes and failed training logs. Use when the user mentions DeepLabCut, DLC, train_network, analyze_videos, pose_cfg.yaml, pytorch_config.yaml, or markerless pose estimation, esp. with Slurm or GPUs. Also use to retrain, resubmit, or build an orchestrator/sweep, benchmark suite or sbatch loop over DLC training or video-analysis scripts (shuffles, model variants), even if the request does not say "DeepLabCut" or "Slurm", to review or rank a benchmark JSON/export (even analysis-only), compare shuffles or net_type results, or decide whether a model needs more epochs. Combine with hpc-* skills. To check a suspected bug upstream and draft an issue use upstream-bug-report. For metrics or statistics on the tracked output use animal-behaviour-tracking-analysis; for behavioural syllables use keypoint-moseq.
 metadata:
   prompt_signals: 'deeplabcut|DeepLabCut|\banalyze_videos\b|\btrain_network\b|pytorch_config\.yaml|pose_cfg\.yaml|benchmark.{0,20}(json|export)|\bnet_type\b'
   file_signals: 'import deeplabcut|pytorch_config\.yaml|pose_cfg\.yaml|deeplabcut_version|test_mAP|training_state|evaluation_state|dlc_.*benchmark.*\.json|gpu_usage_.*\.csv'
@@ -61,6 +61,8 @@ Start from [assets/train-job.sh](assets/train-job.sh) and [assets/train_dlc.py](
 
 An unexpected error is often a known bug, a regression, or fixed on `main`. Get the DLC version, engine, PyTorch/CUDA versions and the exact traceback from the user, then search issues, PRs, commits, releases and the forum before inventing a workaround. Report plainly whether a match is confirmed, only similar, or not found. Details: [references/upstream-search.md](references/upstream-search.md).
 
+**Watch for bug candidates.** Throughout the work, keep an eye out for errors, unexpected behaviour, or deviations from the documentation (a documented argument ignored, output that differs from what the docs describe, silent wrong results). When you see one, say so, check it against the docs and upstream issues, and tell the user it may be worth reporting as a bug. Offer to draft the issue with version info, a minimal reproduction and the traceback; do not file it yourself. The general procedure (minimal reproduction, redaction, draft) is in the `upstream-bug-report` skill.
+
 ## Not verified
 
 Written from the official docs (3.0.2 docs and release notes; research and real-use evidence in `research/deeplabcut-hpc-ledger.md` in the llm-skills repo). Scripts were reviewed with `bash -n`, the sbatch linter and dry runs; nothing has run on a real cluster. If a command or key fails there, trust the live docs and the cluster version's `help()` output (ask the user to paste it) over this file, and say which part was wrong.
@@ -69,6 +71,7 @@ Written from the official docs (3.0.2 docs and release notes; research and real-
 
 - `animal-behaviour-tracking-analysis`: what to do with the DLC output (likelihood masking, distance, speed, ROI time).
 - `keypoint-moseq`: unsupervised behavioural syllables from the DLC keypoints.
+- `upstream-bug-report`: the general procedure for turning a suspected DLC bug into a checked, redacted issue draft.
 
 ## Explain the reasoning (teaching rule)
 

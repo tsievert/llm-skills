@@ -72,6 +72,10 @@ kpms is documented for mice, rats and fruit flies only; no confirmed use on othe
 - `scripts/kpms_results.R`: same summaries in R plus a frame-level reader.
 - `assets/kpms_fit.sbatch`: Slurm template (single fit or array of seeds).
 
+## Watch for bug candidates
+
+Throughout the work, keep an eye out for errors, unexpected behaviour, or deviations from the documentation (a documented argument ignored, output that differs from what the docs describe, silent wrong results, NaNs or degenerate fits without a data explanation). When you see one, say so, check it against the live docs and the upstream issue tracker, and tell the user it may be worth reporting as a bug. Offer to draft the issue with kpms/jax versions, a minimal reproduction and the traceback; do not file it yourself. Upstream is `dattalab/keypoint-moseq` (no issue template; read its CONTRIBUTING.md first). The general procedure is in the `upstream-bug-report` skill.
+
 ## Not verified
 
 Tested on CPU with synthetic DLC-format data only; GPU, Slurm, real data, `apply_model`, grid movies, the calibration widget and other species are untested ([references/tested-and-not-tested.md](references/tested-and-not-tested.md)). If something fails on the cluster, trust the live docs and `help()` for the installed version over this file and tell the user which part was wrong.
@@ -84,6 +88,7 @@ Tested on CPU with synthetic DLC-format data only; GPU, Slurm, real data, `apply
 - `gam-mgcv`: time-resolved or peri-stimulus syllable usage as a GAM.
 - `hpc-python-code`: Python code that runs the fits inside cluster jobs.
 - `manuscript-figures-ggplot`: journal-ready figures from the summaries and model results.
+- `upstream-bug-report`: checking a suspected kpms bug against upstream issues and drafting a redacted report.
 - `python-reproducible-pipeline`: wrapping tracking, fits and statistics into one re-runnable, pinned workflow (Snakemake + uv).
 - `openalex`: follow-up literature searches on kpms use cases.
 

@@ -1,0 +1,20 @@
+{
+  "skill": "upstream-bug-report",
+  "note": "Written 2026-11-26 by the skill author; queries are not independent of the description. Splits fixed before running.",
+  "queries": [
+    { "id": 1, "query": "mgcv::gam() ignores my select = TRUE argument even though the docs say it penalizes null space. Is this a bug? Where would I report it?", "should_trigger": true, "split": "train" },
+    { "id": 2, "query": "Can you write a GitHub issue for the DeepLabCut repo about analyze_videos crashing on a documented default path? Draft only, I will post it.", "should_trigger": true, "split": "train" },
+    { "id": 3, "query": "I get the same traceback after upgrading to the new release of ggplot2; looks like a regression. Check whether it's already reported upstream.", "should_trigger": true, "split": "train" },
+    { "id": 4, "query": "keypoint-moseq apply_model returns NaN syllables on the tutorial data, exactly as in the docs example. Help me turn this into a minimal reproducible example for the maintainers.", "should_trigger": true, "split": "train" },
+    { "id": 5, "query": "Make a reprex for this dplyr join behaviour that contradicts the documentation and tell me what to put in the issue.", "should_trigger": true, "split": "validation" },
+    { "id": 6, "query": "Is this a bug in snakemake or am I holding it wrong? the --cores flag is documented to cap jobs but it doesn't", "should_trigger": true, "split": "validation" },
+    { "id": 7, "query": "DLC training log shows loss going to NaN at epoch 3 on my cluster job; reproduce locally and draft an upstream issue.", "should_trigger": true, "split": "validation" },
+    { "id": 8, "query": "My DeepLabCut training job on Slurm fails with CUDA out of memory. How much memory should I request?", "should_trigger": false, "split": "train" },
+    { "id": 9, "query": "One of the skills in this repo gave me wrong advice about the kappa parameter; log that as a lesson.", "should_trigger": false, "split": "train" },
+    { "id": 10, "query": "My glmmTMB model gives a singular fit warning. What does it mean and what should I do?", "should_trigger": false, "split": "train" },
+    { "id": 11, "query": "How do I open a pull request on GitHub for my own R package?", "should_trigger": false, "split": "train" },
+    { "id": 12, "query": "Write a README for my data deposit on Zenodo.", "should_trigger": false, "split": "validation" },
+    { "id": 13, "query": "I called pivot_longer with the wrong names_to and got an error. Fix my code.", "should_trigger": false, "split": "validation" },
+    { "id": 14, "query": "Set up a .gitignore for my R project and tell me how to remove a committed token.", "should_trigger": false, "split": "validation" }
+  ]
+}

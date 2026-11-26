@@ -44,3 +44,6 @@ manuscript-writing-coach	keypoint-moseq	no-backlink	Only a pointer for reporting
 manuscript-writing-coach	openalex	no-backlink	Generic literature skill must not collect a pointer to every domain skill that uses it	2026-11-10
 application-style-coach	openalex	no-backlink	Only a hand-off sentence for find-a-study requests; openalex is generic and should not collect pointers from domain skills.	2026-11-17
 python-reproducible-pipeline	deeplabcut-hpc	no-backlink	deeplabcut-hpc no longer mentions the pipeline skills in SKILL.md (only a uv/PATH pointer in a reference); a DLC cluster job is not a pipeline next step	2026-11-23
+upstream-bug-report	web-fetching-r	no-backlink	Generic fetch helper; users of it do not need bug reporting	2026-11-26
+gam-mgcv	upstream-bug-report	no-backlink	Domain skills point to the general procedure; the general skill names only the first two domain examples and must not collect every domain skill	2026-11-26
+mixed-models-glmm	upstream-bug-report	no-backlink	Same reason	2026-11-26

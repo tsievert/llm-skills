@@ -40,6 +40,7 @@ duplicating it here.
 - `research/recipe-notes-ledger.md`: `recipe-notes-formatter`.
 - `research/manuscript-writing-quarto-ledger.md`: planned `manuscript-writing-quarto` (Quarto manuscript/journal templates, CRediT helper via CRAN `CRediTas`, spelling/linting via `hunspell`/`spelling`).
 - `research/stats-reporting-and-review-ledger.md`: `stats-reporting-and-review` (effect sizes via `effectsize`/`report`, power via `pwr`/`simr`, pre-registration via `prereg` — `preregr` was archived from CRAN 2026-07-28, multiplicity); records the cross-skill finding that `report()`'s auto-generated prose conflicts with `manuscript-writing-quarto`'s "no autonomous prose" rule.
+- `research/upstream-bug-report-ledger.md`: `upstream-bug-report` (sources, live checks of the DLC and kpms issue setups, clash result, decisions, open items).
 - `research/skill-maintenance-review-2026-11-17.md`: **active task list** for the usage/bloat/overlap review of existing
   skills (12 tasks with status). When the user says to continue the maintenance review, read it first and update it.
 - **Always protocol research (standing rule, added 2026-10-24).** Whenever research is done for a skill or decision (web
@@ -169,6 +170,7 @@ anything) is still open. Before starting a new one: follow the working rules abo
 | `application-style-coach` | done, unproven | Chat-only style coaching for academic applications (English); research in `research/application-style-coach-ledger.md`. Open: live trigger test, real applications. |
 | `tidy-data-wrangling` | done, unproven | R tidyverse reshaping, cleaning, joins, messy spreadsheets; read-only `scripts/audit_table.R`; research in `research/tidy-data-wrangling-ledger.md`. Open: live trigger test, real messy file, Python variant. |
 | `job-opportunity-watch` | done, staged pipeline (s0-s6), partly unproven | Weekly job search over a user links file and profile; research in its ledger. Open: Brave Search API source, platform APIs untested, `skills-ref validate` not run. |
+| `upstream-bug-report` | drafted 2026-11-26, unproven | General procedure for suspected upstream bugs (search, minimal reproduction, redaction, issue draft, never filed by the assistant); research in `research/upstream-bug-report-ledger.md`. Open: live trigger test, overlap with `deeplabcut-hpc` description ("draft an upstream issue"), `skills-ref validate` not run. |
 
 ## History
 

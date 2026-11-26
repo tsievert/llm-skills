@@ -121,8 +121,13 @@ Load [references/resources.md](references/resources.md) for the curated list. Sh
 - Gavin Simpson's GitHub (courses, `naboer`, other packages): https://github.com/gavinsimpson
 - mgcv help: `?gam`, `?choose.k`, `?gam.check`, `?mgcv.FAQ`
 
+## Watch for bug candidates
+
+Keep an eye out for behaviour that deviates from the documentation of mgcv, gratia or related packages: a documented argument silently ignored, a function erroring on a documented model type, output that contradicts the help page, or a result that changes with an unrelated setting. Rule out the usual causes first (model misspecification, low `k`, concurvity, version differences; check the installed version's help and NEWS). If it still looks like a bug, say so, search the package's issue tracker, and offer to draft a report with versions and a minimal reproduction (built-in data such as `gamSim()`); do not file it yourself. Procedure: `upstream-bug-report`.
+
 ## Related skills
 
+- `upstream-bug-report`: checking a suspected package bug against upstream issues and drafting a redacted report.
 - `mixed-models-glmm`: linear or generalized mixed models without smooth terms (random intercepts and slopes, zero inflation, repeatability).
 - `gam-interpretation`: plotting and cautiously interpreting a fitted GAM.
 - `hpc-r-code`: running large `bam()` or many GAM fits on a cluster.
