@@ -1,0 +1,39 @@
+{
+  "skill_name": "openalex",
+  "evals": [
+    {
+      "id": 1,
+      "name": "taxon-name-change",
+      "prompt": "Review my saved OpenAlex alert for bank vole behaviour and olfaction. The filter lists vole, voles, Myodes and Microtus. Check whether it misses papers from the last 12 months and suggest fixes.",
+      "expected_output": "Notices that OpenAlex records the bank vole under the newer genus name Clethrionomys (Clethrionomys glareolus) as well as Myodes glareolus, tests both names against the live API (counts or a group_by), compares the hit lists, and proposes adding Clethrionomys (and any other synonym found) to the alert filter.",
+      "assertions": [
+        "Queries the live API (MCP or R) with Myodes and with Clethrionomys separately or in a comparison, instead of answering from memory",
+        "Reports that records using the Clethrionomys name exist that the Myodes-only filter does not match",
+        "Proposes adding Clethrionomys to the taxon clause of the filter",
+        "Does not put a wildcard inside a quoted phrase such as \"bank vole*\""
+      ]
+    },
+    {
+      "id": 2,
+      "name": "exclude-data-repositories",
+      "prompt": "My OpenAlex alert returns many Zenodo, Figshare and Dryad records. Exclude data repositories but keep preprints.",
+      "expected_output": "Groups matches by primary_location.source.type and source id to find the repositories, resolves their OpenAlex source ids, and adds a negated type filter (dataset, supplementary-materials) plus negated source ids to the filter, keeping bioRxiv-style preprint servers.",
+      "assertions": [
+        "Resolves repository names to OpenAlex source ids before filtering (no name strings in the filter)",
+        "Uses a negated type filter (type:!dataset|...) and/or primary_location.source.id:!S...|S...",
+        "Does not exclude all source type 'repository', which would also remove preprint servers",
+        "Shows counts before and after"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "edge-wildcard-in-phrase",
+      "prompt": "Add 'small rodent*' and 'population cycle*' as phrases to my alert filter.",
+      "expected_output": "Explains that OpenAlex rejects wildcards inside quoted phrases (HTTP 400), writes the phrases as literal variants (\"small rodent\", \"small rodents\", \"population cycle\", \"population cycles\") and validates the query against the API before saving.",
+      "assertions": [
+        "Does not leave a wildcard inside quotes in the final filter",
+        "Validates the filter with a count request before applying it"
+      ]
+    }
+  ]
+}

@@ -44,6 +44,20 @@ roughly in order of effort:
   English keyword in parentheses. If a wildcarded root is short (under ~6
   characters) or a common letter sequence, compare counts for the wildcard
   vs. the literal word(s) it's meant to stand in for before trusting it.
+- **Taxon names change; list every synonym.** OpenAlex labels the bank vole *Clethrionomys glareolus* on many records while
+  older alerts use *Myodes glareolus*, so a `Myodes`-only filter silently misses newer records. Compare counts for each
+  name and add the synonyms found (test case: `evals/evals.json`, id 1).
+- **A bare common term can drive a whole noise cluster; test removing each OR term.** In a predator-cue alert, `fear` plus
+  generic `cue` matched human fear conditioning and "fear of missing out". Keeping the term but requiring an explicit
+  odour/pheromone term in that branch removed the noise and left human studies with an odour aspect.
+- **No wildcards inside quoted phrases** (`"bank vole*"` returns HTTP 400); write `"bank vole"` or `bank vole*` as
+  separate words. On a 400 read `resp_body_string(e$resp)` for the real message.
+- **Excluding data repositories:** group by `primary_location.source.type` then `primary_location.source.id` to find them;
+  exclude with `type:!dataset|supplementary-materials|...` and `primary_location.source.id:!S...|S...`. Excluding the whole
+  type `repository` would also drop preprint servers.
+- **Auditing and editing alerts in R:** `GET /saved-searches` lists them (the filter is in `api_url`); `PATCH
+  /saved-searches/{id}` with `{"url": "<full works URL>"}` changes the filter and keeps the alert. Build the URL string by
+  hand: `httr2::req_url_query()` re-encodes `+` and a boolean filter then silently returns zero hits.
 - **For a narrow/niche research area, citation-lineage tracking
   (`cites:`/`cited_by:`, or `list_citations`/`oa_snowball()`) can outperform
   keyword search entirely.** When keyword guessing for a specific compound
