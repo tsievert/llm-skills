@@ -50,14 +50,19 @@ roughly in order of effort:
 - **A bare common term can drive a whole noise cluster; test removing each OR term.** In a predator-cue alert, `fear` plus
   generic `cue` matched human fear conditioning and "fear of missing out". Keeping the term but requiring an explicit
   odour/pheromone term in that branch removed the noise and left human studies with an odour aspect.
-- **No wildcards inside quoted phrases** (`"bank vole*"` returns HTTP 400); write `"bank vole"` or `bank vole*` as
-  separate words. On a 400 read `resp_body_string(e$resp)` for the real message.
+- **Wildcards need the exact field, not a particular quoting.** `title_and_abstract.search.exact:"bank vole*"` returned 200
+  and matched more than the literal phrase (checked live 2026-11-27); a wildcard in the stemmed `title_and_abstract.search`
+  returns HTTP 400. On a 400 use `req_error(is_error = \(r) FALSE)` and print `resp_body_string(resp)` for the real message.
+- **A niche software-practice question is a weak OpenAlex query.** Such practices live in issue trackers and forums, so
+  "no hit" is a limited check, not evidence that something is undocumented or novel; say so.
 - **Excluding data repositories:** group by `primary_location.source.type` then `primary_location.source.id` to find them;
   exclude with `type:!dataset|supplementary-materials|...` and `primary_location.source.id:!S...|S...`. Excluding the whole
   type `repository` would also drop preprint servers.
 - **Auditing and editing alerts in R:** `GET /saved-searches` lists them (the filter is in `api_url`); `PATCH
   /saved-searches/{id}` with `{"url": "<full works URL>"}` changes the filter and keeps the alert. Build the URL string by
-  hand: `httr2::req_url_query()` re-encodes `+` and a boolean filter then silently returns zero hits.
+  hand: `httr2::req_url_query()` escapes a literal `+` as `%2B`, so a filter already written with `+` for spaces silently
+  runs a different, wrong query (462 hits instead of 34386 in a test, 2026-11-27). Pass spaces unencoded, wrap the string
+  in `I()`, or build the URL yourself.
 - **For a narrow/niche research area, citation-lineage tracking
   (`cites:`/`cited_by:`, or `list_citations`/`oa_snowball()`) can outperform
   keyword search entirely.** When keyword guessing for a specific compound

@@ -51,7 +51,8 @@ whether the skill is ever used.
 ## Does the skill improve the answer? (with/without comparison)
 
 1. Write 2-3 realistic prompts per skill in `evals/evals.json` inside the skill folder
-   (prompt, expected output description, optional input files). Add one edge case.
+   (prompt, expected output description, optional input files). Add one edge case. Start from
+   `assets/evals.template.json`.
 2. Run each prompt twice in fresh conversations: skill available, and skill absent
    (temporarily move the folder out of `skills.paths`, or compare against the previous
    commit). Save outputs side by side.

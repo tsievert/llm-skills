@@ -17,7 +17,7 @@ and run syntax checks or small local tests (the skeleton runs on Windows/macOS/L
 but not on real Slurm: signal/requeue paths, `SLURM_*` variables, cgroup CPU limits and
 shared-filesystem behaviour are untested until the user runs the job and shares the log.
 Local package versions may differ from the cluster's.
-On Windows, `python`/`python3` in Git Bash may be the Microsoft Store stub (silent or "not found" failures): create a venv with `uv venv` and call scripts through `.venv/Scripts/python.exe`. `uv pip download` does not exist.
+On Windows, `python`/`python3` in Git Bash may be the Microsoft Store stub (silent or "not found" failures): create a venv with `uv venv` and call scripts through `.venv/Scripts/python.exe`. `uv pip download` does not exist. A local test of code that calls `os.symlink` fails on Windows (WinError 1314, no privilege): shim it or enable developer mode; `runpy` needs the script directory on `sys.path`.
 
 **Requirement:** whenever information is needed that only the cluster can provide
 (Python/package versions, allocation, logs, file system state), stop and ask the user
@@ -87,7 +87,7 @@ resume, and a completion marker. Adapt it rather than rewriting these parts.
   deleted when the job ends. Template: `hpc-job-scripts` assets/python-scratch-job.sh.
 - **GPUs.** See the `hpc-gpu-jobs` skill (launch patterns, DataLoader workers,
   monitoring). Check `torch.cuda.is_available()` and fail fast if no GPU is visible.
-- **Patching scripts from Windows.** The edit tool can re-introduce CRLF into an LF script even on a two-line edit (a test suite then drops from all-pass to failing), so run `file script` after every edit. For scripted patches, replace exact strings and `assert s.count(old) == 1` (slicing between two markers found with `str.index` silently deleted a block when an earlier line matched), write with `newline="\n"`, and compare file size and test count afterwards. Do not put `\n` escapes in text that passes through a heredoc or tool call into generated Python source (they became real newlines); build them with `chr(10)` and check with `py_compile`. Use raw strings for regexes in patch scripts (a plain `\d` raised a SyntaxWarning) and re-grep the written line. In test helpers that capture child output on Windows, pass `encoding="utf-8", errors="replace"` to `subprocess.run` (`text=True` alone raised `UnicodeDecodeError` under cp1252).
+- **Patching scripts from Windows.** The edit tool can re-introduce CRLF into an LF script even on a two-line edit (a test suite then drops from all-pass to failing), so run `file script` after every edit-tool use on LF scripts, new ones included, and again as the last step before handing them over. For scripted patches, replace exact strings and `assert s.count(old) == 1` (slicing between two markers found with `str.index` silently deleted a block when an earlier line matched), write with `newline="\n"`, and compare file size and test count afterwards. Do not put `\n` escapes in text that passes through a heredoc or tool call into generated Python source (they became real newlines); build them with `chr(10)` and check with `py_compile`. Use raw strings for regexes in patch scripts (a plain `\d` raised a SyntaxWarning) and re-grep the written line. In test helpers that capture child output on Windows, pass `encoding="utf-8", errors="replace"` to `subprocess.run` (`text=True` alone raised `UnicodeDecodeError` under cp1252).
 
 ## Review checklist
 

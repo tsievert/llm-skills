@@ -1,0 +1,21 @@
+{
+  "skill": "REPLACE-WITH-SKILL-NAME",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A realistic user request that the skill should handle, with file names and casual wording.",
+      "expected_output": "Plain description of what a good answer contains.",
+      "files": [],
+      "assertions": [
+        "Objectively checkable statement written after seeing the first outputs."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "An edge case: missing data, an unusual layout, or a request at the skill's boundary.",
+      "expected_output": "What the skill should do or refuse to do.",
+      "files": [],
+      "assertions": []
+    }
+  ]
+}

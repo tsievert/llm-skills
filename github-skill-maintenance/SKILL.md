@@ -59,7 +59,9 @@ and say what it would change.
    `references/clash-decisions.tsv`. Run it for every new or changed skill. The ownership table and
    description-writing rules are in [references/skill-boundaries.md](references/skill-boundaries.md);
    update the table when adding a skill. The score is lexical: it cannot see meaning and cannot prove
-   triggering (that needs the queries in step 5).
+   triggering (that needs the queries in step 5). Also grep the other descriptions for the new skill's key
+   verbs and phrases (for example "draft an issue"); a low score once missed a description that already
+   claimed the new task.
 2. **Independent spec check.** `uvx --from skills-ref agentskills validate <skill-dir>`
    (PyPI `skills-ref`, the reference validator; its README calls it a demonstration
    library). The bare command `uvx skills-ref` fails on Windows; use `--from`. It accepts

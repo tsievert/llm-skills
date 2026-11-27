@@ -39,8 +39,9 @@ list every `candidate` file in the inventory as keep, rework now or defer with a
 
 ## Verify
 
-Append one row per reworked file or folder to `rework-log.tsv` (date, commit, target) in the same commit, so the
-churn ranking stops listing the skill until it is edited again.
+Append one row per reworked file or folder to `rework-log.tsv` (date, commit, target) right after the rework commit
+(the hash does not exist before it), as a follow-up commit, so the churn ranking stops listing the skill until it
+is edited again.
 
 `lint_skills()`, `uvx --from skills-ref agentskills validate <dir>`, `check_skill_links()` if related-skills
 sections changed, re-run any reproducible original failure and any changed script. Compare the new text

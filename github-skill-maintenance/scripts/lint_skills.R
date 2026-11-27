@@ -22,6 +22,22 @@ lint_skills <- function(repo = find_repo_root(), skills = NULL) {
   res
 }
 
+# Rewrites tracked files whose index is LF but whose working copy is CRLF or mixed (the edit tool does this on Windows).
+# Returns the fixed paths invisibly; use `skills = "name"` to limit to one skill folder.
+fix_eol <- function(repo = find_repo_root(), skills = NULL) {
+  eol <- system2("git", c("-C", shQuote(repo), "ls-files", "--eol"), stdout = TRUE)
+  hit <- eol[grepl("^i/lf\\s+w/(crlf|mixed)\\s", eol)]
+  paths <- sub("^.*\\t", "", hit)
+  if (!is.null(skills)) paths <- paths[dirname(paths) %in% skills | sub("/.*$", "", paths) %in% skills]
+  for (p in file.path(repo, paths)) {
+    b <- readBin(p, "raw", file.size(p))
+    b <- b[b != as.raw(13L)]
+    writeBin(b, p)
+  }
+  message("Normalised ", length(paths), " file(s) to LF.")
+  invisible(paths)
+}
+
 find_repo_root <- function(start = getwd()) {
   d <- normalizePath(start, winslash = "/")
   repeat {
@@ -101,8 +117,8 @@ lint_one_skill <- function(dir) {
                                            stdout = TRUE, stderr = FALSE), error = function(e) character()))
   bad <- sub("^.*\\t", "", eol[grepl("^i/lf\\s+w/(crlf|mixed)\\s", eol)])
   if (length(bad))
-    add("warn", "eol", sprintf("Working copy has CRLF or mixed line endings (index is LF): %s. Fix with sed -i 's/\\r$//' <file> as the last step before commit.",
-                               paste(head(bad, 5), collapse = ", ")))
+    add("warn", "eol", sprintf("Working copy has CRLF or mixed line endings (index is LF) in %d file(s), including references/ and scripts/: %s. Run fix_eol() (this script) as the last step before commit.",
+                               length(bad), paste(bad, collapse = ", ")))
   raw <- readLines(file.path(dir, "SKILL.md"), warn = FALSE, encoding = "UTF-8")
   fm <- split_frontmatter(raw)
   if (is.null(fm)) {

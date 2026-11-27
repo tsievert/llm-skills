@@ -6,3 +6,5 @@ date	target	reason
 2026-11-25	hpc-resource-allocation/references/capacity-benchmark.md	one small addition to a healthy file; no contradiction or overlap found when read
 2026-11-25	hpc-cluster-docs/SKILL.md	one small addition to a healthy file; no contradiction or overlap found when read
 2026-11-25	gam-interpretation/references/recent-developments.md	one small addition to a healthy file; no contradiction or overlap found when read
+2026-11-27	skill-feedback-triage/SKILL.md	2026-11-27 triage: fixes placed in references; user deferred rework
+2026-11-27	github-skill-maintenance/SKILL.md	2026-11-27 triage: fixes placed in references and scripts; user deferred rework

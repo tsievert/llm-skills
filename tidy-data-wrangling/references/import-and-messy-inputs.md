@@ -77,6 +77,17 @@ cells |>
 - Hidden rows, columns and sheets are read as normal data; ask whether they matter.
 - Google Sheets: `googlesheets4::read_sheet()` with the same type care.
 
+## Nested JSON with ragged records
+
+`dplyr::bind_rows(lapply(x, as.data.frame))` fails ("arguments imply differing number of rows: 1, 0") when a field is `NULL` or missing in some records. Look at one record first (`str(x[[1]], max.level = 1)`: a field documented as an object can be a plain string in another schema version, and `$` on it errors), then build each row by hand with a NULL-to-NA helper:
+
+```r
+g <- function(v) if (is.null(v) || length(v) == 0) NA else v[[1]]
+rows <- dplyr::bind_rows(lapply(x, function(r) data.frame(id = g(r$id), n = g(r$n))))
+```
+
+(tested: NULL fields become `NA`, no error). When several exports of one tool differ in schema, make a per-file inventory (file, group, record count, which target fields are present) before extracting anything, so a key that only looks like the results table, or empty per-item blocks, are caught before a join. `print(df, n = )` and `width =` belong to tibbles; on a base data.frame use `head()` or `tibble::as_tibble()`.
+
 ## Several files or sheets
 
 ```r

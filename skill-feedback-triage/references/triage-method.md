@@ -98,7 +98,14 @@ Research is recorded in the same turn it is done, not summarised afterwards.
   entry stories belong in the ledger or `HISTORY.md`. The skill states the rule, not who found it.
 - **Size budget.** Before and after editing a SKILL.md, compare `file.size()`; above about 12 KB new detail
   goes to a reference by default, and `lint_skills()` warns above 16 KB. A fix that grows a SKILL.md past
-  the budget moves something else out in the same change.
+  the budget moves something else out in the same change. A file already over 12 KB must shrink by at least
+  what the change adds; if it is still over after one round of moving text out, propose a `rework` of that file
+  instead of trimming again.
+- **Ledger timing for entry-only evidence.** A one-line-per-issue ledger table (issue, check done or not
+  possible, outcome) satisfies gate 1 and may be written after the table is approved but before any edit; show
+  the table with "research row pending" for those issues. A real reproduction still goes in its own row.
+- **Normalise line endings before linting.** After edit-tool or `sed` changes, run `fix_eol()` (from
+  `github-skill-maintenance/scripts/lint_skills.R`) and then `lint_skills()`.
 - **Shared boilerplate has one canonical text** (the "Capture lessons" and "Explain the reasoning" sections);
   change it by script across all skills in one commit, never by editing one copy.
 
