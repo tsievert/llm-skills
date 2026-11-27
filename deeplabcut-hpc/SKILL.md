@@ -42,7 +42,7 @@ Rows marked (detail) have more in [references/pitfall-details.md](references/pit
 | 6 | Batch size | Raise `batch_size` to use GPU memory, confirmed by monitoring. GPU out-of-memory is fixed by a smaller batch or image size, not more host memory. |
 | 7 | Checkpoint and resume | Set `save_epochs` low enough that a time-limit kill loses little; resume with `resume_training_from` or `snapshot_path`. A resumed run treats `epochs` as additional, so pass the remaining number in a requeue script (detail; `hpc-job-scripts` for requeue and `--signal`). |
 | 8 | Shuffles, projects, GPUs | One GPU per run; multi-GPU is single-node `DataParallel`, scaling untested. Job arrays with isolated output per task. Shuffle numbering starts at 1, not 0 (detail). |
-| 9 | `analyze_videos` caching | Already-analyzed videos are skipped, so reruns are cheap. Use `destfolder` for scratch/project storage; parallelise per video or folder as an array. |
+| 9 | `analyze_videos` caching | Already-analyzed videos are skipped, so reruns are cheap; since 3.0.2 PyTorch `analyze_videos` honours `overwrite` (earlier builds ignored it), so set it deliberately. Use `destfolder` for scratch/project storage; parallelise per video or folder as an array. |
 | 10 | Video I/O | Decoding is CPU-bound; request enough CPUs. Stage large videos to node-local scratch when the shared filesystem is slow (`hpc-job-scripts` arrays-and-scratch reference). |
 | 11 | Model downloads | Backbones and SuperAnimal weights download on first use, which fails on compute nodes without internet. Run one short model-creation step on a login node (or pre-download); point the cache to shared storage if the home quota is small. |
 | 12 | Re-split and evaluation | After `create_training_dataset` or a re-split, `evaluate_network` can fall back to TensorFlow. Pass `engine=Engine.PYTORCH` and `shuffles=[n]` explicitly and treat old evaluation results as stale (detail). |
@@ -65,7 +65,7 @@ An unexpected error is often a known bug, a regression, or fixed on `main`. Get 
 
 ## Not verified
 
-Written from the official docs (3.0.2 docs and release notes; research and real-use evidence in `research/deeplabcut-hpc-ledger.md` in the llm-skills repo). Scripts were reviewed with `bash -n`, the sbatch linter and dry runs; nothing has run on a real cluster. If a command or key fails there, trust the live docs and the cluster version's `help()` output (ask the user to paste it) over this file, and say which part was wrong.
+Written from the official docs (3.0.2 docs; release notes re-read through 3.0.3 on 2026-11-27, docs pages not re-read for 3.0.3; research and real-use evidence in `research/deeplabcut-hpc-ledger.md` in the llm-skills repo). Scripts were reviewed with `bash -n`, the sbatch linter and dry runs; nothing has run on a real cluster. If a command or key fails there, trust the live docs and the cluster version's `help()` output (ask the user to paste it) over this file, and say which part was wrong.
 
 ## Related skills
 

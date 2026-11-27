@@ -99,9 +99,10 @@ Templates: [assets/gpu-single.sh](assets/gpu-single.sh),
 - Log GPU utilisation during the run (background sampler, stopped at exit):
   ```bash
   nvidia-smi --query-gpu=timestamp,index,utilization.gpu,memory.used,memory.total \
-    --format=csv -l 30 -f "logs/gpu_${SLURM_JOB_ID}.csv" &
+    --format=csv -l 30 > "logs/gpu_${SLURM_JOB_ID}.csv" &
   GPU_MON=$!; trap 'kill $GPU_MON 2>/dev/null || true' EXIT
   ```
+  Redirect stdout rather than using `-f`: a backgrounded `-f` sampler stopped with `kill` left empty files on a test GPU node. `nvidia-smi` is absent on login nodes; test it in a short GPU job.
   Or attach to a running job: `srun --jobid=<id> --overlap nvidia-smi` (needs
   site permission; `--overlap` may be required on newer Slurm).
 - Low utilisation usually means a starved input pipeline (too few workers, slow

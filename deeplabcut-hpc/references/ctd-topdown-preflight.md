@@ -9,7 +9,7 @@ Contents: net types that fail by project type, `rtmpose_x` crop mismatch, CTD co
 
 ## Crop and head `input_size`
 
-- Known upstream failure (3.0.2): the generated default top-down `rtmpose_x` config has a 256 crop but a 384 head `input_size` and crashes at the first step (DeepLabCut issue #3592, open when checked 2026-11-16). `ctd_prenet_rtmpose_x` shows the same mismatch (the `s` and `m` variants use 256 and are fine). Config validation raises "must match RTMPose input_size". Set the crop from `input_size` first, then validate.
+- Known upstream failure (3.0.1 to 3.0.3): the generated default top-down `rtmpose_x` config has a 256 crop but a 384 head `input_size` and crashes at the first step (DeepLabCut issue #3592, still open 2026-11-27 and present in 3.0.3; a maintainer calls it a 3.0.1 regression, fix in PR #3593 for the next release). `ctd_prenet_rtmpose_x` shows the same mismatch (the `s` and `m` variants use 256 and are fine). Config validation raises "must match RTMPose input_size". Workaround from the maintainer: set both `data.train.top_down_crop` and `data.inference.top_down_crop` to 384 x 384 in `pytorch_config.yaml`. Set the crop from `input_size` first, then validate. Reproduced locally on 3.0.3 (2026-11-27): generated `rtmpose_x` has `top_down_crop` 256 x 256 (train and inference) and head `input_size` [384, 384]; `rtmpose_m` is 256/256 and fine. Once a release newer than 3.0.3 is installed, re-test before keeping the workaround.
 - A driver that corrects the crop only for methods classed as top-down misses CTD methods; include CTD in the top-down branch.
 - RTMPose heads carry `model.heads.bodypart.input_size`; heatmap top-down nets (`top_down_cspnext_*`, `top_down_hrnet_*`, `top_down_resnet_*`) have no head `input_size` and use the generated 256x256 `top_down_crop`. A driver that requires `input_size` fails with "Top-down models require model.heads.bodypart.input_size". Branch on head type and test. Specify crop or `input_size` explicitly rather than the word `default`.
 
@@ -26,7 +26,7 @@ CTD shuffles take their conditions from the prediction file written when the bot
 
 ## Evaluate in the build that trained
 
-Evaluate a shuffle in the same DLC build that trained it. `evaluate_network` in the release env rejected a dev-branch config with `extra_forbidden` errors (`runner.load_scheduler_state_dict`, `train_settings.dataloader_kwargs`) because `PoseConfig` forbids unknown keys.
+Evaluate a shuffle in the same DLC build that trained it. `evaluate_network` in a 3.0.2 release env rejected a dev-branch config with `extra_forbidden` errors (`runner.load_scheduler_state_dict`, `train_settings.dataloader_kwargs`) because `PoseConfig` forbids unknown keys. 3.0.3 knows both fields (`dataloader_kwargs` is new, `load_scheduler_state_dict` was added to `RunnerConfig`), but the reverse still holds: a config that sets `dataloader_kwargs` cannot be loaded by 3.0.2 or older unless the field is removed. Keep training and evaluation envs on one version. Tested 2026-11-27 (synthetic project, CPU): configs written by 3.0.3 (`create_training_dataset`, and after training with `dataloader_kwargs` set) failed to load in 3.0.2 with `extra_forbidden` on `runner.load_scheduler_state_dict`, and also on `train_settings.dataloader_kwargs` when set. So a 3.0.3-written config is not usable in 3.0.2 even when `dataloader_kwargs` is unset, which the 3.0.3 release note suggests it is; possible upstream bug or doc gap, not reported. Both configs load in 3.0.3.
 
 ## Local dry runs
 

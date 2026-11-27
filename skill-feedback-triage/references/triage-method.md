@@ -38,7 +38,7 @@ patches from earlier runs it carries (`git log -p -- <file>`). Results go in the
   is evidence that the earlier fix failed, so it is not `already-present`. Find why it failed (text not seen,
   wrong place, rule too weak, no enforcement) and move up the fix ladder. The title match is a screen: read
   both entries. Record the outcome as `fix`. An entry filed on the day of the fix is a failed fix only if its
-  session started after the fix commit (`git log -S"<phrase>"` gives the time); otherwise the session saw the old text.
+  session started after the fix commit (`git log -S"<phrase>"` gives the time); otherwise the session saw the old text. If the fix is still uncommitted (`git status`), compare the entry file time with the edited file's modification time instead.
 - **Same failure class on several sites** (several entries, different sites or inputs): propose a code-level
   fix keyed by failure class (a ladder in the script) before any per-site documentation note.
 - **Rework trigger.** Propose `rework` when a target file has 3 or more edits in the window and at least 2 entries

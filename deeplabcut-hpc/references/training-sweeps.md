@@ -6,7 +6,7 @@ Contents: which axis to vary first, current `net_type` options, orchestrator che
 
 Exhaust the model architecture (`net_type`) axis before reusing secondary knobs (dataloader settings, augmentation on/off) to inflate the candidate count. Check both sources before proposing a sweep: the project's own benchmark results (if any) and the current architectures page. Order candidates architecture-first; defer secondary-knob variants to a later round. Untested `net_type` options are higher value than a second variant of a knob already covered.
 
-## Current `net_type` options (DLC 3.0.2)
+## Current `net_type` options (DLC 3.0.2; `available_models()` re-run on 3.0.3 gives the same 34 names and 3 detectors)
 
 Source: https://deeplabcut.github.io/DeepLabCut/docs/pytorch/architectures.html. The authoritative list for the installed version is `from deeplabcut.pose_estimation_pytorch import available_models, available_detectors` (ask the user to run it on the cluster).
 
